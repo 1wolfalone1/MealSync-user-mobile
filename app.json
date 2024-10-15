@@ -4,6 +4,7 @@
     "slug": "mealsync-user-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
+    "backgroundColor": "#000000",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
@@ -16,6 +17,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "mealsync.org",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -29,8 +31,10 @@
     "plugins": [
       "expo-router"
     ],
-    "experiments": {
-      "typedRoutes": true
+     "extra": {
+      "router": {
+        "origin": false
+      }
     }
   }
 }
