@@ -179,15 +179,28 @@ export function formatDate(dateString) {
 }
 
 export function formatDateTime(dateString) {
-  const dateObj = new Date(dateString); // Parse the date string
-  const hours = dateObj.getHours().toString().padStart(2, "0"); // Add leading zero for single-digit hours
-  const minutes = dateObj.getMinutes().toString().padStart(2, "0");
-  const seconds = dateObj.getSeconds().toString().padStart(2, "0");
-  const day = dateObj.getDate().toString().padStart(2, "0");
-  const month = (dateObj.getMonth() + 1).toString().padStart(2, "0"); // Months are zero-indexed (January is 0)
-  const year = dateObj.getFullYear();
+  // Create a Date object using the UTC timestamp
+  const dateObj = new Date(dateString);
 
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
+  // Define options for formatting in Ho Chi Minh City time
+  const options = {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  };
+
+  // Format the date and time in the desired format
+  const formattedDate = dateObj.toLocaleString("en-US", options);
+
+  // Split the formatted date into date and time parts
+  const [datePart, timePart] = formattedDate.split(", ");
+
+  // Return the final formatted string in the desired format
+  return `${datePart} ${timePart}`;
 }
 export const formatPhoneNumber = (phoneNumberString) => {
   const cleaned = ("" + phoneNumberString).replace(/\D/g, "");
@@ -208,6 +221,6 @@ export function convertIntTimeToString(time) {
     // Return the formatted time
     return `${hours}:${minutes}`;
   }
-  return ""
+  return "";
   // Extract hours and minutes from the string
 }

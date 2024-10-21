@@ -34,7 +34,7 @@ const initialState = {
     elevation: 5,
   },
   loading: {
-    isLoaded: false,
+    isLoading: true,
     msg: 'Chờ tí nhé...',
   },
 

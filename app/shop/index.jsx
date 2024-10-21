@@ -193,7 +193,7 @@ const ShopPage = () => {
                 </Text>
               </View>
               <ListPromotionInShop listPromotion={listPromotion} />
-              {listBestProduct &&
+              {listBestProduct ? (
                 listBestProduct.map((item, index) => (
                   <View key={item.id}>
                     <Text className="text-lg font-hnow65medium px-8 mt-1">
@@ -201,7 +201,23 @@ const ShopPage = () => {
                     </Text>
                     <ListBestProductInShop data={item.foods} />
                   </View>
-                ))}
+                ))
+              ) : (
+                <>
+                  <View>
+                    <Text className="text-lg font-hnow65medium px-8 mt-1">
+                      Sản phẩm của cửa hàng
+                    </Text>
+                    <ListBestProductInShop data={[null, null, null]} />
+                  </View>
+                  <View>
+                    <Text className="text-lg font-hnow65medium px-8 mt-1">
+                      Sản phẩm tốt nhất
+                    </Text>
+                    <ListBestProductInShop data={[null, null, null]} />
+                  </View>
+                </>
+              )}
               <Text className="text-lg font-hnow65medium px-8 mt-1">
                 Tất cả sản phẩm
               </Text>

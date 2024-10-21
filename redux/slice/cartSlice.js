@@ -73,7 +73,6 @@ const cartSlice = createSlice({
     },
     setQuantity: (state, action) => {
       const { shopId, itemId, quantity } = action.payload;
-      console.log(shopId, itemId, quantity, " set quantity reducer");
       if (state.items[shopId]) {
         state.items[shopId] = state.items[shopId].map((item) => {
           if (item.productId === itemId) {
@@ -109,13 +108,13 @@ const cartSlice = createSlice({
       }
     },
     setNote: (state, action) => {
-      const { shopId, itemId, note } = action.payload;
-      console.log(shopId, itemId, note, " add note reducer");
+      const { shopId, itemId, note, note2 } = action.payload;
+      console.log(shopId, itemId, note, note2, " add note reducer");
       if (state.items[shopId]) {
         state.items[shopId].map((item) => {
-          if (item.productId === itemId) {
-            console.log(item.productId, itemId, note, " add note reducer ddd");
+          if (item.productId == itemId) {
             item.note = note;
+            item.note2 = note2
             return item;
           } else {
             return item;
@@ -125,7 +124,9 @@ const cartSlice = createSlice({
     },
     clearCart: (state, actions) => {
       const { shopId, operatingSlotId } = actions.payload;
-      const tempList = state.items[shopId].filter((item) => item.operatingSlotId != operatingSlotId)
+      const tempList = state.items[shopId].filter(
+        (item) => item.operatingSlotId != operatingSlotId
+      );
       state.items[shopId] = tempList;
       state.listItemInfo = initialState.listItemInfo;
     },

@@ -1,40 +1,43 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import api from '../../api/api';
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import api from "../../api/api";
 const initialState = {
-  products: {},
+  products: [],
   shopId: 0,
+  note: "",
   orderPrice: {
     total: 0,
     totalProduct: 0,
     voucher: 10000,
     shippingFee: 0,
   },
+  voucherId: null,
   voucher: {},
   listVoucher: {
-    active: [],
+    active: [{id: 0}, {id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}],
     inactive: [],
   },
   orderInfo: {
-    fullName: '',
-    phoneNumber: '',
+    fullName: "",
+    phoneNumber: "",
+    buildingId: 0,
     building: {
-      address: '',
+      address: "",
       latitude: 0,
       longitude: 0,
     },
   },
   ship: {
-    distance: 0,
-    duration: 0,
+    distance: 1,
+    duration: 1,
   },
 };
 const orderSlice = createSlice({
-  name: 'orderSlice',
+  name: "orderSlice",
   initialState: initialState,
   reducers: {
     changeProducts: (state, actions) => {
       const products = actions.payload;
-      console.log(products, ' -------------products-------');
+      console.log(products, " -------------products-------");
 
       state.products = products.map((product) => {
         const newToppingCheckbox = [];
@@ -50,11 +53,11 @@ const orderSlice = createSlice({
         });
         Object.keys(product.topping.checkbox).forEach((key) => {
           const topping = product.topping.checkbox[key];
-          console.log(topping, ' in lopppppppppppppppppppppppp');
+          console.log(topping, " in lopppppppppppppppppppppppp");
           if (topping) {
             if (topping.options && Array.isArray(topping.options)) {
               const optionIds = topping.options.map((option) => option.id);
-              console.log(optionIds, 'optionIds');
+              console.log(optionIds, "optionIds");
               newToppingCheckbox.push({
                 id: key,
                 optionIds: optionIds,
@@ -67,17 +70,26 @@ const orderSlice = createSlice({
           newToppingRadio,
           product.topping,
           product.productId,
-          ' ------- topping add---',
+          " ------- topping add---"
         );
         return {
-          ...product,
-          topping: {
-            checkbox: newToppingCheckbox,
-            radio: newToppingRadio,
-          },
+          id: product.productId,
+          quantity: product.quantity,
+          note: product.note2,
+          optionGroupCheckbox: newToppingCheckbox,
+          optionGroupRadio: newToppingRadio,
         };
       });
-      console.log(products, ' --- product for change');
+      console.log(products, " --- product for change");
+    },
+    changeNote: (state, actions) => {
+      state.note = state.products.reduce((acc, current) => {
+        if (current.note) {
+          return acc + current.note + "\n";
+        } else {
+          return acc;
+        }
+      }, "");
     },
     changeShopId: (state, actions) => {
       const id = actions.payload;
@@ -112,36 +124,41 @@ const orderSlice = createSlice({
     },
     changeVoucher: (state, actions) => {
       const id = actions.payload;
-      if (id) {
-        const parseIdArr = id.split('-');
-        const selectVoucher = state.listVoucher.active.find((v) => {
-          return v.id == parseIdArr[0] && v.promotionType == parseIdArr[1];
-        });
+      const selectVoucher = state.listVoucher.active.find((v) => {
+        return v.id == id;
+      });
+      if (selectVoucher) {
         state.voucher = selectVoucher;
       }
+      state.voucherId = id;
     },
     changeItems: (state, actions) => {},
     calculateTotalProductPrice: (state, actions) => {
       const items = actions.payload;
       if (Array.isArray(items)) {
-        const totalProductPrice = items.reduce((acc, item) => acc + item.quantity * item.price, 0);
+        const totalProductPrice = items.reduce(
+          (acc, item) => acc + item.quantity * item.price,
+          0
+        );
         state.orderPrice.totalProduct = totalProductPrice;
       }
     },
-    calculateTotal: (state, actions) => {
-
-    },
+    calculateTotal: (state, actions) => {},
     calculateVoucherPrice: (state, actions) => {
       const voucher = state.voucher;
       const totalProductPrice = state.orderPrice.totalProduct;
       const shippingFee = state.orderPrice.shippingFee;
-      console.log(voucher, ' voucher -----------------');
+      console.log(voucher, " voucher -----------------");
       if (voucher && voucher.id) {
         if (voucher.applyType == 1) {
           const listPrice = [];
           listPrice.push(voucher.maximumApplyValue);
-          listPrice.push(parseInt(((totalProductPrice + shippingFee) * voucher.amountRate) / 100));
-          console.log(listPrice, ' list', Math.max(listPrice));
+          listPrice.push(
+            parseInt(
+              ((totalProductPrice + shippingFee) * voucher.amountRate) / 100
+            )
+          );
+          console.log(listPrice, " list", Math.max(listPrice));
           state.orderPrice.voucher = Math.min(...listPrice);
         } else {
           state.orderPrice.voucher = voucher.amountValue;
@@ -154,29 +171,25 @@ const orderSlice = createSlice({
 
   extraReducers: (builder) =>
     builder.addCase(getListVoucher.fulfilled, (state, actions) => {
-      console.log(actions.payload, ' payload in get liafsst voucher');
-      state.listVoucher.active = actions.payload.promotionActive.items;
-      state.listVoucher.inactive = actions.payload.promotionInActive.items;
+      console.log(actions.payload, " payload in get liafsst voucher");
+      state.listVoucher.active = actions.payload.eligibleList;
+      state.listVoucher.inactive = actions.payload.ineligibleList;
     }),
 });
 
 export const getListVoucher = createAsyncThunk(
-  'orderSlice/getListVoucher',
-  async ({ shopId, userId, distance }, { getState }) => {
+  "orderSlice/getListVoucher",
+  async ({ shopId }, { getState }) => {
     try {
       const stateOrder = getState().orderSlice;
-      console.log(Date.now(), 'datata voucher list ne');
-      const res = await api.get('/api/v1/customer/promotion/all', {
+      console.log(Date.now(), "datata voucher list ne");
+      const res = await api.get(`/api/v1/shop/${shopId}/promotion/filter`, {
         params: {
-          shopId: shopId,
-          customerId: userId,
-          orderValue: stateOrder.orderPrice.totalProduct + stateOrder.orderPrice.shippingFee,
-          distance: distance,
-          currentDate: '2024-06-01',
+          totalPrice: stateOrder.orderPrice.totalProduct,
         },
       });
       const data = await res.data;
-      console.log(data, 'data get list voucher in order page');
+      console.log(data, "data get list voucher in order page");
       if (data.isSuccess) {
         return data.value;
       } else {
@@ -186,10 +199,10 @@ export const getListVoucher = createAsyncThunk(
         };
       }
     } catch (err) {
-      console.log(err, ' error in getlist voucher in order page');
+      console.log(err, " error in getlist voucher in order page");
       throw err;
     }
-  },
+  }
 );
 export default orderSlice;
 
@@ -197,6 +210,7 @@ export const orderSelector = (state) => state.orderSlice;
 
 export const orderTotalOrderSelector = (state) => {
   const orderPrice = state.orderSlice.orderPrice;
-  const total = orderPrice.totalProduct + orderPrice.shippingFee - orderPrice.voucher;
+  const total =
+    orderPrice.totalProduct + orderPrice.shippingFee - orderPrice.voucher;
   return total;
 };

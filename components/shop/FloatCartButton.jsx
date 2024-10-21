@@ -46,7 +46,7 @@ const FloatCartButton = () => {
       setCartTitle(
         items[info?.id]?.length === 0
           ? null
-          : items[info?.id].length + " sản phẩm"
+          : items[info?.id].length + " sản phẩm  "
       );
       console.log(items, " cart info");
     } else {
