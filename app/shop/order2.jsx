@@ -1,7 +1,15 @@
 import { router, useLocalSearchParams } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { HandCoins, Ticket, Timer, Truck, Wallet } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, Image, ScrollView, Text, View } from "react-native";
+import {
+  Animated,
+  Dimensions,
+  Image,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { Button, Divider, RadioButton } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
@@ -33,6 +41,7 @@ const CartItemInShop = () => {
   const { shopId, operatingSlotId } = useLocalSearchParams();
 
   const [open, setOpen] = useState(false);
+  const [orderIdAfterPayment, setOrderIdAfterPayment] = useState(0);
   const [isNotScroll, setIsNotScroll] = useState(true);
   const [listItemInCartBySlot, setListItemInCartBySlot] = useState([]);
   const [valueOperatingTime, setValueOperatingTime] = useState(null);
@@ -46,22 +55,86 @@ const CartItemInShop = () => {
   const { listItemInfo, items } = useSelector(cartSelector);
   const { info } = useSelector(dataShopDetailsSelector);
   const userInfo = useSelector(userInfoSliceSelector);
-  const { orderPrice, ship } = useSelector(orderSelector);
+  const { orderPrice, ship, products } = useSelector(orderSelector);
   const totalOrderPrice = useSelector(orderTotalOrderSelector);
   const dispatch = useDispatch();
   const { orderInfo, voucher } = useSelector(orderSelector);
   const [operatingSlot, setOperatingSlot] = useState();
-  const [paymentMethod, setPaymentMethod] = useState(1);
-
-
+  const [paymentMethod, setPaymentMethod] = useState(2);
+  const [paymentUrl, setPaymentUrl] = useState(null);
   const order = useSelector(orderSelector);
   let scrollOffsetY = useRef(new Animated.Value(0)).current;
   const handleChangePaymentMethod = (value) => {
     setPaymentMethod(value);
-  } 
+  };
   useEffect(() => {
     dispatch(orderSlice.actions.calculateVoucherPrice());
   }, [voucher]);
+
+  useEffect(() => {
+    const handleVNPayRedirect = async () => {
+      // Open the browser with the payment link
+      let result = await WebBrowser.openAuthSessionAsync(paymentUrl);
+      console.log(paymentUrl);
+      console.log("---------------ddddd");
+      // Check if the user returned by pressing the back button or the browser closed
+      if (result.type === "cancel" || result.type === "dismiss") {
+        // Make API call to check payment status
+        const paymentStatus = await checkPaymentStatus();
+        console.log(paymentStatus, " ddddd");
+        if (paymentStatus.isSuccess) {
+          // Handle successful payment, e.g., navigate to confirmation page
+          dispatch(
+            globalSlice.actions.changeLoadings({
+              isLoading: false,
+              msg: "Chờ tí nhé...",
+            })
+          );
+          router.push("/order-details/" + orderIdAfterPayment);
+        } else {
+          // Handle payment failure
+          dispatch(
+            globalSlice.actions.changeLoadings({
+              isLoading: false,
+              msg: "Chờ tí nhé...",
+            })
+          );
+          console.log("Payment Failed!");
+        }
+      }
+    };
+
+    if (paymentUrl) {
+      handleVNPayRedirect();
+      // Linking.openURL(paymentUrl);
+    }
+  }, [paymentUrl]);
+  const checkPaymentStatus = async () => {
+    try {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: true,
+          msg: "Chờ tí nhé...",
+        })
+      );
+      console.log("Checking payment status...", paymentUrl);
+      const response = await api.get(
+        `/api/v1/customer/order/${orderIdAfterPayment}/payment/status`
+      );
+      console.log(response, " check vnpay");
+      const data = await response.data;
+      return data;
+    } catch (error) {
+      console.error("Error checking payment status", error);
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Chờ tí nhé...",
+        })
+      );
+      return { success: false };
+    }
+  };
   useEffect(() => {
     if (info && info.operatingSlots && Array.isArray(info.operatingSlots)) {
       const index = info.operatingSlots.findIndex(
@@ -87,7 +160,7 @@ const CartItemInShop = () => {
 
           result.push({
             label: label,
-            value: value++,
+            value: `${i}-${y}`,
           });
         }
         setListOperatingTime(result);
@@ -151,7 +224,6 @@ const CartItemInShop = () => {
     return () => {};
   }, [userInfo]);
   useEffect(() => {
-    dispatch(globalSlice.actions.changePositionTabBar(500));
     console.log(listItemInfo);
     if (shopId) {
       dispatch(getCartInfo(shopId));
@@ -161,28 +233,27 @@ const CartItemInShop = () => {
     return () => {
       dispatch(cartSlice.actions.resetStateListItemInfo());
       dispatch(orderSlice.actions.resetState());
-      dispatch(globalSlice.actions.changePositionTabBar(0));
       dispatch(shopDetailsSlice.actions.resetState());
     };
   }, []);
   useEffect(() => {
-    if (items[shopId]) {
-      dispatch(orderSlice.actions.calculateTotalProductPrice(items[shopId]));
-      dispatch(orderSlice.actions.changeProducts(items[shopId]));
+    if (items[shopId] && Array.isArray(items[shopId])) {
+      const newFoods = items[shopId].filter(
+        (food) => food.operatingSlotId == operatingSlotId
+      );
+      dispatch(orderSlice.actions.calculateTotalProductPrice(newFoods));
+      dispatch(orderSlice.actions.changeProducts(newFoods));
     }
   }, [items]);
-
+  useEffect(() => {
+    dispatch(orderSlice.actions.changeNote());
+  }, [products]);
   const handleOrder = async () => {
     try {
-      const { listVoucher, ...orther } = order;
-      console.log(orther);
       if (
-        !(
-          orderInfo.building &&
-          orderInfo.building.address != "" &&
-          orderInfo.building.latitude != 0 &&
-          orderInfo.building.longitude != 0
-        )
+        orderInfo.fullName == "" ||
+        orderInfo.phoneNumber == "" ||
+        orderInfo.buildingId == 0
       ) {
         dispatch(
           globalSlice.actions.customSnackBar({
@@ -198,20 +269,69 @@ const CartItemInShop = () => {
         );
         dispatch(
           globalSlice.actions.openSnackBar({
-            message: "Vui lòng cung địa chỉ giao hàng!!!",
+            message: "Vui lòng cung cấp thông tin giao hàng!!!",
           })
         );
         return;
       }
-      dispatch(globalSlice.actions.changeLoadings(true));
-      const res = await api.post("api/v1/customer/order", orther);
-      const data = await res.data;
-      console.log("dataa ordrrrrrrrrrrr", data);
-      if (data.isSuccess) {
-        dispatch(globalSlice.actions.changeLoadings(true));
-        router.push("/order/");
+
+      if (valueOperatingTime) {
+        const orderTime = {
+          isOrderNextDay: false,
+          startTime: parseInt(valueOperatingTime.split("-")[0]),
+          endTime: parseInt(valueOperatingTime.split("-")[1]),
+        };
+
+        const dataOrder = {
+          shopId: order.shopId,
+          ...orderInfo,
+          note: order.note,
+          foods: order.products,
+          orderTime,
+          voucherId: order.voucherId,
+          totalDiscount: orderPrice.voucher,
+          totalOrder: orderPrice.totalProduct - orderPrice.voucher,
+          totalFoodCost: orderPrice.totalProduct,
+          paymentMethod: paymentMethod,
+          shipInfo: order.ship,
+        };
+        console.log("data order", dataOrder);
+        dispatch(
+          globalSlice.actions.changeLoadings({
+            isLoading: true,
+            msg: "Chờ tí nhé...",
+          })
+        );
+        const res = await api.post("api/v1/customer/order", dataOrder);
+        const data = await res.data;
+        console.log("dataa ordrrrrrrrrrrr", data);
+        if (data.isSuccess) {
+          dispatch(
+            globalSlice.actions.changeLoadings({
+              isLoading: false,
+              msg: "Chờ tí nhé...",
+            })
+          );
+          if (paymentMethod == 1) {
+            console.log(data.value.paymentLink, " linkkkkkkkkkkkkkkkkk");
+            const qrUrl = data.value.paymentLink;
+
+            setOrderIdAfterPayment(data?.value?.order?.id);
+            setPaymentUrl(qrUrl);
+            // Linking.openURL(qrUrl)
+          } else {
+            router.push("/order-details/" + data?.value?.order?.id);
+          }
+        } else {
+          dispatch(
+            globalSlice.actions.changeLoadings({
+              isLoading: false,
+              msg: "Chờ tí nhé...",
+            })
+          );
+        }
       } else {
-        dispatch(globalSlice.actions.changeLoadings(false));
+        console.log("");
       }
     } catch (e) {
       dispatch(globalSlice.actions.changeLoadings(false));
@@ -291,8 +411,7 @@ const CartItemInShop = () => {
               value={valueOperatingTime}
               items={listOperatingTime}
               setOpen={setOpen}
-              onChangeValue={(value) => {
-              }}
+              onChangeValue={(value) => {}}
               setValue={setValueOperatingTime}
               setItems={setListOperatingTime}
               placeholder={operatingSlot?.title}
@@ -339,33 +458,41 @@ const CartItemInShop = () => {
                 <View className="mt-2 gap-2">
                   <View className="flex-row justify-between items-center">
                     <View className="flex-row items-center ">
-                      <Image source={images.Cod} style={{
-                        width: 40,
-                        height: 40,
-                        
-                        marginRight: 10,
-                      }}/>
-                      <Text className="text-base font-hnow64regular">Thanh toán khi nhận hàng</Text>
+                      <Image
+                        source={images.Cod}
+                        style={{
+                          width: 40,
+                          height: 40,
+
+                          marginRight: 10,
+                        }}
+                      />
+                      <Text className="text-base font-hnow64regular">
+                        Thanh toán khi nhận hàng
+                      </Text>
                     </View>
                     <RadioButton.Android
-                      value={1}
+                      value={2}
                       status={"checked"}
                       color={colors.primaryBackgroundColor}
                     />
                   </View>
                   <View className="flex-row justify-between items-center">
                     <View className="flex-row items-center">
-                      <Image source={images.VNPay} 
-                      
-                      style={{
-                        width: 40,
-                        height: 40,
-                        marginRight: 10,
-                      }}/>
-                      <Text className="text-base font-hnow64regular">Ví VNPay</Text>
+                      <Image
+                        source={images.VNPay}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          marginRight: 10,
+                        }}
+                      />
+                      <Text className="text-base font-hnow64regular">
+                        Ví VNPay
+                      </Text>
                     </View>
                     <RadioButton.Android
-                      value={2}
+                      value={1}
                       color={colors.primaryBackgroundColor}
                     />
                   </View>
@@ -385,7 +512,7 @@ const CartItemInShop = () => {
               <View>
                 <Button
                   icon="chevron-right"
-                  onPress={() => router.push("/cart/" + info.id + "/voucher")}
+                  onPress={() => router.push("/shop/voucher")}
                   style={{
                     margin: 0,
                     padding: 0,

@@ -30,6 +30,15 @@ const ShopLayout = () => {
           }}
         />
         <JsStack.Screen
+          name="voucher"
+          options={{
+            headerShown: false,
+            mode: "model",
+            gestureEnabled: true,
+            ...TransitionPresets.ModalPresentationIOS,
+          }}
+        />
+        <JsStack.Screen
           name="temp-cart"
           options={{
             title: "product-detail",
@@ -46,7 +55,7 @@ const ShopLayout = () => {
             headerShown: false,
           }}
         />
-          <JsStack.Screen
+        <JsStack.Screen
           name="change-info"
           options={{
             title: "product-detail",
@@ -56,7 +65,6 @@ const ShopLayout = () => {
             ...TransitionPresets.ModalPresentationIOS,
           }}
         />
-        
       </JsStack>
     </>
   );

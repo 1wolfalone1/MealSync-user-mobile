@@ -1,10 +1,13 @@
-import { ArrowRight } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { Dimensions, Image, StyleSheet, Text, View } from 'react-native';
-import { Button, Dialog, Portal } from 'react-native-paper';
-import { Colors } from '../../constant';
-import images from '../../constant/images';
-import { formatNumberVND, parseDateStringToOnlyDate } from '../../utils/MyUtils';
+import { ArrowRight } from "lucide-react-native";
+import React, { useState } from "react";
+import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
+import { Button, Dialog, Portal } from "react-native-paper";
+import { Colors } from "../../constant";
+import images from "../../constant/images";
+import {
+  formatNumberVND,
+  parseDateStringToOnlyDate,
+} from "../../utils/MyUtils";
 const styles = StyleSheet.create({
   shadow: {
     shadowOffset: { width: 4, height: 4 },
@@ -25,8 +28,8 @@ const styles = StyleSheet.create({
   },
 });
 const InactiveVoucher = ({ item }) => {
-  const [image, setImage] = useState('');
-  const { width, height } = Dimensions.get('window');
+  const [image, setImage] = useState("");
+  const { width, height } = Dimensions.get("window");
   const widthImage = parseInt((width * 25) / 100);
   const [open, setOpen] = useState(false);
   const handleCloseConditionText = () => {
@@ -34,9 +37,9 @@ const InactiveVoucher = ({ item }) => {
   };
   const genPromotionTitle = (item) => {
     if (item.applyType == 1) {
-      return `Giảm ${item.amountRate}% \nTối đa ${formatNumberVND(item.maximumApplyValue)}`;
+      return `Giảm ${item.amountRate}% \nTối đa ${formatNumberVND(item.maximumApplyValue)}\n  Áp dụng đơn hàng từ ${formatNumberVND(item.minimumOrdervalue)}`;
     } else {
-      return `Giảm ${formatNumberVND(item.amountValue)}  Áp dụng đơn hàng từ ${formatNumberVND(item.minimumOrderValue)}`;
+      return `Giảm ${formatNumberVND(item.amountValue)}  Áp dụng đơn hàng từ ${formatNumberVND(item.minimumOrdervalue)}`;
     }
   };
   return (
@@ -62,11 +65,11 @@ const InactiveVoucher = ({ item }) => {
         className="flex-row mb-4 justify-between"
         style={{
           height: widthImage,
-          width: '100%',
-          backgroundColor: 'white',
+          width: "100%",
+          backgroundColor: "white",
           ...styles.shadow,
           borderRadius: 16,
-          overflow: 'hidden',
+          overflow: "hidden",
         }}
       >
         <Image
@@ -87,12 +90,14 @@ const InactiveVoucher = ({ item }) => {
           <Text numberOfLines={5} className="font-hnow63book flex-1">
             {item.title}
           </Text>
-          <Text className="text-xs mb-1 text-gray-500">Giới hạn: {item.usageLimit} mã</Text>
+          <Text className="text-xs mb-1 text-gray-500">
+            Giới hạn: {item.usageLimit} mã
+          </Text>
           <View className="flex-row gap-2 flex-wrap h-[30]">
             <Text numberOfLines={1} className="text-primary">
               {parseDateStringToOnlyDate(item.startDate)}
             </Text>
-            <ArrowRight color={'red'} size={20} />
+            <ArrowRight color={"red"} size={20} />
             <Text numberOfLines={1} className="text-blue-500">
               {parseDateStringToOnlyDate(item.endDate)}
             </Text>

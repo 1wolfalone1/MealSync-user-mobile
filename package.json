@@ -14,7 +14,7 @@
   "jest": {
     "preset": "jest-expo"
   },
- "dependencies": {
+  "dependencies": {
     "@expo/vector-icons": "^14.0.0",
     "@gorhom/bottom-sheet": "^4.6.3",
     "@react-native-async-storage/async-storage": "^1.23.1",
@@ -107,4 +107,3 @@
   },
   "private": true
 }
- 

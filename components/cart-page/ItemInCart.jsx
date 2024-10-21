@@ -107,7 +107,7 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
           }, '');
           if (index == 0) {
             if (isHasRadio) {
-              toppingString += ' --- ' + item.topping.title + ': ' + checkBoxToppingString;
+              toppingString += ' -&- ' + item.topping.title + ': ' + checkBoxToppingString;
             } else {
               toppingString += item.topping.title + ': ' + checkBoxToppingString;
             }
@@ -153,11 +153,16 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
   };
   const handleSaveNote = () => {
     setOpenNote(false);
+    let toppingString2 = "";
+    if(toppingString) {
+      toppingString2 = `(${toppingString})`
+    }
     dispatch(
       cartSlice.actions.setNote({
         shopId: shopId,
         itemId: itemInCart.productId,
-        note: noteTemp,
+        note2: item.name + " " + toppingString2 + ": "+ noteTemp,
+        note: noteTemp
       }),
     );
   };
@@ -213,7 +218,7 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
   const handleViewTopping = () => {
     if(toppingString) {
       let string = '';
-      toppingString.split('---').forEach(item => {
+      toppingString.split('-&-').forEach(item => {
         string += item.trim() + "\n";
       })
       return string;

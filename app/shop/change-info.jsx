@@ -1,7 +1,6 @@
-import * as Location from "expo-location";
 import { router } from "expo-router";
 import { Formik } from "formik";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import {
@@ -20,7 +19,6 @@ import { Colors } from "../../constant";
 import colors from "../../constant/colors";
 import globalSlice from "../../redux/slice/globalSlice";
 import orderSlice, { orderSelector } from "../../redux/slice/orderSlice";
-import { dataShopDetailsSelector } from "../../redux/slice/shopDetailsSlice";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -49,14 +47,9 @@ const validationSchema = yup.object().shape({
 });
 const ChangeInfoPage = () => {
   const { orderInfo } = useSelector(orderSelector);
-  const [address, setAddress] = useState({});
   const [listBuilding, setListBuilding] = useState([]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
-  const apiKey = process.env.EXPO_PUBLIC_SERVICE_API;
-  const refSuggest = useRef();
-  const refMap = useRef();
-  const { info: shopInfo } = useSelector(dataShopDetailsSelector);
-  const refMarker = useRef();
+  
   const [openModelCreateBuilding, setOpenModelCreateBuilding] = useState(false);
   const [selectDormitoryId, setSelectDormitoryId] = useState(null);
   const [selectBuildingId, setSelectBuildingId] = useState(null);
@@ -66,23 +59,13 @@ const ChangeInfoPage = () => {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState(false)
   const [openB, setOpenB] = useState(false);
-  const [value, setValue] = useState(null);
-  const [items, setItems] = useState([
-    { label: "Bỏ trống", value: 0 },
-    { label: "Giá", value: 1 },
-    { label: "Sao", value: 2 },
-  ]);
   const [openSort, setOpenSort] = useState(false);
   const [openDropDownListDormitory, setOpenDropDownListDormitory] =
     useState(false);
   const [openDropDownListBuilding, setOpenDropDownListBuilding] =
     useState(false);
   const dispatch = useDispatch();
-  const [destination, setDestination] = useState({
-    latitude: 10.8387911,
-    longitude: 106.8347649,
-    name: "Vinhome Grand Park",
-  });
+ 
   const handleGetListBuilding = async () => {
     try {
       const res = await api.get("/api/v1/customer/building");
@@ -158,74 +141,17 @@ const ChangeInfoPage = () => {
       );
     }
   };
-  const [origin, setOrigin] = useState([
-    {
-      latitude: 10.8387911,
-      longitude: 106.8347649,
-      name: "Vinhome Grand Park",
-    },
-  ]);
-  useEffect(() => {
-    Location.requestForegroundPermissionsAsync();
-    if (shopInfo && shopInfo.building) {
-      setDestination({
-        latitude: shopInfo.building.latitude,
-        longitude: shopInfo.building.longitude,
-        name: shopInfo.building.name,
-      });
-    }
-    if (orderInfo.building) {
-      setOrigin([
-        {
-          address: orderInfo.building.address,
-          latitude: orderInfo.building.latitude,
-          longitude: orderInfo.building.longitude,
-        },
-      ]);
-    }
-    if (refMarker?.current) {
-      refMarker.current.showCallout();
-    }
-  }, []);
-  useEffect(() => {
-    if (refSuggest) {
-      if (refSuggest.current) {
-        console.log(origin[0], " origina");
-        refSuggest?.current?.setAddressText(origin[0].address);
-      }
-    }
-  }, [origin]);
+ 
+
   const handleUpdateOrderInfo = (values) => {
     if (false) {
-      console.log("dsfasdfasdfasdff");
-      dispatch(
-        globalSlice.actions.customSnackBar({
-          style: {
-            color: "white",
-            backgroundColor: Colors.glass.red,
-            pos: {
-              top: 40,
-            },
-            actionColor: "yellow",
-          },
-        })
-      );
-      dispatch(
-        globalSlice.actions.openSnackBar({
-          message: "Địa chỉ không thể bỏ trống!!!",
-        })
-      );
+     
     } else {
       dispatch(
         orderSlice.actions.changeOrderInfo({
           fullName: values.fullName,
           phoneNumber: values.phoneNumber,
           buildingId: selectedBuilding,
-          building: {
-            address: origin[0].address,
-            longitude: origin[0].longitude,
-            latitude: origin[0].latitude,
-          },
         })
       );
       dispatch(
@@ -416,7 +342,7 @@ const ChangeInfoPage = () => {
           initialValues={{
             phoneNumber: orderInfo.phoneNumber,
             fullName: orderInfo.fullName,
-            building: orderInfo.building.address,
+            building: orderInfo.buildingId,
           }}
           onSubmit={(values) => {
             console.log("----------------------submit--------------------");
