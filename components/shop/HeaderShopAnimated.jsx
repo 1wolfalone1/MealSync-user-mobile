@@ -92,6 +92,7 @@ const HeaderShopAnimated = ({
     outputRange: [Header_Max_Height, Header_Min_Height],
     extrapolate: "clamp",
   });
+  console.log(' =================================================================')
   useEffect(() => {
     console.log(shopInfo, " asdfasdfasdfaaaaaaaaaaaaaaaaaaaaaa");
     if (shopInfo) {

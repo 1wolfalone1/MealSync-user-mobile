@@ -37,7 +37,7 @@ const initialState = {
         endTime: 100,
       },
     ],
-    foodOptionGroups: [
+    optionGroups: [
       {
         displayOrder: 1,
         optionGroup: {
@@ -108,9 +108,7 @@ const shopDetailsSlice = createSlice({
           return;
         }
       }
-      const topping = state.topping.find(
-        (item) => item.id === toppingId
-      );
+      const topping = state.topping.find((item) => item.id === toppingId);
       const listOption = topping.options.filter((item) => {
         if (checks.find((optionId) => optionId === item.id)) {
           return true;
@@ -165,10 +163,15 @@ const shopDetailsSlice = createSlice({
       })
       .addCase(getProductDetailsById.fulfilled, (state, action) => {
         state.product = action.payload;
-        const newToppingList = action.payload.foodOptionGroups.map((item) => {
-          return item.optionGroup
-        })
-        state.topping = newToppingList
+        if (
+          action.payload.optionGroups &&
+          Array.isArray(action.payload.optionGroups)
+        ) {
+          const newToppingList = action.payload.optionGroups.map((item) => {
+            return item.optionGroup;
+          });
+          state.topping = newToppingList;
+        }
       })
       .addCase(getProductDetailsById.rejected, (state, action) => {
         console.log(action.payload);

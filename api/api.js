@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { router } from "expo-router";
 const api = axios.create({
   baseURL: "https://api.mealsync.org",
 
@@ -27,26 +28,36 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
-// api.interceptors.response.use(
-//    (response) => {
-//       console.log(response);
-//       // Edit response config
-//       return response;
-//    },
-//    (error) => {
-//       console.log(error);
-//       if (error.response.status === 423) {
-//          console.log("error 423");
-//          window.location.href = "/handle-banned?auth=403";
-//       } else if (error.response.status === 406) {
-//          window.location.href = "/login?auth=406";
-//       } else if (error.response.status === 401) {
-//          console.log(error.response)
-//          window.location.href = `${process.env.REACT_APP_REDIRECT_USER}login?error=6`;
-//       } else {
-//          throw error;
-//       }
-//    }
-// )
+api.interceptors.response.use(
+  (response) => {
+    console.log(response);
+    return response;
+  },
+  (error) => {
+    console.log(error);
+    if (error.response.status === 423) {
+      console.log("error 423");
+    } else if (error.response.status === 406) {
+    } else if (error.response.status === 401) {
+      console.log(error.response);
+      router.navigate({
+        pathname: "/",
+        params: {
+          messageError: "Bạn cần đăng nhập để tiếp tục sử dụng ứng dụng!",
+        },
+      });
+    } else if (error.response.status === 403) {
+      console.log(error.response);
+      router.navigate({
+        pathname: "/",
+        params: {
+          messageError: "Bạn cần đăng nhập để tiếp tục sử dụng ứng dụng!",
+        },
+      });
+    } else {
+      throw error;
+    }
+  }
+);
 
 export default api;

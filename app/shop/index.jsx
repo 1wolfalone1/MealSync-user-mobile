@@ -1,3 +1,4 @@
+import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -35,6 +36,7 @@ import shopDetailsSlice, {
   shopInfoSelector,
 } from "../../redux/slice/shopDetailsSlice";
 
+const listEmpty = new Array(9).fill(null);
 const ShopPage = () => {
   const { width, height } = Dimensions.get("window");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -52,10 +54,11 @@ const ShopPage = () => {
   const dispatch = useDispatch();
   const { totalPage } = useSelector(dataShopDetailsSelector);
   const [isLoading, setLoading] = useState(true);
+  
+  const isFocus = useIsFocused();
   const { refreshing, onRefreshHandler } = usePullToRefresh({
     onRefreshFunction() {
       setCurrentPage(1);
-      console.log("tgestsdfasdfasdfasdfasdf");
       dispatch(getListAllProductsInShop(shopId));
     },
   });
@@ -68,7 +71,6 @@ const ShopPage = () => {
     initialPage: 1,
   });
   useEffect(() => {
-    console.log("height: " + height);
   }, [height]);
   const { shopId } = params;
   const product = {
@@ -83,27 +85,21 @@ const ShopPage = () => {
     status: "active",
     shop_id: "shop01",
   };
-  console.log(params, " params");
   useEffect(() => {
     const subscription = Dimensions.addEventListener(
       "change",
       ({ window, screen }) => {
-        console.log(window, "window");
-        console.log(screen, "screen");
       }
     );
     return () => subscription?.remove();
-  });
+  }, []);
   useEffect(() => {
     dispatch(getListPromotionInShop(shopId));
     dispatch(getShopInfo(shopId));
     dispatch(getListBestProduct(shopId));
-    console.log();
 
     dispatch(getListAllProductsInShop(shopId));
     const listener = scrollOffsetY.addListener(({ value }) => {
-      // console.log(value, ' scroll value');
-      console.info("test", " asdfasd");
       if (value <= height + 100) {
         setScrollEventThrottle(10000);
       } else {
@@ -122,7 +118,6 @@ const ShopPage = () => {
         setIsSearchOpen(false);
       }
     });
-    console.log(" testtstest");
 
     dispatch(globalSlice.actions.changeStateOpenFabInShop(true));
     return () => {
@@ -131,7 +126,6 @@ const ShopPage = () => {
       scrollOffsetY.removeListener(listener);
     };
   }, []);
-  const listEmpty = new Array(9).fill(null);
 
   return (
     <SafeAreaView
@@ -178,7 +172,7 @@ const ShopPage = () => {
         }}
         ListHeaderComponent={() => {
           return (
-            <View className="mt-4">
+            <View className="mt-4" key={1}>
               <View className="flex-row  items-center px-8  mt-5">
                 <Image
                   className="rounded-md"

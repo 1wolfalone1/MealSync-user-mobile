@@ -224,3 +224,51 @@ export function convertIntTimeToString(time) {
   return "";
   // Extract hours and minutes from the string
 }
+export function isTodayInVietnam(timestamp) {
+  // Convert the UTC timestamp to a Date object
+  const date = new Date(timestamp);
+
+  // Convert the UTC date to Vietnam's timezone (UTC+7)
+  const vietnamOffset = 7 * 60; // UTC+7 offset in minutes
+  const vietnamDate = new Date(date.getTime() + vietnamOffset * 60 * 1000);
+  // Get the current date in Vietnam's timezone
+  const now = new Date();
+  const vietnamNow = new Date(now.getTime() + vietnamOffset * 60 * 1000);
+  // Check if the date part matches
+  return (
+    vietnamDate.getUTCFullYear() === vietnamNow.getUTCFullYear() &&
+    vietnamDate.getUTCMonth() === vietnamNow.getUTCMonth() &&
+    vietnamDate.getUTCDate() === vietnamNow.getUTCDate()
+  );
+}
+export function isBeforeOneHour(timeString) {
+  // Parse the input time string (e.g., 800 -> 8:00 or 1700 -> 17:00)
+  const options = {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  };
+  const dateObj= new Date()
+  // Format the date and time in the desired format
+  const formattedDate = dateObj.toLocaleString("en-US", options);
+  console.log(formattedDate)
+  console.log(timeString, ' time')
+  const hour = Math.floor(timeString / 100);
+  const minute = timeString % 100;
+  console.log(hour, minute, "hour asdsdsd");
+  // Get the current time in Vietnam's timezone (UTC+7)
+  const now = new Date();
+  const vietnamNow = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+
+  // Create a Date object for the target time in Vietnam's timezone today
+  const targetTime = new Date();
+  const test = targetTime.setUTCHours(hour,minute, 0, 0);
+  // Check if the current time is before the target time by at least an hour
+  const oneHourBeforeTarget = new Date(targetTime.getTime() - 60 * 60 * 1000);
+  console.log(oneHourBeforeTarget, vietnamNow, "sdffddddd")
+  return vietnamNow < oneHourBeforeTarget;
+}

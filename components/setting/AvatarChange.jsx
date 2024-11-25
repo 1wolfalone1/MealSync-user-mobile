@@ -1,12 +1,12 @@
-import * as ImagePicker from 'expo-image-picker';
-import React, { useEffect, useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
-import { Avatar, Button, IconButton } from 'react-native-paper';
-import { useDispatch, useSelector } from 'react-redux';
-import api from '../../api/api';
-import { Colors } from '../../constant';
-import commonConstants from '../../constant/common';
-import { loadInfo, userInfoSliceSelector } from '../../redux/slice/userSlice';
+import * as ImagePicker from "expo-image-picker";
+import React, { useEffect, useState } from "react";
+import { Platform, StyleSheet, Text, View } from "react-native";
+import { Avatar, Button, IconButton } from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
+import api from "../../api/api";
+import { Colors } from "../../constant";
+import commonConstants from "../../constant/common";
+import { loadInfo, userInfoSliceSelector } from "../../redux/slice/userSlice";
 const styles = StyleSheet.create({
   shadow: {
     shadowOffset: { width: 5, height: 8 },
@@ -39,16 +39,17 @@ const AvatarChange = ({}) => {
   }, [info]);
 
   const pickImage = async () => {
-    console.log(' -----------------pick image----------------');
-    if (Platform.OS !== 'web') {
-      const libraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (libraryStatus.status !== 'granted') {
-        alert('Sorry, we need camera roll permissions to make this work!');
+    console.log(" -----------------pick image----------------");
+    if (Platform.OS !== "web") {
+      const libraryStatus =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (libraryStatus.status !== "granted") {
+        alert("Sorry, we need camera roll permissions to make this work!");
       }
 
       const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
-      if (cameraStatus.status !== 'granted') {
-        alert('Sorry, we need camera permissions to make this work!');
+      if (cameraStatus.status !== "granted") {
+        alert("Sorry, we need camera permissions to make this work!");
       }
     }
 
@@ -64,24 +65,22 @@ const AvatarChange = ({}) => {
     }
   };
   const handleSaveAvatar = async () => {
-    console.log(' -----------------save avatar----------------');
+    console.log(" -----------------save avatar----------------");
     try {
       const formData = new FormData();
-      formData.append('avatarImageFile', {
+      formData.append("file", {
         uri: avatar,
-        type: 'image/jpg',
-        name: 'image.jpg',
+        type: "image/jpg",
+        name: "image.jpg",
       });
-      const res = await api.put('/api/v1/customer/upload/' + info.id, formData, {
+      const res = await api.put("/api/v1/customer/avatar", formData, {
         headers: {
-          'Content-type': 'multipart/form-data',
+          "Content-type": "multipart/form-data",
         },
       });
       const data = await res.data;
-      if (data.isSuccess) {
-        dispatch(loadInfo());
-      }
-      console.log(data, 'data upload image');
+      dispatch(loadInfo());
+      console.log(data, "data upload image");
     } catch (e) {
       console.log(e);
     }
@@ -91,7 +90,7 @@ const AvatarChange = ({}) => {
       <View
         style={{
           ...styles.shadow,
-          backgroundColor: 'white',
+          backgroundColor: "white",
           borderRadius: 100,
         }}
       >
@@ -105,13 +104,13 @@ const AvatarChange = ({}) => {
           mode="contained-tonal"
           className="absolute right-[-10] bottom-[-10] "
           onPress={pickImage}
-          icon={'camera'}
+          icon={"camera"}
           iconColor={Colors.primaryBackgroundColor}
           disabled={!isChangeMode}
         />
       </View>
       <Text className="font-hnow64regular text-2xl mt-8">
-        {info?.fullname ? info.fullname : 'Khách hàng'}
+        {info?.fullname ? info.fullname : "Khách hàng"}
       </Text>
       {isChangeMode ? (
         <>
@@ -119,8 +118,8 @@ const AvatarChange = ({}) => {
             <Button
               labelStyle={{
                 fontSize: 18,
-                color: 'blue',
-                fontFamily: 'HeadingNow-63Book',
+                color: "blue",
+                fontFamily: "HeadingNow-63Book",
               }}
               mode="outlined"
               onPress={() => {
@@ -134,13 +133,13 @@ const AvatarChange = ({}) => {
               mode="contained-tonal"
               labelStyle={{
                 fontSize: 18,
-                color: 'blue',
-                fontFamily: 'HeadingNow-63Book',
+                color: "blue",
+                fontFamily: "HeadingNow-63Book",
               }}
               onPress={() => {
-                console.log('asdfasf');
+                console.log("asdfasf");
                 handleSaveAvatar();
-                setIsChangeMode(!isChangeMode)
+                setIsChangeMode(!isChangeMode);
               }}
             >
               Lưu ảnh
@@ -151,8 +150,8 @@ const AvatarChange = ({}) => {
         <Button
           labelStyle={{
             fontSize: 18,
-            color: isChangeMode ? 'blue' : 'grey',
-            fontFamily: 'HeadingNow-63Book',
+            color: isChangeMode ? "blue" : "grey",
+            fontFamily: "HeadingNow-63Book",
           }}
           onPress={() => setIsChangeMode(!isChangeMode)}
         >

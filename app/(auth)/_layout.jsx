@@ -1,4 +1,3 @@
-import { Redirect, useRootNavigationState } from "expo-router";
 import React from "react";
 import { Image, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -6,11 +5,11 @@ import MaterialTopBar from "../../components/custom-stack/MaterialTopBar";
 import colors from "../../constant/colors";
 import icons from "../../constant/icons";
 const AuthLayout = () => {
-  const rootNavigationState = useRootNavigationState();
+ /*  const rootNavigationState = useRootNavigationState();
   if (true) {
     if (!rootNavigationState?.key) return null;
     return <Redirect href={'/home'}/>
-  }
+  } */
   return (
     <SafeAreaView
       className="flex-1 bg-primary rounded-sm"

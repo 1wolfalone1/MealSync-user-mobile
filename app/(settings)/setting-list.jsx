@@ -10,41 +10,42 @@ import { useDispatch } from 'react-redux';
 import HeaderSimple from '../../components/common/HeaderSimple';
 import AvatarChange from '../../components/setting/AvatarChange';
 import colors from '../../constant/colors';
+import globalSlice from '../../redux/slice/globalSlice';
 
 const SettingsLayout = () => {
   const dispatch = useDispatch();
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <HeaderSimple title={'Cài đặt'} />
+      <HeaderSimple title={"Cài đặt"} />
 
       <View>
         <AvatarChange />
         <View>
-          <TouchableRipple onPress={() => router.push('/user')}>
+          <TouchableRipple onPress={() => router.push("/user")}>
             <View className="flex-row gap-4 items-center p-2 pl-5">
               <Contact size={30} color={colors.primaryBackgroundColor} />
               <Text className="text-lg text-primary">Thay đổi thông tin</Text>
             </View>
           </TouchableRipple>
           <Divider className="w-full" style={{ height: 1 }} />
-     
+
           <Divider className="w-full" style={{ height: 1 }} />
           <TouchableRipple
             onPress={async () => {
               try {
                 const a = await auth().signOut();
-                console.log(a, ' sign out ------------------------------');
+                console.log(a, " sign out ------------------------------");
 
-                await AsyncStorage.setItem('@token', '');
-                await AsyncStorage.setItem('@statusLogin', '');
+                await AsyncStorage.setItem("@token", "");
+                await AsyncStorage.setItem("@statusLogin", "");
               } catch (e) {
-                const a = await auth().signOut();
-                console.log(a, ' sign out ------------------------------');
+                console.log(" sign out ------------------------------", 3);
 
-                await AsyncStorage.setItem('@token', '');
-                await AsyncStorage.setItem('@statusLogin', '');
+                await AsyncStorage.setItem("@token", "");
+                await AsyncStorage.setItem("@statusLogin", "");
               }
-              router.push('/sign-in');
+              dispatch(globalSlice.actions.resetState());
+              router.push("/");
             }}
           >
             <View className="flex-row gap-4 items-center p-2 pl-5">

@@ -16,7 +16,6 @@ const HeaderStickyShop = ({ shopInfo, isHeaderTop, shopName, heightHeaderSticky 
         shopId: shopInfo?.id,
       });
       const data = await res.data;
-      console.log(data, ' favourite shop api');
       if (data.isSuccess) {
         dispatch(shopDetailsSlice.actions.toggleFavouriteShop());
       }
@@ -37,7 +36,9 @@ const HeaderStickyShop = ({ shopInfo, isHeaderTop, shopName, heightHeaderSticky 
           containerColor={!isHeaderTop ? Colors.glassShopHeader : 'transparent'}
           size={40}
           theme={{ padding: 5 }}
-          onPress={() => router.back()}
+          onPress={() => {
+            router.navigate('/home')
+          }}
           className="p-0"
           style={{ borderRadius: 16 }}
         />

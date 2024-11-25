@@ -30,11 +30,15 @@ const styles = StyleSheet.create({
 const FloatCartButton = () => {
   const [state, setState] = React.useState({ open: false });
   const { openFabInShop } = useSelector(globalSelector);
-  const onStateChange = ({ open }) => setState({ open });
+  const onStateChange = ({ open }) => {
+    setState({ open });
+  };
 
   const { open } = state;
 
   const { items } = useSelector(cartSelector);
+
+  const data = useSelector(cartSelector);
   const { info } = useSelector(dataShopDetailsSelector);
   const [cartQuantity, setCartQuantity] = useState(0);
   const [operatingSlots, setOperatingSlots] = useState([]);
@@ -48,7 +52,6 @@ const FloatCartButton = () => {
           ? null
           : items[info?.id].length + " sản phẩm  "
       );
-      console.log(items, " cart info");
     } else {
       setCartTitle(null);
     }
@@ -83,7 +86,10 @@ const FloatCartButton = () => {
       setOperatingSlots(newOperatingSlots);
     }
   }, [info, items]);
-
+  useEffect(() => {
+    return () => {
+    }
+  }, [])
   const handleOpenTempCart = () => {
     if (items[info?.id]) {
       router.push("/shop/temp-cart");
@@ -111,9 +117,11 @@ const FloatCartButton = () => {
   return (
     <Portal>
       <FAB.Group
+        key={'asdfasfd'}
         open={open}
         visible={openFabInShop}
         label={cartTitle}
+        testID="dsf"
         fabStyle={{}}
         style={{}}
         icon={open ? "cart-outline" : "cart-outline"}
@@ -121,7 +129,7 @@ const FloatCartButton = () => {
         onStateChange={onStateChange}
         onPress={() => {
           if (open) {
-            handleOpenTempCart();
+            // handleOpenTempCart();
             // do something if the speed dial is open
           }
         }}

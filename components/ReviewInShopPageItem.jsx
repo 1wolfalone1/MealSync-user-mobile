@@ -36,7 +36,7 @@ const ReviewInShopPageItem = ({ item }) => {
       <View className="flex-row">
         <Image
           source={{
-            uri: item.accountAvartar,
+            uri: item.reviews[0].avatar,
           }}
           style={{
             width: 40,
@@ -46,8 +46,8 @@ const ReviewInShopPageItem = ({ item }) => {
         />
         <View className="flex-1 ml-2">
           <View className="flex-row justify-between items-start flex-1">
-            <Text className="font-bold">{item.accountName}</Text>
-            <Text className="text-gray-500 text-xs">{formatDateTime(item.createdDate)}</Text>
+            <Text className="font-bold">{ item.reviews[0].name}</Text>
+            <Text className="text-gray-500 text-xs">{formatDateTime(1729947350607)}</Text>
           </View>
           <View
             style={{
@@ -62,7 +62,7 @@ const ReviewInShopPageItem = ({ item }) => {
                 alignItems: 'flex-start',
               }}
               readonly
-              startingValue={item.rating}
+              startingValue={item.reviews[0].rating}
               imageSize={12}
             />
           </View>
@@ -74,10 +74,10 @@ const ReviewInShopPageItem = ({ item }) => {
           <Text className="flex-wrap ">{item.comment}</Text>
         </View>
         <View className="flex-row justify-between items-end">
-          {item.images && Array.isArray(item.images) && item.images[0] != '' ? (
+          {item.reviews[0].imageUrls && Array.isArray(item.reviews[0].imageUrls) && item.reviews[0].imageUrls[0] != '' ? (
             <Image
               source={{
-                uri: item.images[0],
+                uri: item.reviews[0].imageUrls[0],
               }}
               style={{
                 width: 100,
@@ -87,7 +87,7 @@ const ReviewInShopPageItem = ({ item }) => {
             />
           ): <View>
             </View>}
-          <Text className="text-green-600 text-xs">{item.productOrders}</Text>
+          <Text className="text-green-600 text-xs">{item.orderId}</Text>
         </View>
       </View>
     </View>

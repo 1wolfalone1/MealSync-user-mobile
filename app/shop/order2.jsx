@@ -38,7 +38,7 @@ import { convertIntTimeToString, formatQuantity } from "../../utils/MyUtils";
 
 const CartItemInShop = () => {
   const apiKey = process.env.EXPO_PUBLIC_SERVICE_API;
-  const { shopId, operatingSlotId } = useLocalSearchParams();
+  const { shopId, operatingSlotId, orderTomorrow } = useLocalSearchParams();
 
   const [open, setOpen] = useState(false);
   const [orderIdAfterPayment, setOrderIdAfterPayment] = useState(0);
@@ -58,7 +58,7 @@ const CartItemInShop = () => {
   const { orderPrice, ship, products } = useSelector(orderSelector);
   const totalOrderPrice = useSelector(orderTotalOrderSelector);
   const dispatch = useDispatch();
-  const { orderInfo, voucher } = useSelector(orderSelector);
+  const { orderInfo, voucher, itemsInCart } = useSelector(orderSelector);
   const [operatingSlot, setOperatingSlot] = useState();
   const [paymentMethod, setPaymentMethod] = useState(2);
   const [paymentUrl, setPaymentUrl] = useState(null);
@@ -169,9 +169,23 @@ const CartItemInShop = () => {
   }, [info]);
   useEffect(() => {
     if (items && items[shopId] && Array.isArray(items[shopId])) {
-      const listItemInCartBySlotTemp = items[shopId].filter((i) => {
-        return i.operatingSlotId == operatingSlotId;
-      });
+      const listItemInCartBySlotTemp = items[shopId].reduce((acc, i) => {
+        if (itemsInCart[i.productId] && i.operatingSlotId == operatingSlotId) {
+          return [
+            ...acc,
+            {
+              ...i,
+              info: itemsInCart[i.productId].info,
+            },
+          ];
+        } else {
+          return acc;
+        }
+      }, []);
+      console.log(
+        listItemInCartBySlotTemp,
+        " temppppppppppppppppppppppppppppppppp"
+      );
       setListItemInCartBySlot(listItemInCartBySlotTemp);
     } else {
       setListItemInCartBySlot([]);
@@ -213,6 +227,7 @@ const CartItemInShop = () => {
         orderSlice.actions.changeOrderInfo({
           fullName: userInfo.fullName,
           phoneNumber: userInfo.phoneNumber,
+          buildingId: userInfo?.building?.id,
           building: {
             address: userInfo?.building?.address,
             longitude: userInfo?.building?.longitude,
@@ -239,7 +254,7 @@ const CartItemInShop = () => {
   useEffect(() => {
     if (items[shopId] && Array.isArray(items[shopId])) {
       const newFoods = items[shopId].filter(
-        (food) => food.operatingSlotId == operatingSlotId
+        (food) => itemsInCart[food.productId]
       );
       dispatch(orderSlice.actions.calculateTotalProductPrice(newFoods));
       dispatch(orderSlice.actions.changeProducts(newFoods));
@@ -277,7 +292,7 @@ const CartItemInShop = () => {
 
       if (valueOperatingTime) {
         const orderTime = {
-          isOrderNextDay: false,
+          isOrderNextDay: orderTomorrow == "true" ? true : false,
           startTime: parseInt(valueOperatingTime.split("-")[0]),
           endTime: parseInt(valueOperatingTime.split("-")[1]),
         };
@@ -363,6 +378,7 @@ const CartItemInShop = () => {
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
+        <View className="flex-row justify-center my-4 "></View>
         <OrderInfoViewInCart userInfo={userInfo} info={info} />
         <View className="my-0 pl-8">
           <View className="flex-row items-center">
@@ -416,6 +432,9 @@ const CartItemInShop = () => {
               setItems={setListOperatingTime}
               placeholder={operatingSlot?.title}
             />
+            <Text className="text-gray-700 text-lg">
+              {orderTomorrow == "true" ? "Đặt hàng cho ngày mai" : "Đặt hàng cho hôm nay"}
+            </Text>
           </View>
         </View>
         <View className="p-8" style={{ zIndex: -1 }}>

@@ -5,6 +5,7 @@ import api from '../../../api/api';
 import ItemBestSellerInHome from '../../../components/user-page/ItemBestSellerInHome';
 import ItemShopRegulerInHome from '../../../components/user-page/ItemShopRegulerInHome';
 import { Colors } from '../../../constant';
+import cartSlice, { cartSelector } from '../../../redux/slice/cartSlice';
 import globalSlice from '../../../redux/slice/globalSlice';
 import { userInfoSliceSelector } from '../../../redux/slice/userSlice';
 const Index = () => {
@@ -14,6 +15,8 @@ const Index = () => {
   const dispatch = useDispatch()
   const widthCategory = parseInt((width * 15) / 100);
   const userData = useSelector(userInfoSliceSelector);
+  
+  const data = useSelector(cartSelector);
   const styles = StyleSheet.create({
     shadow: {
       shadowOffset: { width: 5, height: 8 },
@@ -58,9 +61,12 @@ const Index = () => {
       setDataTopShop(data.value.items);
     } catch (err) {
       console.log(err, ' error in ItemShopRegulerInHome ');
+
     }
   };
-  
+  useEffect(() => {
+    dispatch(cartSlice.actions.resetStateListItemInfo()) 
+  }, []) 
   useEffect(() => {
   dispatch(globalSlice.actions.changeLoadings({
           isLoading: false,

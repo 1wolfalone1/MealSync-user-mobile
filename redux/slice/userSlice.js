@@ -47,9 +47,9 @@ export default userInfoSlice;
 
 export const loadInfo = createAsyncThunk('userSlice/loadInfo', async () => {
   try {
-    const res = await api.get('/api/v1/customer');
+    const res = await api.get('/api/v1/customer/profile');
     const data = await res.data;
-    console.log(data);
+    console.log(data, " user data 2");
     return data.value;
   } catch (e) {
     console.log(e);

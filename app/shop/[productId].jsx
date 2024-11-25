@@ -14,6 +14,7 @@ import {
 import {
   Button,
   Chip,
+  Dialog,
   Divider,
   Modal,
   Portal,
@@ -69,7 +70,7 @@ const ProductDetail = () => {
       let isValid = true;
       topping.forEach((item) => {
         if (item.isRequire) {
-          if (toppingSelected.radio[item.id]) {
+          if (!toppingSelected.radio[item.id]) {
             isValid = false;
           }
         }
@@ -83,11 +84,14 @@ const ProductDetail = () => {
   const [canAddTooCart, setCanAddTooCart] = useState(true);
   const [openOperatingSlotsSelect, setOpenOperatingSlotsSelect] =
     useState(false);
+  const [openDialogIsSoldOut, setOpenDialogIsSoldOut] = useState(false);
+  const [openDialogIsOrderPaused, setOpenDialogIsOrderPaused] = useState(false);
+  const [dataOperatingSlotsSelect, setDataOperatingSlotsSelect] = useState({});
   const handleAddLike = () => {
     setIsLiked(!isLiked);
   };
   console.log(product, " product detials in selector");
-  const [totalOrder, setTotalOrder] = useState(product.total_order || 0);
+  const [totalOrder, setTotalOrder] = useState(product.total_order || 1);
 
   const handleDecrease = () => {
     if (totalOrder > 0) {
@@ -124,7 +128,7 @@ const ProductDetail = () => {
 
       dispatch(
         globalSlice.actions.openSnackBar({
-          message: "Add to Cart successfully",
+          message: "Add to Cart successfully a",
         })
       );
       router.back();
@@ -155,6 +159,39 @@ const ProductDetail = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <Portal>
+        <Dialog
+          visible={openDialogIsSoldOut}
+          onDismiss={() => {
+            setOpenDialogIsSoldOut(false);
+          }}
+        >
+          <Dialog.Title>Đồ ăn đã bán hết</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">
+              Hiện tại, cửa hàng đã ngừng nhận đơn đặt hàng cho đồ ăn/thức uống
+              này trong hôm nay. Bạn vẫn có thể đặt trước cho ngày mai.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button
+              onPress={() => {
+                setOpenDialogIsSoldOut(false);
+              }}
+            >
+              Hủy
+            </Button>
+            <Button
+              onPress={() => {
+                setOpenDialogIsSoldOut(false);
+                setOpenOperatingSlotsSelect(true);
+              }}
+            >
+              Tiếp tục
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+      <Portal>
         <Modal
           visible={openOperatingSlotsSelect}
           onDismiss={handleDismissOperatingSlotsSelect}
@@ -172,12 +209,28 @@ const ProductDetail = () => {
             <View key={item.id}>
               <TouchableRipple
                 className="py-4"
-                onPress={() => handleAddToCart(item.id)}
+                onPress={() => {
+                  if (
+                    info.isReceivingOrderPaused ||
+                    item.isReceivingOrderPaused
+                  ) {
+                    setOpenDialogIsOrderPaused(true);
+                    setDataOperatingSlotsSelect(item);
+                  } else {
+                    handleAddToCart(item.id);
+                  }
+                }}
               >
                 <View className="flex-row justify-between items-center">
                   <Text className="text-base text-gray-800">
                     {item.title} từ {convertIntTimeToString(item.startTime)} đến{" "}
                     {convertIntTimeToString(item.endTime)}
+                    {item.isReceivingOrderPaused || info.isReceivingOrderPaused
+                      ? <Text className="text-sm text-red-400">
+                         {"\n"}Ngừng nhận đơn đặt hàng trong khung giờ này
+                      </Text>
+                      : ""}
+                    
                   </Text>
                   <ChevronRight size={18} color={"grey"} />
                 </View>
@@ -197,6 +250,41 @@ const ProductDetail = () => {
               Hủy
             </Button>
           </View>
+          <Dialog
+            visible={openDialogIsOrderPaused}
+            onDismiss={() => {
+              setOpenDialogIsOrderPaused(false);
+            }}
+          >
+            <Dialog.Title>Cửa hàng ngừng nhận hàng</Dialog.Title>
+            <Dialog.Content>
+              <Text variant="bodyMedium">
+                Cửa hàng đã ngừng nhận đơn đặt hàng cho đồ ăn/thức uống này
+                trong khoảng thời gian {dataOperatingSlotsSelect.title} từ{" "}
+                {convertIntTimeToString(dataOperatingSlotsSelect.startTime)} đến{" "}
+                {convertIntTimeToString(dataOperatingSlotsSelect.endTime)}. Bạn
+                vẫn có thể đặt trước cho ngày mai.
+              </Text>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button
+                onPress={() => {
+                  setOpenDialogIsOrderPaused(false);
+                }}
+              >
+                Hủy
+              </Button>
+              <Button
+                onPress={() => {
+                  setOpenDialogIsOrderPaused(false);
+                  setOpenOperatingSlotsSelect(false);
+                  handleAddToCart(dataOperatingSlotsSelect.id);
+                }}
+              >
+                Tiếp tục
+              </Button>
+            </Dialog.Actions>
+          </Dialog>
         </Modal>
       </Portal>
       <FloatCartButton />
@@ -272,12 +360,8 @@ const ProductDetail = () => {
                   data={product?.operatingSlots}
                   ItemSeparatorComponent={() => <View className="w-[16]" />}
                   renderItem={({ item }) => (
-                    <Chip
-                    
-                    background={'red'}
-                    mode=""
-                    >
-                      {convertIntTimeToString(item.startTime)} - 
+                    <Chip background={"red"} mode="">
+                      {convertIntTimeToString(item.startTime)} -
                       {convertIntTimeToString(item.endTime)}
                     </Chip>
                   )}
@@ -286,7 +370,7 @@ const ProductDetail = () => {
               <Text className="text-gray-500 my-4">{product.description}</Text>
 
               <View className="flex-1">
-                {product.foodOptionGroups.map((item, index) => (
+                {product.optionGroups.map((item, index) => (
                   <ToppingItem topping={item} key={item.id} />
                 ))}
               </View>
@@ -298,14 +382,20 @@ const ProductDetail = () => {
         <Button
           textColor="white"
           mode="elevated"
-          disabled={canAddTooCart}
+          disabled={!canAddTooCart}
           buttonColor={Colors.primaryBackgroundColor}
           className="rounded-full items-center"
           labelStyle={{
             padding: 2,
           }}
           icon="shopping"
-          onPress={() => setOpenOperatingSlotsSelect(true)}
+          onPress={() => {
+            if (product.isSoldOut) {
+              setOpenDialogIsSoldOut(true);
+            } else {
+              setOpenOperatingSlotsSelect(true);
+            }
+          }}
         >
           Thêm vào giỏ hàng
         </Button>

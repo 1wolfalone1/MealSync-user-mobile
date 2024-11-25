@@ -1,36 +1,60 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router, useNavigation } from 'expo-router';
-import { SlidersHorizontal } from 'lucide-react-native';
-import * as React from 'react';
-import { Animated, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Avatar, Button, IconButton, TouchableRipple } from 'react-native-paper';
-import { useDispatch, useSelector } from 'react-redux';
-import { Colors } from '../../constant';
-import colors from '../../constant/colors';
-import searchSlice, { searchSliceSelector } from '../../redux/slice/searchSlice';
-import { userInfoSliceSelector } from '../../redux/slice/userSlice';
+import { Ionicons } from "@expo/vector-icons";
+import { useIsFocused } from "@react-navigation/native";
+import { router, useNavigation } from "expo-router";
+import { SlidersHorizontal } from "lucide-react-native";
+import * as React from "react";
+import { useEffect } from "react";
+import { Animated, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Avatar,
+  Badge,
+  Button,
+  IconButton,
+  TouchableRipple,
+} from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
+import { Colors } from "../../constant";
+import colors from "../../constant/colors";
+import { globalSelector } from "../../redux/slice/globalSlice";
+import searchSlice, {
+  searchSliceSelector,
+} from "../../redux/slice/searchSlice";
+import { userInfoSliceSelector } from "../../redux/slice/userSlice";
 
 const Header_Max_Height = 90;
 const Header_Min_Height = 20;
 
 export default function DynamicHeader({ animHeaderValue }) {
   const userData = useSelector(userInfoSliceSelector);
+  const { socket } = useSelector(globalSelector);
+  const [notRead, setNotRead] = React.useState(0);
   const navigation = useNavigation();
   const {
-   searchProductInHome: {filter} 
-  } = useSelector(searchSliceSelector)
+    searchProductInHome: { filter },
+  } = useSelector(searchSliceSelector);
   const dispatch = useDispatch();
   const animateHeaderBackgroundColor = animHeaderValue.interpolate({
     inputRange: [0, Header_Max_Height - Header_Min_Height],
     outputRange: [1, 0],
-    extrapolate: 'clamp',
+    extrapolate: "clamp",
   });
+  const isFocus = useIsFocused();
+  useEffect(() => {
+    if (socket) {
+      socket.emit("regisGetNotRead", true);
+      socket.on("getCountNotRead", (msg) => {
+        setNotRead(msg);
+      });
+    }
+  }, [socket]);
+  useEffect(() => {
+    if (socket) socket.emit("regisListChannel", true);
+  }, [isFocus]);
   const animateHeaderHeight = animHeaderValue.interpolate({
     inputRange: [0, Header_Max_Height - Header_Min_Height],
     outputRange: [Header_Max_Height, Header_Min_Height],
-    extrapolate: 'clamp',
+    extrapolate: "clamp",
   });
-  console.log(userData, 'user data')
   return (
     <Animated.View
       // style={[
@@ -52,12 +76,16 @@ export default function DynamicHeader({ animHeaderValue }) {
             height: animateHeaderHeight,
             backgroundColor: animateHeaderBackgroundColor,
             opacity: animateHeaderBackgroundColor,
-            overflow: 'hidden',
+            overflow: "hidden",
           },
         ]}
       >
         <View className="flex-row justify-between items-center pl-7 pr-7">
-          <TouchableRipple borderless onPress={() => router.push('/setting-list')} className="rounded-full">
+          <TouchableRipple
+            borderless
+            onPress={() => router.push("/setting-list")}
+            className="rounded-full"
+          >
             <Avatar.Image
               size={40}
               source={
@@ -66,7 +94,7 @@ export default function DynamicHeader({ animHeaderValue }) {
                       uri: userData.avatarUrl,
                     }
                   : {
-                      uri: 'https://w7.pngwing.com/pngs/205/731/png-transparent-default-avatar-thumbnail.png',
+                      uri: "https://w7.pngwing.com/pngs/205/731/png-transparent-default-avatar-thumbnail.png",
                     }
               }
             />
@@ -81,25 +109,48 @@ export default function DynamicHeader({ animHeaderValue }) {
               }}
               onPress={() => {}}
               mode="text"
-              contentStyle={{ flexDirection: 'row-reverse', alignItems: 'center' }}
+              contentStyle={{
+                flexDirection: "row-reverse",
+                alignItems: "center",
+              }}
               icon="chevron-down"
             >
               Giao toi
             </Button>
-            <Text className="text-primary font-hnow64regular">Kí túc xá khu B, tòa A1</Text>
+            <Text className="text-primary font-hnow64regular text-xs">
+              {userData?.building?.name}
+            </Text>
           </View>
           <View className="flex-row ">
+            <View
+              style={{
+                position: "absolute",
+                top: -5,
+                right: -5,
+                borderRadius: 1000,
+                width: 16,
+              }}
+            >
+              {notRead > 0 && <Badge>{notRead}</Badge>}
+            </View>
+
             <TouchableRipple
-              onPress={() => router.push('chat')}
+              onPress={() => router.push("chat")}
               className="rounded-full"
               style={{
                 borderRadius: 1000,
-                
               }}
               borderless
             >
-              <View className="" style={{backgroundColor: '#8f88883a' , padding: 8 }}> 
-                <Ionicons name="chatbubble-ellipses" size={24} color={colors.blue[100]} />
+              <View
+                className=""
+                style={{ backgroundColor: "#8f88883a", padding: 8 }}
+              >
+                <Ionicons
+                  name="chatbubble-ellipses"
+                  size={24}
+                  color={colors.blue[100]}
+                />
               </View>
             </TouchableRipple>
           </View>
@@ -117,17 +168,19 @@ export default function DynamicHeader({ animHeaderValue }) {
             icon="magnify"
             iconColor={Colors.primaryBackgroundColor}
             onPress={() => {
-              router.push('/home/search-list')
+              router.push("/home/search-list");
             }}
           />
           <TextInput
-            onFocus={() => router.push('/home/search')}
+            onFocus={() => router.push("/home/search")}
             className="flex-1 font-hnow63book"
             value={filter.searchText}
             onChangeText={(value) => {
-              dispatch(searchSlice.actions.updateFilterInSearchProductInHome({
-                searchText: value,
-              }));
+              dispatch(
+                searchSlice.actions.updateFilterInSearchProductInHome({
+                  searchText: value,
+                })
+              );
             }}
             placeholder="Tìm kiếm món ăn hay shop house?"
           />
@@ -135,7 +188,7 @@ export default function DynamicHeader({ animHeaderValue }) {
         <TouchableRipple
           className="p-2 ml-2 rounded-full "
           style={styles.shadow}
-          onPress={() => console.log('Pressed')}
+          onPress={() => {}}
           rippleColor="rgba(0, 0, 0, .32)"
         >
           <SlidersHorizontal size={32} color={Colors.primaryBackgroundColor} />
@@ -147,18 +200,18 @@ export default function DynamicHeader({ animHeaderValue }) {
 
 const styles = StyleSheet.create({
   header: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     left: 0,
     right: 0,
     paddingTop: 10,
   },
   headerText: {
-    overflow: 'hidden',
-    color: '#fff',
+    overflow: "hidden",
+    color: "#fff",
     fontSize: 25,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
   shadow: {
     shadowOffset: { width: 4, height: 5 },
