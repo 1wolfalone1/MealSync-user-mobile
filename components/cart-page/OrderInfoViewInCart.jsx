@@ -31,7 +31,7 @@ const OrderInfoViewInCart = ({ userInfo, info }) => {
     handleGetListBuilding();
   }, [orderInfo]);
   return (
-    <View className="my-5 pl-8">
+    <View className="mb-5 pl-8">
       <View className="flex-row items-center ">
         <View className="flex-row items-center">
           <Info color={"green"} size={28} />

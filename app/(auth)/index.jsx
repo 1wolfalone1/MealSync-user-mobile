@@ -1,7 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
+import auth from "@react-native-firebase/auth";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import {
+  router,
+  useLocalSearchParams,
+  useRootNavigationState
+} from "expo-router";
 import { Formik } from "formik";
-import { default as React, useState } from "react";
+import { default as React, useEffect, useState } from "react";
 import { Image, Keyboard, ScrollView, Text, View } from "react-native";
 import {
   Button,
@@ -14,8 +20,13 @@ import { useDispatch } from "react-redux";
 import * as yup from "yup";
 import api from "../../api/api";
 import { Colors, CommonConstants, Images } from "../../constant";
+import globalSlice from "../../redux/slice/globalSlice";
 import userInfoSlice from "../../redux/slice/userSlice";
 
+GoogleSignin.configure({
+  webClientId:
+    "165787317331-1ic454psf9ne9d6rkuiksmmn4kroson2.apps.googleusercontent.com",
+});
 const validationSchema = yup.object().shape({
   email: yup
     .string()
@@ -41,12 +52,72 @@ const validationSchema = yup.object().shape({
 const SignIn = () => {
   const [loginErrorGoogleMessage, setLoginErrorGoogleMessage] = useState("");
   const [isShowPassword, setIsShownPassword] = useState(false);
+  const params = useLocalSearchParams();
   const dispatch = useDispatch();
   const [message, setMessage] = useState();
+  const [user, setUser] = useState();
 
-  const handleLogin = async (payload) => {
-   
+  const rootNavigationState = useRootNavigationState();
+  async function onGoogleButtonPress() {
+    // Check if your device supports Google Play
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    // Get the users ID token
+    const signInResult = await GoogleSignin.signIn();
+
+    // Try the new style of google-sign in result, from v13+ of that module
+    idToken = signInResult.data?.idToken;
+    if (!idToken) {
+      // if you are using older versions of google-signin, try old style result
+      idToken = signInResult.idToken;
+    }
+    if (!idToken) {
+      throw new Error("No ID token found");
+    }
+    console.log(signInResult, "Google Sign In Result");
+    // Create a Google credential with the token
+    const googleCredential = auth.GoogleAuthProvider.credential(
+      signInResult.data.idToken
+    );
+    GoogleSignin.signOut();
+    router.navigate("/home");
+    // Sign-in the user with the credential
+    return auth().signInWithCredential(googleCredential);
+  }
+  // Handle user state changes
+  useEffect(() => {
+    checkLogin();
+  }, []);
+  const checkLogin = async () => {
     try {
+      const token = await AsyncStorage.getItem("@token");
+      if (token) {
+        router.navigate('/home')
+      }
+    } catch (err) {
+      console.log(err, "error check login");
+    }
+  };
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(async (user) => {
+      console.log("User state changed", user);
+      try {
+        const idToken = await user.getIdTokenResult(true);
+
+        console.log(idToken, " firebase auth state changed ");
+      } catch (e) {
+        console.log(e, " error get id token");
+      }
+    });
+    return subscriber; // unsubscribe on unmount
+  }, []);
+  const handleLogin = async (payload) => {
+    try {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: true,
+          msg: "Đang đăng nhập",
+        })
+      );
       const responseData = await api.post("api/v1/auth/login", payload);
       const data = await responseData.data;
       console.log("data ne", data);
@@ -57,6 +128,12 @@ const SignIn = () => {
         data.error.message
       );
     } catch (error) {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Đang đăng nhập",
+        })
+      );
       console.log("error ne", error);
     }
   };
@@ -69,28 +146,45 @@ const SignIn = () => {
   ) => {
     try {
       if (isSuccess) {
-        console.log(data)
-        await AsyncStorage.setItem(
-          "@token",
-          data.tokenResponse.accessToken
-        );
+        console.log(data);
+        await AsyncStorage.setItem("@token", data.tokenResponse.accessToken);
         dispatch(
           userInfoSlice.actions.changeUserInfo({
             info: data.accountResponse,
             role: CommonConstants.USER_ROLE.USER,
           })
         );
+        dispatch(
+          globalSlice.actions.changeLoadings({
+            isLoading: false,
+            msg: "Đang đăng nhập",
+          })
+        );
         router.push("/home");
       } else if (errorCode === "401") {
+        dispatch(
+          globalSlice.actions.changeLoadings({
+            isLoading: false,
+            msg: "Đang đăng nhập",
+          })
+        );
         setMessage(errorMessage);
       }
     } catch (e) {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Đang đăng nhập",
+        })
+      );
       console.log(e);
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: '#fffcfc' }}>
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1, backgroundColor: "#fffcfc" }}
+    >
       <Formik
         initialValues={{ email: "", password: "" }}
         onSubmit={(values) => {
@@ -219,7 +313,13 @@ const SignIn = () => {
             className="bg-white rounded-3xl"
             style={{ width: "100%" }}
             borderless
-            onPress={() => promptAsync()}
+            onPress={() =>
+              onGoogleButtonPress()
+                .then(() => console.log("Signed in with Google successfully!"))
+                .catch((e) => {
+                  console.log("Failed to sign in with Google!", e);
+                })
+            }
             rippleColor="rgba(0, 0, 0, .32)"
           >
             <View
@@ -243,7 +343,11 @@ const SignIn = () => {
               <Image className="h-[30] w-[30] mr-2" resizeMode="contain" />
             </View>
           </TouchableRipple>
-          <Text>{loginErrorGoogleMessage}</Text>
+        </View>
+        <View className="items-center flex-row justify-between mt-4">
+          <Text className="text-red-600">
+            {loginErrorGoogleMessage || params.messageError}
+          </Text>
         </View>
       </View>
     </ScrollView>

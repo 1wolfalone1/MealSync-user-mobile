@@ -1,5 +1,7 @@
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useIsFocused } from "@react-navigation/native";
+import MapboxGL from "@rnmapbox/maps";
+import axios from "axios";
 import * as Location from "expo-location";
 import { router, useLocalSearchParams } from "expo-router";
 import {
@@ -36,47 +38,163 @@ import { Colors, Images } from "../../constant";
 import colors from "../../constant/colors";
 import images from "../../constant/images";
 import globalSlice, { globalSelector } from "../../redux/slice/globalSlice";
-import { userInfoSliceSelector } from "../../redux/slice/userSlice";
 import {
   convertIntTimeToString,
   formatDateTime,
   formatNumberVND,
+  isBeforeOneHour,
+  isTodayInVietnam,
 } from "../../utils/MyUtils";
-
+if (MapboxGL) {
+  MapboxGL?.setAccessToken(
+    "sk.eyJ1IjoiMXdvbGZhbG9uZTEiLCJhIjoiY20zdjRjY2M4MHA0bDJqczkwY252NnhvdyJ9.nrhMmt33T1W-Weqz2zXZpg"
+  );
+}
+const lineStyle = {
+  lineColor: "#ff0000",
+  lineWidth: 3,
+  lineCap: "round",
+  lineJoin: "round",
+};
 const OrderTracking = () => {
+  console.log(MapboxGL, "asdfasdf map box");
   const { width, height } = Dimensions.get("window");
   const widthItem = (width * 90) / 100;
   const heightItem = (height * 20) / 100;
+  const [loadMap, setLoadMap] = useState(
+    "https://tiles.goong.io/assets/goong_map_web.json?api_key=PElNdAGV5G98AeTOVaRfIZVeBO6XdVPhJSn2HDku"
+  );
+  const mapRef = useRef(null);
+  const [coordinates] = useState([106.83196028706885, 10.821764739534105]);
   const widthImageIllustration = (width * 30) / 100;
+  const camera = useRef(null);
   const [openInfoOrder, setOpenInfoOrder] = useState(false);
   console.log(openInfoOrder, " open");
   const params = useLocalSearchParams();
-  const refMap = useRef();
   const [heightMap, setHeightMap] = useState(0);
   const layoutRef = useRef();
   const translateY = useSharedValue(0);
   const bottomSheetRef = useRef(null);
-  const info = useSelector(userInfoSliceSelector);
   const isFocus = useIsFocused();
   const { orderStatusChange } = useSelector(globalSelector);
-  const apiKey = process.env.EXPO_PUBLIC_SERVICE_API;
   const [visible, setVisible] = useState(false);
   const [reasonCancel, setReasonCancel] = useState("");
   const [reasonError, setReasonError] = useState("");
+  const [canCancel, setCanCancel] = useState(true);
   const dispatch = useDispatch();
-  const [origin, setOrigin] = useState([
-    {
-      latitude: 10.8387911,
-      longitude: 106.8347649,
-      name: "Vinhome Grand Park",
-    },
-  ]);
+  const [route, setRoute] = useState([]);
+  const [routeInfo, setRouteInfo] = useState(null);
+  const [routeProfile, setRouteProfile] = useState("car"); // 'car', 'bike', 'taxi', 'truck', 'hd'
   const [orderData, setOrderData] = useState(null);
   // callbacks
   useEffect(() => {
+    fitBoundsWithPadding();
+  }, [locations, fitBoundsWithPadding]);
+  useEffect(() => {
     handleGetOrderData();
   }, [isFocus, orderStatusChange]);
+  const getDirections = async (start, end) => {
+    try {
+      const response = await axios.get(`https://rsapi.goong.io/Direction`, {
+        params: {
+          
+          origin: `${start[1]},${start[0]}`,
+          destination: `${end[1]},${end[0]}`,
+          vehicle: routeProfile,
+          api_key: "rk92yVlnm1LVaN5ts1YRSjeii7a31TvGmaqfglh0",
 
+        },
+      });
+
+      if (response.data?.routes?.[0]) {
+        const route = response.data.routes[0];
+        const leg = route.legs[0];
+
+        // Store route information
+        setRouteInfo({
+          distance: leg.distance,
+          duration: leg.duration,
+        });
+
+        // Create route GeoJSON
+        const geoJson = {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {
+                distance: leg.distance.text,
+                duration: leg.duration.text,
+              },
+              geometry: {
+                type: "LineString",
+                // If steps array is empty, use start and end points
+                coordinates:
+                  leg.steps.length > 0
+                    ? leg.steps.map((step) => [
+                        step.start_location.lng,
+                        step.start_location.lat,
+
+                      ])
+                    : [start, end],
+              },
+            },
+          ],
+        };
+
+        setRouteCoordinates(geoJson);
+
+        // Adjust zoom level based on distance
+        const distance = leg.distance.value;
+        if (distance < 2000) {
+          setZoomlevel(15);
+        } else if (distance < 5000) {
+          setZoomlevel(14);
+        } else if (distance < 10000) {
+          setZoomlevel(12);
+        } else if (distance < 15000) {
+          setZoomlevel(11);
+        } else {
+          setZoomlevel(9);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching directions:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (locations.length >= 2) {
+      getDirections(locations[0].coord, locations[1].coord);
+    }
+  }, [locations, routeProfile]);
+  const fitBoundsWithPadding = useCallback(() => {
+    if (mapRef.current && locations.length >= 2) {
+      // Convert locations to bounds
+      const coords = locations.map((loc) => loc.coord);
+      const bounds = coords.reduce(
+        (bounds, coord) => {
+          return [
+            [
+              Math.min(bounds[0][0], coord[0]),
+              Math.min(bounds[0][1], coord[1]),
+            ],
+            [
+              Math.max(bounds[1][0], coord[0]),
+              Math.max(bounds[1][1], coord[1]),
+            ],
+          ];
+        },
+        [coords[0], coords[0]]
+      );
+
+      // Fit bounds with padding
+      mapRef.current?.fitBounds(bounds, {
+        padding: 0,
+        animationDuration: 200,
+      });
+    }
+  }, [locations]);
   const handleGetOrderData = async () => {
     try {
       const res = await api.get(`/api/v1/customer/order/${params.orderId}`);
@@ -106,6 +224,28 @@ const OrderTracking = () => {
     Location.requestForegroundPermissionsAsync();
   }, []);
   useEffect(() => {
+    if (orderData) {
+      const orderDate = orderData.orderDate;
+      if (orderData.isOrderNextDay) {
+        if (isTodayInVietnam(orderDate)) {
+          if (isBeforeOneHour(orderData.startTime)) {
+            setCanCancel(true);
+          } else {
+            setCanCancel(false);
+          }
+        } else {
+          setCanCancel(true);
+        }
+      } else {
+        if (isBeforeOneHour(orderData.startTime)) {
+          setCanCancel(true);
+        } else {
+          setCanCancel(false);
+        }
+      }
+    }
+  }, [orderData]);
+  useEffect(() => {
     if (openInfoOrder) {
       translateY.value = withTiming(100);
     } else {
@@ -124,20 +264,15 @@ const OrderTracking = () => {
   const hideModal = () => {
     setVisible(false);
   };
-  const handleGetPaymentMethodString = (payments) => {
-    if (payments && Array.isArray(payments)) {
-      const payment = payments.find((i) => i.type == 1);
-      if (payment) {
-        if (payment.paymentMethods == 1) {
-          return "Thanh toán online qua VNPay";
-        } else {
-          return "Thanh toán khi nhận hàng";
-        }
+  const handleGetPaymentMethodString = (payment) => {
+    if (payment) {
+      if (payment.paymentMethods == 1) {
+        return "Thanh toán online qua VNPay";
       } else {
-        return "-";
+        return "Thanh toán khi nhận hàng";
       }
     } else {
-      return "";
+      return "-";
     }
   };
   const handleCancelOrder = async () => {
@@ -212,6 +347,22 @@ const OrderTracking = () => {
       console.log(e);
     }
   };
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
+  const [locations, setLocations] = useState([
+    {
+      key: "1",
+      coord: [106.83196028706885, 10.821764739534105],
+    },
+    {
+      key: "2",
+      coord: [ 106.817837319592, 10.80607174450758],
+    },
+  ]);
+  const handleOnPress = (event) => {
+    const loc = event.geometry.coordinates;
+
+    camera.current?.moveTo(loc, 200);
+  };
   return orderData == null ? (
     <></>
   ) : (
@@ -282,7 +433,58 @@ const OrderTracking = () => {
           </View>
         </Modal>
       </Portal>
-      <View className=" absolute bottom-0 right-0 left-0 items-center">
+      <View className=" flex-1 items-center bg-red-300">
+        <MapboxGL.MapView
+          ref={mapRef}
+          styleURL={loadMap}
+          onPress={handleOnPress}
+          style={{
+            width: "100%",
+            height: "100%",
+          }}
+          projection="mercator"
+          zoomEnabled={true}
+        >
+          <MapboxGL.Camera
+
+            ref={camera}
+            zoomLevel={15}
+            
+            centerCoordinate={coordinates}
+          />
+          {routeCoordinates && (
+            <MapboxGL.ShapeSource id="routeSource" shape={routeCoordinates}>
+              <MapboxGL.LineLayer
+                id="routeLine"
+                style={{
+                  lineColor: "#4285F4",
+                  lineWidth: 4,
+                  lineCap: "round",
+                  lineJoin: "round",
+                }}
+              />
+            </MapboxGL.ShapeSource>
+          )}
+          {/* 1 point  */}
+          {/* <MapboxGL.PointAnnotation 
+        id='pointDirect'
+        key='pointDirect'
+        coordinate={coordinates}
+        draggable={true}
+         /> */}
+          {/* many point */}
+          {locations.map((item) => (
+            <MapboxGL.PointAnnotation
+              id="pointDirect"
+              key="0909"
+              coordinate={item.coord}
+              draggable={true}
+            >
+              <MapboxGL.Callout title={item.key} />
+            </MapboxGL.PointAnnotation>
+          ))}
+        </MapboxGL.MapView>
+
         {
           // <Animated.View
           //   style={[
@@ -313,6 +515,12 @@ const OrderTracking = () => {
           // </Animated.View>
         }
       </View>
+      <View
+        style={{
+          width: "100%",
+          height: 260,
+        }}
+      ></View>
       <BottomSheet
         ref={bottomSheetRef}
         style={{
@@ -424,6 +632,33 @@ const OrderTracking = () => {
               flexGrow: 1,
             }}
           >
+            <View>
+              <Divider />
+              <View className="flex-row justify-between mx-7 items-center">
+                <Text className="font-bold">Liên hệ cửa hàng</Text>
+                <View className="flex-row">
+                  <IconButton
+                    style={{
+                      margin: 0,
+                    }}
+                    iconColor="blue"
+                    icon={"chat-processing-outline"}
+                    onPress={() => {
+                      router.push("/chat/" + orderData.id);
+                    }}
+                  />
+                  <IconButton
+                    onPress={() => {}}
+                    style={{
+                      margin: 0,
+                    }}
+                    iconColor="red"
+                    icon="phone"
+                  />
+                </View>
+              </View>
+              <Divider />
+            </View>
             {orderData.voucher && orderData.voucher.promotionId && (
               <View className="flex-row gap-1 flex-1">
                 <TicketCheck size={20} color={Colors.primaryBackgroundColor} />
@@ -540,6 +775,7 @@ const OrderTracking = () => {
                   fontSize: 20,
                   lineHeight: 22,
                 }}
+                disabled={!canCancel}
                 onPress={handleOpenDialogCancelOrder}
               >
                 Hủy đơn hàng
@@ -554,13 +790,23 @@ const OrderTracking = () => {
 
 export default OrderTracking;
 const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  container: {
+    height: 300,
+    width: 300,
+  },
+  map: {
+    height: 300,
+    width: 300,
+  },
   container: {
     flex: 1,
   },
-  map: {
-    width: "100%",
-    height: "100%",
-  },
+
   shadow: {
     shadowOffset: { width: 5, height: 8 },
     shadowColor: "black",

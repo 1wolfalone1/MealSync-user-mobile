@@ -1,7 +1,15 @@
-import SkeletonLoading from 'expo-skeleton-loading';
-import { NotebookPen } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
-import { Dimensions, Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import SkeletonLoading from "expo-skeleton-loading";
+import { NotebookPen } from "lucide-react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import {
   Button,
   Dialog,
@@ -10,11 +18,11 @@ import {
   Modal,
   Portal,
   TouchableRipple,
-} from 'react-native-paper';
-import { useDispatch, useSelector } from 'react-redux';
-import { Colors } from '../../constant';
-import cartSlice, { cartSelector } from '../../redux/slice/cartSlice';
-import { formatNumberVND } from '../../utils/MyUtils';
+} from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
+import { Colors } from "../../constant";
+import cartSlice, { cartSelector } from "../../redux/slice/cartSlice";
+import { formatNumberVND } from "../../utils/MyUtils";
 const styles = StyleSheet.create({
   shadow: {
     shadowOffset: { width: 4, height: 4 },
@@ -35,116 +43,113 @@ const styles = StyleSheet.create({
   },
 });
 const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
-  const { width, height } = Dimensions.get('window');
+  const { width, height } = Dimensions.get("window");
   const heightItem = parseInt((width * 30) / 100);
   const widthItem = parseInt((width * 85) / 100);
   const { items, listItemInfo } = useSelector(cartSelector);
   const [item, setItemInCart] = useState(null);
-  const [toppingString, setToppingString] = useState('');
-  const [note, setNote] = useState('');
+  const [toppingString, setToppingString] = useState("");
+  const [note, setNote] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [topping, setTopping] = useState('');
+  const [topping, setTopping] = useState("");
   const [openNote, setOpenNote] = useState(false);
-  const [noteTemp, setNoteTemp] = useState('');
+  const [noteTemp, setNoteTemp] = useState("");
   const dispatch = useDispatch();
   const [visible, setVisible] = useState(false);
   const [heightNote, setHeightNote] = useState(200);
-  const [price, setPrice] = useState('');
+  const [price, setPrice] = useState("");
   const [priceToppingString, setPriceToppingString] = useState(0);
   useEffect(() => {
-    console.log('---------------------------------------------------')
-    if (listItemInfo && Array.isArray(listItemInfo)) {
-      const item = listItemInfo.find((itemInfo) => {
-        console.log(
-          itemInCart.productId.split('-')[0],
-          '----',
-          itemInCart,
-          itemInfo,
-          ' tesssssssttt',
-        );
-        if (itemInCart) {
-          if (
-            itemInCart.productId.split('-') &&
-            itemInCart.productId.split('-')[0] == itemInfo.id
-          ) {
-            console.log('okkkkkkkk tesssssssttt');
-            return true;
-          }
-        }
-        return false;
-      });
-
-      console.log(item, ' test');
-      let priceTopping = 0;
-      if (!item) {
-        return;
-      }
-      setItemInCart(item);
-      let toppingString = '';
+    console.log("---------------------------------------------------");
+    console.log(item, " test neeeeeee", itemInCart);
+    let priceTopping = 0;
+    if (itemInCart) {
+      setItemInCart(itemInCart.info);
+      let toppingString = "";
       let isHasRadio = false;
-      Object.values(itemInCart.topping.radio).forEach((item, index) => {
-        if (item) {
-          if (index === 0) {
-            toppingString += item.topping.title + ' : ' + item.option.title;
-          } else {
-            toppingString += ' - ' + item.topping.title + ' : ' + item.option.title;
-          }
+      if (itemInCart.topping.radio) {
+        Object.values(itemInCart.topping.radio).forEach((item, index) => {
+          console.log(item, "item topppinggggggggggggg");
+          if (item) {
+            if (index === 0) {
+              toppingString += item.title + " : " + item.option.title;
+            } else {
+              toppingString += " - " + item.title + " : " + item.option.title;
+            }
 
-          priceTopping += item.option.price;
-          isHasRadio = true;
-        }
-      });
-      Object.values(itemInCart.topping.checkbox).forEach((item, index) => {
-        if (item) {
-          const checkBoxToppingString = item.options.reduce((a, option, index) => {
-            priceTopping += option.price;
-            console.log(option);
-            if (index == 0) {
-              return option.title;
-            } else {
-              return a + ', ' + option.title;
-            }
-          }, '');
-          if (index == 0) {
-            if (isHasRadio) {
-              toppingString += ' -&- ' + item.topping.title + ': ' + checkBoxToppingString;
-            } else {
-              toppingString += item.topping.title + ': ' + checkBoxToppingString;
-            }
-          } else {
-            toppingString += ' - ' + item.topping.title + ': ' + checkBoxToppingString;
+            priceTopping += item.option.price;
+            isHasRadio = true;
           }
-        }
-      });
+        });
+      }
+      if (itemInCart.topping.checkbox) {
+        Object.values(itemInCart.topping.checkbox).forEach((item, index) => {
+          if (item) {
+            const checkBoxToppingString = item.options.reduce(
+              (a, option, index) => {
+                priceTopping += option.price;
+                console.log(option);
+                if (index == 0) {
+                  return option.title;
+                } else {
+                  return a + ", " + option.title;
+                }
+              },
+              ""
+            );
+            if (index == 0) {
+              if (isHasRadio) {
+                toppingString +=
+                  " -&- " + item.title + ": " + checkBoxToppingString;
+              } else {
+                toppingString += item.title + ": " + checkBoxToppingString;
+              }
+            } else {
+              toppingString +=
+                " - " + item.title + ": " + checkBoxToppingString;
+            }
+          }
+        });
+      }
       setToppingString(toppingString);
       setQuantity(itemInCart.quantity);
       setNoteTemp(itemInCart.note);
       setPriceToppingString(priceTopping);
+    }else {
+      setItemInCart(null);
+      setToppingString("");
+      setQuantity(1);
+      setNote("");
+      setPriceToppingString(0);
     }
-  }, [listItemInfo, items]);
+  }, [listItemInfo, items, itemInCart]);
   useEffect(() => {
     if (item) {
-      setPrice(formatNumberVND(item.price) + ' +' + ' ' + formatNumberVND(priceToppingString));
+      setPrice(
+        formatNumberVND(item.price) +
+          " +" +
+          " " +
+          formatNumberVND(priceToppingString)
+      );
       dispatch(
         cartSlice.actions.changePriceItem({
           shopId: shopId,
           itemId: itemInCart.productId,
           price: parseInt(item.price) + parseInt(priceToppingString),
-        }),
+        })
       );
     }
   }, [item]);
 
-  console.log(item, ' item ne');
   const handleRemoveItem = () =>
     dispatch(
       cartSlice.actions.removeItemInCart({
         shopId: shopId,
         itemId: itemInCart.productId,
-      }),
+      })
     );
   const handleOpenNote = () => {
-    console.log(item, 'noteeeeeeeeeeeeeeeeeeeeee');
+    console.log(item, "noteeeeeeeeeeeeeeeeeeeeee");
     setNoteTemp(itemInCart?.note);
     setOpenNote(true);
   };
@@ -154,16 +159,16 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
   const handleSaveNote = () => {
     setOpenNote(false);
     let toppingString2 = "";
-    if(toppingString) {
-      toppingString2 = `(${toppingString})`
+    if (toppingString) {
+      toppingString2 = `(${toppingString})`;
     }
     dispatch(
       cartSlice.actions.setNote({
         shopId: shopId,
         itemId: itemInCart.productId,
-        note2: item.name + " " + toppingString2 + ": "+ noteTemp,
-        note: noteTemp
-      }),
+        note2: item.name + " " + toppingString2 + ": " + noteTemp,
+        note: noteTemp,
+      })
     );
   };
   const hideDialog = () => setVisible(false);
@@ -174,14 +179,14 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
       if (valueNum < 0 || Number.isNaN(valueNum)) {
         valueNum = 0;
       }
-      console.log(valueNum, ' asdfasfasfasdffffffffffffffffffff');
+      console.log(valueNum, " asdfasfasfasdffffffffffffffffffff");
       setQuantity(valueNum);
       dispatch(
         cartSlice.actions.setQuantity({
           shopId: shopId,
           itemId: itemInCart.productId,
           quantity: valueNum,
-        }),
+        })
       );
     }
   };
@@ -191,7 +196,7 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
         cartSlice.actions.removeItemInCart({
           shopId: shopId,
           itemId: itemInCart.productId,
-        }),
+        })
       );
     }
   };
@@ -201,7 +206,7 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
         cartSlice.actions.removeItemInCart({
           shopId: shopId,
           itemId: itemInCart.productId,
-        }),
+        })
       );
     } else {
       let valueNum = quantity - 1;
@@ -211,33 +216,44 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
           shopId: shopId,
           itemId: itemInCart.productId,
           quantity: valueNum,
-        }),
+        })
       );
     }
   };
   const handleViewTopping = () => {
-    if(toppingString) {
-      let string = '';
-      toppingString.split('-&-').forEach(item => {
+    if (toppingString) {
+      let string = "";
+      toppingString.split("-&-").forEach((item) => {
         string += item.trim() + "\n";
-      })
+      });
       return string;
     }
-  }
-  return item == null ? (
+  };
+  return item == null || itemInCart == null ? (
     <SkeletonItem />
   ) : (
     <View
       className="flex-row bg-white mb-4"
-      style={{ height: heightItem, width: widthItem, zIndex: 1, overflow: 'visible' }}
+      style={{
+        height: heightItem,
+        width: widthItem,
+        zIndex: 1,
+        overflow: "visible",
+      }}
     >
       <Portal>
-        <Dialog visible={visible} onDismiss={hideDialog} style={{ backgroundColor: '#ffffffe4' }}>
+        <Dialog
+          visible={visible}
+          onDismiss={hideDialog}
+          style={{ backgroundColor: "#ffffffe4" }}
+        >
           <Dialog.Title>
             <Text className="font-hnow65medium text-xl">Topping nè</Text>
           </Dialog.Title>
           <Dialog.Content>
-            <Text className="font-hnow64regular text-sm">{handleViewTopping()}</Text>
+            <Text className="font-hnow64regular text-sm">
+              {handleViewTopping()}
+            </Text>
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={hideDialog}>Hủy</Button>
@@ -249,7 +265,7 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
           visible={openNote}
           onDismiss={handleHideNote}
           contentContainerStyle={{
-            backgroundColor: 'white',
+            backgroundColor: "white",
             padding: 10,
             marginHorizontal: 20,
             borderRadius: 20,
@@ -257,8 +273,10 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
         >
           <ScrollView style={{}}>
             <View className="items-center flex-1">
-              <Text className="text-center text-lg font-hnow64regular">Ghi chú cho quán nào</Text>
-              <Divider style={{ width: '100%', marginVertical: 20 }} />
+              <Text className="text-center text-lg font-hnow64regular">
+                Ghi chú cho quán nào
+              </Text>
+              <Divider style={{ width: "100%", marginVertical: 20 }} />
             </View>
             <View style={{ minHeight: 200, flex: 1 }}>
               <TextInput
@@ -305,7 +323,10 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
       <View className="ml-3 flex-1 justify-between">
         <View className="">
           <View className="flex-row justify-between items-center ">
-            <Text className="p-0 m-0 font-hnow65medium" style={{ fontSize: 16 }}>
+            <Text
+              className="p-0 m-0 font-hnow65medium"
+              style={{ fontSize: 16 }}
+            >
               {item.name}
             </Text>
             <IconButton
@@ -330,22 +351,27 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
         <View className="">
           <TouchableRipple borderless onPress={handleOpenNote}>
             <View className="flex-row gap-2">
-              <NotebookPen color={'#000000'} size={16} />
-              <Text className="text-gray-600 text-ellipsis text-xs" numberOfLines={1}>
-                {itemInCart.note ? itemInCart.note : 'Thêm ghi chú...'}
+              <NotebookPen color={"#000000"} size={16} />
+              <Text
+                className="text-gray-600 text-ellipsis text-xs"
+                numberOfLines={1}
+              >
+                {itemInCart.note ? itemInCart.note : "Thêm ghi chú..."}
               </Text>
             </View>
           </TouchableRipple>
           <View className=" justify-between items-end flex-row">
-            <Text className="text-sm text-primary font-hnow63book">{price}</Text>
+            <Text className="text-sm text-primary font-hnow63book">
+              {price}
+            </Text>
             <View className="flex-row justify-between items-center">
               <IconButton
-                icon={'minus'}
+                icon={"minus"}
                 className="m-0 p-0 "
                 mode="outlined"
                 size={8}
                 onPress={handleDecreaseQuantity}
-                style={{ borderColor: 'red' }}
+                style={{ borderColor: "red" }}
                 iconColor={Colors.primaryBackgroundColor}
               />
               <TextInput
@@ -358,10 +384,10 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
                 textAlignVertical="center"
               />
               <IconButton
-                icon={'plus'}
+                icon={"plus"}
                 size={8}
                 onPress={() => handleChangeQuantity(quantity + 1)}
-                style={{ borderColor: 'red' }}
+                style={{ borderColor: "red" }}
                 className="m-0 p-0 bg-primary"
                 mode="outlined"
                 iconColor={Colors.commonBtnText}
@@ -377,12 +403,15 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
 export default ItemInCart;
 
 const SkeletonItem = () => {
-  const {width, height} = Dimensions.get('window')
+  const { width, height } = Dimensions.get("window");
   const heightItem = parseInt((width * 30) / 100);
   const widthItem = parseInt((width * 85) / 100);
 
   return (
-    <SkeletonLoading background={Colors.skeleton.bg} highlight={Colors.skeleton.hl}>
+    <SkeletonLoading
+      background={Colors.skeleton.bg}
+      highlight={Colors.skeleton.hl}
+    >
       <View
         style={{
           zIndex: 1000,

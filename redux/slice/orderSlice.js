@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "../../api/api";
 const initialState = {
   products: [],
+  itemsInCart: {},
   shopId: 0,
   note: "",
   orderPrice: {
@@ -13,7 +14,7 @@ const initialState = {
   voucherId: null,
   voucher: {},
   listVoucher: {
-    active: [{id: 0}, {id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}],
+    active: [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
     inactive: [],
   },
   orderInfo: {
@@ -35,6 +36,10 @@ const orderSlice = createSlice({
   name: "orderSlice",
   initialState: initialState,
   reducers: {
+    changeItemsInCart: (state, actions) => {
+      console.log(actions.payload, " test item in cartttttttttttttt");
+      state.itemsInCart = actions.payload;
+    },
     changeProducts: (state, actions) => {
       const products = actions.payload;
       console.log(products, " -------------products-------");

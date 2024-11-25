@@ -1,10 +1,10 @@
-import { useFocusEffect } from 'expo-router';
-import React, { useState } from 'react';
-import { Image, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useDispatch } from 'react-redux';
-import MaterialTopBar from '../../../components/custom-stack/MaterialTopBar';
-import { Colors, Icons } from '../../../constant';
+import { useFocusEffect } from "expo-router";
+import React, { useState } from "react";
+import { Image, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useDispatch } from "react-redux";
+import MaterialTopBar from "../../../components/custom-stack/MaterialTopBar";
+import { Colors, Icons } from "../../../constant";
 
 const OrderLayout = () => {
   const dispatch = useDispatch();
@@ -12,12 +12,11 @@ const OrderLayout = () => {
     {
       latitude: 10.8387911,
       longitude: 106.8347649,
-      name: 'Vinhome Grand Park',
+      name: "Vinhome Grand Park",
     },
   ]);
   useFocusEffect(() => {
-    return () => {
-    };
+    return () => {};
   });
   return (
     <SafeAreaView className="flex-1 bg-primary">
@@ -29,7 +28,6 @@ const OrderLayout = () => {
             height: 60,
           }}
         />
-      
       </View>
       <MaterialTopBar
         screenOptions={{
@@ -37,12 +35,12 @@ const OrderLayout = () => {
           animationEnabled: true,
           headerShown: true,
           headerStyle: {
-            backgroundColor: 'red',
+            backgroundColor: "red",
           },
-          tabBarActiveTintColor: 'white',
+          tabBarActiveTintColor: "white",
           tabBarLabelStyle: {
             fontSize: 12,
-            fontFamily: 'HeadingNow-64Regular',
+            fontFamily: "HeadingNow-64Regular",
           },
           tabBarStyle: { backgroundColor: Colors.primaryBackgroundColor },
           tabBarIndicatorStyle: {
@@ -54,19 +52,25 @@ const OrderLayout = () => {
         <MaterialTopBar.Screen
           name="index"
           options={{
-            title: 'Đơn đang giao',
+            title: "Đơn đang giao",
           }}
         />
         <MaterialTopBar.Screen
           name="order-review"
           options={{
-            title: 'Chờ đánh giá',
+            title: "Chờ đánh giá",
           }}
         />
         <MaterialTopBar.Screen
           name="order-history"
           options={{
-            title: 'Lịch sử đơn hàng',
+            title: "Hoàn thành",
+          }}
+        />
+        <MaterialTopBar.Screen
+          name="order-issue"
+          options={{
+            title: "Có vấn đề",
           }}
         />
       </MaterialTopBar>

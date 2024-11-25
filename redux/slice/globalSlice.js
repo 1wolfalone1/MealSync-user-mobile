@@ -1,18 +1,20 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
+  socket: null,
   tabBar: {
     translateY: 0,
   },
-  openFabInShop: true, 
+  openFabInShop: true,
+  currentScreen: "1",
   map: {
     origin: {
-      name: '',
+      name: "",
       latitude: 0,
       longitude: 0,
     },
     destination: {
-      name: '',
+      name: "",
       lat: 0,
       lng: 0,
     },
@@ -23,10 +25,10 @@ const initialState = {
     message: null,
     open: false,
     iconFunction: () => {
-      console.log('Snackbar icon function');
+      console.log("Snackbar icon function");
     },
     action: {
-      label: 'Undo',
+      label: "Undo",
       onPress: () => {},
     },
     style: {},
@@ -34,18 +36,25 @@ const initialState = {
     elevation: 5,
   },
   loading: {
-    isLoading: true,
-    msg: 'Chờ tí nhé...',
+    isLoading: false,
+    msg: "Chờ tí nhé...",
   },
 
   orderStatusChange: false,
 };
 const globalSlice = createSlice({
-  name: 'globalSlice',
+  name: "globalSlice",
   initialState: initialState,
   reducers: {
+    setSocket: (state, actions) => {
+      state.socket = actions.payload;
+    },
+    setCurrentScreen: (state, actions) => {
+      console.log(actions.payload, " asdfsdafdsfd set current screen")
+      state.currentScreen = actions.payload;
+    },
     notifyOrderStatusChange: (state, actions) => {
-      state.orderStatusChange = !state.orderStatusChange
+      state.orderStatusChange = !state.orderStatusChange;
     },
     changePositionTabBar: (state, actions) => {
       state.tabBar.translateY = actions.payload;
@@ -66,7 +75,7 @@ const globalSlice = createSlice({
     },
     changeMapState: (state, actions) => {
       const { latitude, longitude, name } = actions.payload;
-      state.map.isChange = true;
+      state.map.isChange = false;
       state.map.origin = {
         latitude,
         longitude,
@@ -80,9 +89,11 @@ const globalSlice = createSlice({
       state.map = initialState.map;
     },
     customSnackBar: (state, actions) => {
-      const { icon, iconFunction, action, style, duration, elevation } = actions.payload;
+      const { icon, iconFunction, action, style, duration, elevation } =
+        actions.payload;
       if (icon) state.snackbar.icon = actions.payload.icon;
-      if (iconFunction) state.snackbar.iconFunction = actions.payload.iconFunction;
+      if (iconFunction)
+        state.snackbar.iconFunction = actions.payload.iconFunction;
       if (action) state.snackbar.action = actions.payload.action;
       if (style) state.snackbar.style = actions.payload.style;
       if (duration) state.snackbar.duration = actions.payload.duration;

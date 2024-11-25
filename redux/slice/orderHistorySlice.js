@@ -70,11 +70,9 @@ export const  getListOrderReview= createAsyncThunk(
     try {
       const res = await api.get('/api/v1/customer/order/history', {
         params: {
-          accountId: accountId,
           pageIndex: pageIndex,
           pageSize: pageSize,
-          status: [4],
-          reviewMode: 1
+          status: [9, 7, 10, 11, 12],
         },
         paramsSerializer: (params) => {
           return qs.stringify(params, { arrayFormat: 'repeat' });

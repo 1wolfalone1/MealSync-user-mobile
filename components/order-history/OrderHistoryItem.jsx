@@ -1,13 +1,13 @@
-import SkeletonLoading from 'expo-skeleton-loading';
-import { CircleCheckBig, HandCoins, MoveRight } from 'lucide-react-native';
-import React from 'react';
-import { Dimensions, Image, StyleSheet, Text, View } from 'react-native';
-import { TouchableRipple } from 'react-native-paper';
-import { Colors } from '../../constant';
-import { formatNumberVND } from '../../utils/MyUtils';
+import SkeletonLoading from "expo-skeleton-loading";
+import { CircleCheckBig, HandCoins } from "lucide-react-native";
+import React from "react";
+import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
+import { TouchableRipple } from "react-native-paper";
+import { Colors } from "../../constant";
+import { convertIntTimeToString, formatDateTime, formatNumberVND } from "../../utils/MyUtils";
 
 const OrderHistoryItem = ({ item }) => {
-  const { width, height } = Dimensions.get('window');
+  const { width, height } = Dimensions.get("window");
   const heightItem = (width * 30) / 100;
   const widthItem = (width * 90) / 100;
   const formatDate = (originalDateString) => {
@@ -15,15 +15,15 @@ const OrderHistoryItem = ({ item }) => {
 
     // Formatting options
     const options = {
-      year: '2-digit',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
+      year: "2-digit",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
     };
     return date
-      .toLocaleDateString('en-GB', options)
-      .replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+)/, '$1/$2/$3 $4:$5');
+      .toLocaleDateString("en-GB", options)
+      .replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+)/, "$1/$2/$3 $4:$5");
   };
   return item == null ? (
     <SkeletonItem />
@@ -32,8 +32,8 @@ const OrderHistoryItem = ({ item }) => {
       className=""
       style={{
         borderRadius: 16,
-        backgroundColor: 'white',
-        overflow: 'hidden',
+        backgroundColor: "white",
+        overflow: "hidden",
         ...styles.shadow,
       }}
     >
@@ -56,35 +56,49 @@ const OrderHistoryItem = ({ item }) => {
         >
           <Image
             source={{
-              uri: item.logoUrl,
+              uri: item.shopLogoUrl,
             }}
             style={{
               height: heightItem,
               width: heightItem,
             }}
           />
-          <View className="justify-between mx-2 flex-1 pb-1" style={{ height: heightItem }}>
+          <View
+            className="justify-between mx-2 flex-1 pb-1"
+            style={{ height: heightItem }}
+          >
             <View className="flex-row  justify-between">
-              <Text className="text-primary text-lg font-bold">{item.shopName}</Text>
-
+              <Text className="text-primary text-lg font-bold">
+                {item.shopName}
+              </Text>
             </View>
             <View className="flex-row justify-between">
               <Text className="text-blue-700">
-                <HandCoins color={'red'} size={16} /> {formatNumberVND(item.totalOrderValue)}
+                <HandCoins color={"red"} size={16} />{" "}
+                {formatNumberVND(item.totalPrice - item.totalPromotion)}
               </Text>
               <Text className="text-xs text-gray-600">
-                Số lượng món: {item.productOrderQuantity}
+                Số lượng món: {item.totalOrderDetail}
               </Text>
             </View>
             <View className="flex-row gap-1 justify-between">
-              
-              <Text className="text-blue-700">{formatDate(item.orderDate)}</Text>
-               <MoveRight size={20} color={'grey'} />
-              <Text className="text-red-700">{formatDate(item.orderDate)}</Text>
+              <Text className="text-blue-700">
+                Đặt lúc: {formatDateTime(item.orderDate)}
+              </Text>
             </View>
+            <View className="flex-row gap-1 justify-between">
+              <Text className="text-green-800">
+                Khung thời gian giao:{" "}
+                {`${convertIntTimeToString(item.startTime)} - ${convertIntTimeToString(item.endTime)}`}
+              </Text>
+            </View>
+
             <View className="flex-row items-center justify-between">
-              <Text className="text-xs text-gray-500">Mã đơn hàng: #{item.orderId}</Text>
+              <Text className="text-xs text-gray-500">
+                Mã đơn hàng: #{item.id}
+              </Text>
               <View className="flex-row items-center gap-1">
+                
                 <CircleCheckBig color={'green'} size={14} />
                 <Text className="text-xs text-green-600">Giao thành công</Text>
               </View>

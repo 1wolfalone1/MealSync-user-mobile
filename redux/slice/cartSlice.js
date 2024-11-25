@@ -7,6 +7,21 @@ const initialState = {
   listItemInfo: [],
   vouchers: [],
   listShopInfo: [],
+  cartState: {
+    idsRequest: [],
+    isRemoveAllCart: false,
+    isReceivingOrderPaused: false,
+    isAcceptingOrderToday: false,
+    isAcceptingOrderTomorrow: false,
+    messageForAllCart: null,
+    isPresentFoodNeedRemoveToday: true,
+    idsNotFoundToday: [],
+    messageFoodNeedRemoveToday: "",
+    isPresentFoodNeedRemoveTomorrow: true,
+    idsNotFoundTomorrow: [],
+    messageFoodNeedRemoveTomorrow: "",
+    foods: [],
+  },
   status: {
     code: 200,
     message: "",
@@ -94,6 +109,9 @@ const cartSlice = createSlice({
     resetStateListItemInfo: (state, actions) => {
       state.listItemInfo = initialState.listItemInfo;
     },
+    resetCartState: (state, actions) => {
+      state.cartState = initialState.cartState;
+    },
     removeItemInCart: (state, actions) => {
       const { shopId, itemId } = actions.payload;
       console.log(shopId, itemId, " remove item form cart");
@@ -114,7 +132,7 @@ const cartSlice = createSlice({
         state.items[shopId].map((item) => {
           if (item.productId == itemId) {
             item.note = note;
-            item.note2 = note2
+            item.note2 = note2;
             return item;
           } else {
             return item;
@@ -134,30 +152,45 @@ const cartSlice = createSlice({
       const { price, productId, shopId, quantity, topping, operatingSlotId } =
         actions.payload;
       let newId = productId + "-operatingSlotId:" + operatingSlotId + "-radio:";
-
-      Object.keys(topping.radio).forEach((key, index) => {
-        if (topping.radio[key]) {
-          newId = newId + `(${key},${topping.radio[key].optionId})`;
-        }
-      });
+      let optionGroupRadio = [];
+      let optionGroupCheckbox = [];
+      Object.keys(topping.radio)
+        .sort()
+        .forEach((key, index) => {
+          if (topping.radio[key]) {
+            optionGroupRadio.push({
+              id: key,
+              optionId: topping.radio[key].optionId,
+            });
+            newId = newId + `(${key},${topping.radio[key].optionId})`;
+          }
+        });
 
       newId = newId + "|checkbox:";
-      Object.keys(topping.checkbox).forEach((key, index) => {
-        if (topping.checkbox[key]) {
-          if (topping.checkbox[key].options) {
-            const optionIds = topping.checkbox[key].options.map(
-              (option) => option.id
-            );
-            const newStringOption = `[${optionIds.sort().join(",")}]`;
-            console.log(newStringOption, " new string option");
-            newId = newId + `(${key},${newStringOption})`;
+      Object.keys(topping.checkbox)
+        .sort()
+        .forEach((key, index) => {
+          if (topping.checkbox[key]) {
+            if (topping.checkbox[key].options) {
+              const optionIds = topping.checkbox[key].options.map(
+                (option) => option.id
+              );
+              optionGroupCheckbox.push({
+                id: key,
+                optionIds: optionIds,
+              });
+              const newStringOption = `[${optionIds.sort().join(",")}]`;
+              console.log(newStringOption, " new string option");
+              newId = newId + `(${key},${newStringOption})`;
+            }
           }
-        }
-      });
+        });
 
       const carts = state.items;
       const cartItem = {
         productId: newId,
+        optionGroupRadio,
+        optionGroupCheckbox,
         quantity,
         topping,
         price,
@@ -186,9 +219,16 @@ const cartSlice = createSlice({
   extraReducers: (builder) =>
     builder
       .addCase(getCartInfo.fulfilled, (state, action) => {
-        console.log(action.payload, " payloiadddd");
-        console.log(action.payload, " tessssssssssssssssssssssssssssssssssss");
-        state.listItemInfo = action.payload;
+        console.log(action.payload, " payloiadddd ");
+        console.log(action.payload, " tessssssssssssssssssssssssssssssssssss ");
+        if (
+          action.payload &&
+          action.payload.foods &&
+          Array.isArray(action.payload.foods)
+        ) {
+          state.listItemInfo = action.payload.foods;
+        }
+        state.cartState = action.payload;
       })
       .addCase(getCartInfo.rejected, (state, action) => {
         console.log(action.payload);
@@ -250,26 +290,28 @@ export const getCartInfo = createAsyncThunk(
           (i) => i.operatingSlotId == operatingSlotId
         );
         console.log(listItemByOperatingSlots);
-        listIds = listItemByOperatingSlots.map(
-          (item) => item.productId.split("-")[0]
-        );
+        listIds = listItemByOperatingSlots.map((item) => {
+          return {
+            id: item.productId,
+            optionGroupRadio: item?.optionGroupRadio,
+            optionGroupCheckbox: item?.optionGroupCheckbox,
+          };
+        });
       } else {
         return [];
       }
-
-      const res = await api.get("/api/v1/food", {
-        params: {
-          ids: listIds,
-        },
-        paramsSerializer: (params) => {
-          return qs.stringify(params, { arrayFormat: "repeat" });
-        },
+      console.log(listIds, " list id in for request cartttttttttttt");
+      const res = await api.post("/api/v1/food", {
+        shopId: id,
+        operatingSlotId: operatingSlotId,
+        foods: listIds,
       });
+      console.log(res, " asfdasd asd fasdf asdf asf asf ");
       const data = await res.data;
 
       console.log(data, "Data cart invoke");
       if (data.isSuccess) {
-        return data.value.foods;
+        return data.value;
       } else {
         return [];
       }
