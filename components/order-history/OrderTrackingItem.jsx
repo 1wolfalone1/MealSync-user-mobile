@@ -1,11 +1,15 @@
 import { router } from "expo-router";
 import SkeletonLoading from "expo-skeleton-loading";
-import { HandCoins, TimerResetIcon } from "lucide-react-native";
+import { HandCoins, PackageCheck, TimerResetIcon } from "lucide-react-native";
 import React from "react";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
 import { Surface, TouchableRipple } from "react-native-paper";
 import { Colors } from "../../constant";
-import { convertIntTimeToString, formatDateTime, formatNumberVND } from "../../utils/MyUtils";
+import {
+  convertIntTimeToString,
+  formatDateTime,
+  formatNumberVND,
+} from "../../utils/MyUtils";
 
 const OrderTrackingItem = ({ item }) => {
   const { width, height } = Dimensions.get("window");
@@ -26,6 +30,44 @@ const OrderTrackingItem = ({ item }) => {
       .toLocaleDateString("en-GB", options)
       .replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+)/, "$1/$2/$3 $4:$5");
   };
+  const getStatusUI = () => {
+    if (item.status == 1) {
+      return (
+        <>
+          <TimerResetIcon color={"blue"} size={16} />
+          <Text className="text-xs text-blue-600">Chờ xác nhận</Text>
+        </>
+      );
+    } else if (item.status == 3) {
+      return (
+        <>
+          <TimerResetIcon color={"blue"} size={16} />
+          <Text className="text-xs text-blue-600">Đã xác nhận</Text>
+        </>
+      );
+    } else if (item.status == 5) {
+      return (
+        <>
+          <TimerResetIcon color={"blue"} size={16} />
+          <Text className="text-xs text-blue-600">Đang chuẩn bị</Text>
+        </>
+      );
+    } else if (item.status == 6) {
+      return (
+        <>
+          <TimerResetIcon color={"blue"} size={16} />
+          <Text className="text-xs text-blue-600">Đang giao</Text>
+        </>
+      );
+    } else if (item.status == 7) {
+      return (
+        <>
+          <PackageCheck color={"#2a742e"} size={16} />
+          <Text className="text-xs text-green-700">Giao thành công</Text>
+        </>
+      );
+    }
+  };
   return item == null ? (
     <SkeletonItem />
   ) : (
@@ -37,7 +79,18 @@ const OrderTrackingItem = ({ item }) => {
       elevation={1}
     >
       <TouchableRipple
-        onPress={() => router.push("/order-details/" + item.id)}
+        onPress={() => {
+          if (item.status == 7) {
+            router.push({
+              pathname: "/order-delivery-success",
+              params: {
+                orderId: item.id,
+              },
+            });
+          } else {
+            router.push("/order-details/" + item.id);
+          }
+        }}
         borderless
         style={{
           borderRadius: 16,
@@ -97,8 +150,7 @@ const OrderTrackingItem = ({ item }) => {
                 Mã đơn hàng: #{item.id}
               </Text>
               <View className="flex-row items-center gap-1">
-                <TimerResetIcon color={"blue"} size={14} />
-                <Text className="text-xs text-blue-600">Đang xử lý</Text>
+                {getStatusUI()}
               </View>
             </View>
           </View>

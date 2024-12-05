@@ -1,4 +1,5 @@
 import GoogleIcon from '../assets/icon/google-icon.png';
+import AddImage from '../assets/images/add-image.png';
 import BackWhite from '../assets/images/back-white.png';
 import EmptyCart from '../assets/images/cart-empty.png';
 import Cod from '../assets/images/cod.png';
@@ -28,5 +29,6 @@ export default
   FlashSale,
   VNPay,
   Cod,
+  AddImage,
 };
 

@@ -26,7 +26,7 @@ const Header_Min_Height = 20;
 
 export default function DynamicHeader({ animHeaderValue }) {
   const userData = useSelector(userInfoSliceSelector);
-  const { socket } = useSelector(globalSelector);
+  const { socket, searchPage } = useSelector(globalSelector);
   const [notRead, setNotRead] = React.useState(0);
   const navigation = useNavigation();
   const {
@@ -107,7 +107,10 @@ export default function DynamicHeader({ animHeaderValue }) {
                 fontSize: 14,
                 lineHeight: 15,
               }}
-              onPress={() => {}}
+              onPress={() => {
+                router.push('/map2')
+
+              }}
               mode="text"
               contentStyle={{
                 flexDirection: "row-reverse",
@@ -172,7 +175,11 @@ export default function DynamicHeader({ animHeaderValue }) {
             }}
           />
           <TextInput
-            onFocus={() => router.push("/home/search")}
+            onFocus={() => {
+              if (!searchPage) {
+                router.push("/home/search");
+              }
+            }}
             className="flex-1 font-hnow63book"
             value={filter.searchText}
             onChangeText={(value) => {
@@ -181,13 +188,17 @@ export default function DynamicHeader({ animHeaderValue }) {
                   searchText: value,
                 })
               );
+              if (value) {
+                if (!searchPage) {
+                  router.replace("/home/search-list");
+                }
+              }
             }}
             placeholder="Tìm kiếm món ăn hay shop house?"
           />
         </View>
         <TouchableRipple
           className="p-2 ml-2 rounded-full "
-          style={styles.shadow}
           onPress={() => {}}
           rippleColor="rgba(0, 0, 0, .32)"
         >

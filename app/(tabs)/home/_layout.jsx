@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Slot } from "expo-router";
+import { router, Slot } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -20,9 +20,12 @@ import CategoryItemInHome from "../../../components/user-page/CategoryItemInHome
 import DynamicHeader from "../../../components/user-page/HeaderAnimated";
 import globalSlice, { globalSelector } from "../../../redux/slice/globalSlice";
 import searchSlice from "../../../redux/slice/searchSlice";
-import { loadInfo, userInfoSliceSelector } from "../../../redux/slice/userSlice";
+import {
+  loadInfo,
+  userInfoSliceSelector,
+} from "../../../redux/slice/userSlice";
 
-import messaging from '@react-native-firebase/messaging';
+import messaging from "@react-native-firebase/messaging";
 const styles = StyleSheet.create({
   container: {
     margin: 0,
@@ -38,7 +41,7 @@ const styles = StyleSheet.create({
 });
 const blankData = [null, null, null, null, null];
 const HomePage = () => {
-  const { socket, currentScreen } = useSelector(globalSelector);
+  const { socket, currentScreen, searchPage } = useSelector(globalSelector);
   const info = useSelector(userInfoSliceSelector);
   const dispatch = useDispatch();
   console.log(currentScreen, " ?????????????");
@@ -59,10 +62,9 @@ const HomePage = () => {
   const handleRegistrationDevice = async (token) => {
     try {
       console.log("Registration device token", token);
-      const res = await api.put("/api/v1/customer/account/device-token", {
+      const res = await api.put("/api/v1/auth/device-token", {
         deviceToken: token,
       });
-      console.log("Registration", res);
       const data = await res.data;
       console.log(data, " successfully registered device");
     } catch (err) {
@@ -75,7 +77,7 @@ const HomePage = () => {
         .getToken()
         .then((token) => {
           console.log(token, " device tokenn");
-          // if (info) handleRegistrationDevice(token);
+          if (info) handleRegistrationDevice(token);
         })
         .catch((err) => {
           console.log(err, " cannot register device in message()");
@@ -99,7 +101,10 @@ const HomePage = () => {
         return;
       }
     }
-    console.log(message.Type, " message websocket type");
+    console.log(message.EntityType, " message websocket type");
+    if (message.EntityType == 1) {
+      dispatch(globalSlice.actions.notifyOrderStatusChange());
+    }
     showToastable({
       renderContent: () => <NotifyFisebaseForegroundItem {...message} />,
     });
@@ -114,7 +119,7 @@ const HomePage = () => {
       }
 
       // Connect to the server with JWT authentication
-      const newSocket = io("http://socketio.mealsync.org/", {
+      const newSocket = io("https://socketio.1wolfalone1.com/", {
         auth: {
           token: token,
         },
@@ -163,7 +168,7 @@ const HomePage = () => {
     };
   }, []);
   const [categories, setCategories] = useState(null);
-  const [idCategorySelected, setCategorySelected] = useState(1);
+  const [idCategorySelected, setCategorySelected] = useState(0);
   const handleGetCategories = async () => {
     try {
       const res = await api.get("api/v1/platform-category");
@@ -174,6 +179,7 @@ const HomePage = () => {
       console.log(err, " error in DynamicHeader");
     }
   };
+
   const handleClickCategory = (id) => {
     if (id == idCategorySelected) {
       setCategorySelected(0);
@@ -189,6 +195,9 @@ const HomePage = () => {
           categoryId: id,
         })
       );
+    }
+    if (!searchPage) {
+      router.replace("/home/search-list");
     }
   };
   let scrollOffsetY = useRef(new Animated.Value(0)).current;
@@ -209,6 +218,9 @@ const HomePage = () => {
         nestedScrollEnabled={true}
         contentContainerStyle={{
           paddingBottom: 100,
+        }}
+        style={{
+          flex: 1
         }}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],

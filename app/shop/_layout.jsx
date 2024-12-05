@@ -20,6 +20,22 @@ const ShopLayout = () => {
           }}
         />
         <JsStack.Screen
+          name="order-reorder"
+          options={{
+            title: "index",
+            presentation: "",
+            headerShown: false,
+          }}
+        />
+        <JsStack.Screen
+          name="change-info-reorder"
+          options={{
+            title: "index",
+            presentation: "",
+            headerShown: false,
+          }}
+        />
+        <JsStack.Screen
           name="[productId]"
           options={{
             title: "product-detail",

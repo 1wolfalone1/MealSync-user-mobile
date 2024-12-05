@@ -37,10 +37,10 @@ const ShopReview = () => {
   const getReviews = async () => {
     try {
       const res = await api.get(
-        `api/v1/shop/${shopId}/review?filter=3&pageIndex=1&pageSize=20`
+        `api/v1/shop/${shopId}/review?filter=1&pageIndex=1&pageSize=20`
       );
       const data = await res.data;
-      console.log(data.value.items)
+      console.log(data.value.items, "list review")
       setReviews(data.value.items);
     } catch (e) {
       console.log(e);

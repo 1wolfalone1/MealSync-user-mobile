@@ -20,7 +20,6 @@ const OrderHistory = () => {
   useEffect(() => {
     dispatch(getListOrderHistory({ accountId: userInfo.id, pageIndex: 1, pageSize: 20 }));
 
-    console.log(listOrderHistory, 'orderHistory');
   }, [isFocus]);
   return (
     <SafeAreaView edges={['bottom']} className="bg-gray-50 flex-1">

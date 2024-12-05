@@ -38,7 +38,11 @@ import globalSlice, {
   globalSelector,
 } from "../../../../redux/slice/globalSlice";
 import { userInfoSliceSelector } from "../../../../redux/slice/userSlice";
-import { convertIntTimeToString, formatDateTime, formatNumberVND } from "../../../../utils/MyUtils";
+import {
+  convertIntTimeToString,
+  formatDateTime,
+  formatNumberVND,
+} from "../../../../utils/MyUtils";
 
 const OrderTracking = () => {
   const { width, height } = Dimensions.get("window");
@@ -193,6 +197,23 @@ const OrderTracking = () => {
       console.log(e);
     }
   };
+  useEffect(() => {
+    if (orderData) {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Đang lấy thông tin đơn hàng",
+        })
+      );
+    } else {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: true,
+          msg: "Đang lấy thông tin đơn hàng",
+        })
+      );
+    }
+  }, [orderData]);
   return orderData == null ? (
     <></>
   ) : (

@@ -1,18 +1,13 @@
 import { router } from "expo-router";
 import { Formik } from "formik";
 import React, { useState } from "react";
-import { Image, Keyboard, ScrollView, Text, View } from "react-native";
-import {
-  Button,
-  Divider,
-  HelperText,
-  TextInput,
-  TouchableRipple,
-} from "react-native-paper";
+import { Keyboard, ScrollView, Text, View } from "react-native";
+import { Button, Divider, HelperText, TextInput } from "react-native-paper";
 import { useDispatch } from "react-redux";
 import * as yup from "yup";
 import api from "../../api/api";
-import { Colors, Images } from "../../constant";
+import { Colors } from "../../constant";
+import globalSlice from "../../redux/slice/globalSlice";
 import persistSlice from "../../redux/slice/persistSlice";
 
 const validationSchema = yup.object().shape({
@@ -49,7 +44,7 @@ const validationSchema = yup.object().shape({
 });
 
 const SignUp = () => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const [loginErrorGoogleMessage, setLoginErrorGoogleMessage] = useState("");
   const [isShowPassword, setIsShownPassword] = useState(false);
   const [isShowConfirmPassword, setIsShownConfirmPassword] = useState(false);
@@ -73,8 +68,29 @@ const SignUp = () => {
         data.error.code,
         data.error.message
       );
-    } catch (error) {
-      console.log("error ne", error);
+    } catch (e) {
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message,
+            })
+          );
+        }
+      }
+      console.log("error ne", e);
     }
   };
 
@@ -263,34 +279,6 @@ const SignUp = () => {
           }}
         />
         <View className="items-start">
-          <TouchableRipple
-            className="bg-white rounded-3xl"
-            style={{ width: "100%" }}
-            borderless
-            onPress={() => promptAsync()}
-            rippleColor="rgba(0, 0, 0, .32)"
-          >
-            <View
-              className="flex-row justify-between p-3  items-center rounded-full"
-              style={{
-                borderWidth: 1,
-                borderColor: Colors.primaryBackgroundColor,
-                width: "80%",
-              }}
-            >
-              <Image
-                className="h-[30] w-[30] mr-2"
-                resizeMode="contain"
-                source={Images.GoogleIcon}
-              />
-
-              <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-                Đăng nhập bằng google
-              </Text>
-
-              <Image className="h-[30] w-[30] mr-2" resizeMode="contain" />
-            </View>
-          </TouchableRipple>
           <Text>{loginErrorGoogleMessage}</Text>
         </View>
       </View>

@@ -19,7 +19,7 @@ import { dataShopDetailsSelector } from "../../redux/slice/shopDetailsSlice";
 import { userInfoSliceSelector } from "../../redux/slice/userSlice";
 
 const VoucherPage = () => {
-  const { ship, listVoucher, voucher, voucherId } = useSelector(orderSelector);
+  const { ship, listVoucher, voucher, voucherId, dataReorder} = useSelector(orderSelector);
   const test = useSelector(orderSelector);
   const dispatch = useDispatch();
   const { info } = useSelector(dataShopDetailsSelector);
@@ -30,7 +30,7 @@ const VoucherPage = () => {
   useEffect(() => {
     dispatch(
       getListVoucher({
-        shopId: info?.id,
+        shopId: info?.id ? info.id : dataReorder?.shopInfo?.id,
       })
     );
     if (voucher.id) {

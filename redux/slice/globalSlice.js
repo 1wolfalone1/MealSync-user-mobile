@@ -41,16 +41,23 @@ const initialState = {
   },
 
   orderStatusChange: false,
+  searchPage: false,
 };
 const globalSlice = createSlice({
   name: "globalSlice",
   initialState: initialState,
   reducers: {
+    changeSearchPage: (state, actions) => {
+      state.searchPage = true;
+    },
+    resetSearchPage: (state, actions) => {
+      state.searchPage = false;
+    },
     setSocket: (state, actions) => {
       state.socket = actions.payload;
     },
     setCurrentScreen: (state, actions) => {
-      console.log(actions.payload, " asdfsdafdsfd set current screen")
+      console.log(actions.payload, " asdfsdafdsfd set current screen");
       state.currentScreen = actions.payload;
     },
     notifyOrderStatusChange: (state, actions) => {

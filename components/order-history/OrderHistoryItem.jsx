@@ -1,10 +1,15 @@
+import { router } from "expo-router";
 import SkeletonLoading from "expo-skeleton-loading";
-import { CircleCheckBig, HandCoins } from "lucide-react-native";
+import { CircleCheckBig, CircleX, HandCoins } from "lucide-react-native";
 import React from "react";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
 import { TouchableRipple } from "react-native-paper";
 import { Colors } from "../../constant";
-import { convertIntTimeToString, formatDateTime, formatNumberVND } from "../../utils/MyUtils";
+import {
+  convertIntTimeToString,
+  formatDateTime,
+  formatNumberVND,
+} from "../../utils/MyUtils";
 
 const OrderHistoryItem = ({ item }) => {
   const { width, height } = Dimensions.get("window");
@@ -25,6 +30,31 @@ const OrderHistoryItem = ({ item }) => {
       .toLocaleDateString("en-GB", options)
       .replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+)/, "$1/$2/$3 $4:$5");
   };
+  const getUiBasedState = () => {
+    if (item.status == 2 || item.status == 4) {
+      return (
+        <>
+          <CircleX color={"red"} size={14} />
+          <Text className="text-xs text-red-500">{
+            item.status ==2 ? "Bị hủy" : "Đã hủy"}</Text>
+        </>
+      );
+    } else if (item.status == 9) {
+      return (
+        <>
+          <CircleCheckBig color={"green"} size={14} />
+          <Text className="text-xs text-green-600">Giao thành công</Text>
+        </>
+      );
+    } else if (item.status == 8) {
+      return (
+        <>
+          <CircleCheckBig color={"green"} size={14} />
+          <Text className="text-xs text-green-600">Giao hành thất bại</Text>
+        </>
+      );
+    }
+  };
   return item == null ? (
     <SkeletonItem />
   ) : (
@@ -38,7 +68,14 @@ const OrderHistoryItem = ({ item }) => {
       }}
     >
       <TouchableRipple
-        onPress={() => {}}
+        onPress={() =>
+          router.push({
+            pathname: "/order-history-completed",
+            params: {
+              orderId: item.id,
+            },
+          })
+        }
         borderless
         style={{
           borderRadius: 16,
@@ -98,9 +135,7 @@ const OrderHistoryItem = ({ item }) => {
                 Mã đơn hàng: #{item.id}
               </Text>
               <View className="flex-row items-center gap-1">
-                
-                <CircleCheckBig color={'green'} size={14} />
-                <Text className="text-xs text-green-600">Giao thành công</Text>
+                {getUiBasedState()}
               </View>
             </View>
           </View>

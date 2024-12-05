@@ -190,11 +190,10 @@ export function formatDateTime(dateString) {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
   };
 
   // Format the date and time in the desired format
-  const formattedDate = dateObj.toLocaleString("en-US", options);
+  const formattedDate = dateObj.toLocaleString("vi-VN", options);
 
   // Split the formatted date into date and time parts
   const [datePart, timePart] = formattedDate.split(", ");
@@ -271,4 +270,25 @@ export function isBeforeOneHour(timeString) {
   const oneHourBeforeTarget = new Date(targetTime.getTime() - 60 * 60 * 1000);
   console.log(oneHourBeforeTarget, vietnamNow, "sdffddddd")
   return vietnamNow < oneHourBeforeTarget;
+}
+export function getTimeSlotBelow(targetTime) {
+    // Get current time
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    const currentTimeNumber = currentHour * 100 + currentMinute;
+    if (currentTimeNumber < targetTime) {
+        return targetTime;
+    }
+    
+    // Round down to nearest 30-minute slot
+    let slotHour = currentHour;
+    let slotMinute = 0;
+    
+    if (currentMinute >= 30) {
+        slotMinute = 30;
+    }
+    
+    return slotHour * 100 + slotMinute;
 }

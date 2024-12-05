@@ -4,15 +4,18 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import {
   router,
   useLocalSearchParams,
-  useRootNavigationState
+  useRootNavigationState,
 } from "expo-router";
 import { Formik } from "formik";
 import { default as React, useEffect, useState } from "react";
 import { Image, Keyboard, ScrollView, Text, View } from "react-native";
+import DropDownPicker from "react-native-dropdown-picker";
 import {
   Button,
   Divider,
   HelperText,
+  Modal,
+  Portal,
   TextInput,
   TouchableRipple,
 } from "react-native-paper";
@@ -56,55 +59,135 @@ const SignIn = () => {
   const dispatch = useDispatch();
   const [message, setMessage] = useState();
   const [user, setUser] = useState();
-
+  const [stateLogin, setStateLogin] = useState(true);
+  const [dataUserLogin, setDataUserLogin] = useState({});
+  const [errorPhoneNumber, setErrorPhoneNUmber] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const rootNavigationState = useRootNavigationState();
-  async function onGoogleButtonPress() {
-    // Check if your device supports Google Play
-    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-    // Get the users ID token
-    const signInResult = await GoogleSignin.signIn();
-
-    // Try the new style of google-sign in result, from v13+ of that module
-    idToken = signInResult.data?.idToken;
-    if (!idToken) {
-      // if you are using older versions of google-signin, try old style result
-      idToken = signInResult.idToken;
-    }
-    if (!idToken) {
-      throw new Error("No ID token found");
-    }
-    console.log(signInResult, "Google Sign In Result");
-    // Create a Google credential with the token
-    const googleCredential = auth.GoogleAuthProvider.credential(
-      signInResult.data.idToken
-    );
-    GoogleSignin.signOut();
-    router.navigate("/home");
-    // Sign-in the user with the credential
-    return auth().signInWithCredential(googleCredential);
-  }
-  // Handle user state changes
   useEffect(() => {
     checkLogin();
-  }, []);
+  }, [stateLogin]);
   const checkLogin = async () => {
     try {
       const token = await AsyncStorage.getItem("@token");
+      console.log(token, " tokennnnnnnnnn ne ");
       if (token) {
-        router.navigate('/home')
+        router.navigate("/home");
       }
     } catch (err) {
       console.log(err, "error check login");
     }
   };
+  async function onGoogleButtonPress() {
+    // Check if your device supports Google Play
+    try {
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+      // Get the users ID token
+      const signInResult = await GoogleSignin.signIn();
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: true,
+          msg: "Đang đăng nhập",
+        })
+      );
+      // Try the new style of google-sign in result, from v13+ of that module
+      idToken = signInResult.data?.idToken;
+      if (!idToken) {
+        // if you are using older versions of google-signin, try old style result
+        idToken = signInResult.idToken;
+      }
+      if (!idToken) {
+        throw new Error("No ID token found");
+      }
+      console.log(idToken, "Google Sign In Result");
+      // Create a Google credential with the token
+      const googleCredential = auth.GoogleAuthProvider.credential(
+        signInResult.data.idToken
+      );
+      GoogleSignin.signOut();
+      // Sign-in the user with the credential
+      return auth().signInWithCredential(googleCredential);
+    } catch (e) {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: true,
+          msg: "Đang đăng nhập",
+        })
+      );
+      console.error(e);
+    }
+  }
+  // Handle user state changes
+
+  function validatePhoneNumber(phoneNumber) {
+    const phoneRegex = /((^(\\+84|84|0|0084){1})(3|5|7|8|9))+([0-9]{8})$/;
+    const errorMessage = "Số điện thoại không hợp lệ!";
+
+    if (phoneRegex.test(phoneNumber)) {
+      return { valid: true, message: "Số điện thoại hợp lệ!" };
+    } else {
+      return { valid: false, message: errorMessage };
+    }
+  }
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(async (user) => {
       console.log("User state changed", user);
       try {
-        const idToken = await user.getIdTokenResult(true);
+        if (user) {
+          const idToken = await user.getIdTokenResult(true);
+          const res = await api.post("/api/v1/auth/login-google", {
+            idToken: idToken.token,
+          });
+          try {
+            auth().signOut();
+          } catch (e) {
+            console.log(e);
+          }
+          const data = await res.data;
+          console.log(data, " asdfasd daaaaaaaaaaaaaaaaa");
+          if (data.isSuccess) {
+            dispatch(
+              globalSlice.actions.changeLoadings({
+                isLoading: false,
+                msg: "Đang đăng nhập",
+              })
+            );
+            dispatch(
+              userInfoSlice.actions.changeUserInfo({
+                info: data.value.accountResponse,
+                role: CommonConstants.USER_ROLE.USER,
+              })
+            );
 
-        console.log(idToken, " firebase auth state changed ");
+            console.log(data.value, "dta login gooogle");
+            await AsyncStorage.setItem(
+              "@token",
+              data.value.tokenResponse.accessToken
+            );
+            setStateLogin((data) => !data);
+          } else if (data.isWarning) {
+            dispatch(
+              globalSlice.actions.changeLoadings({
+                isLoading: false,
+                msg: "Đang đăng nhập",
+              })
+            );
+            setDataUserLogin(data.value);
+            if (!openModelCreateBuilding) {
+              setOpenModelCreateBuilding(true);
+            }
+            console.log("user must loginnnnnnnnnnnnnnn");
+          }
+        }
       } catch (e) {
+        dispatch(
+          globalSlice.actions.changeLoadings({
+            isLoading: false,
+            msg: "Đang đăng nhập",
+          })
+        );
         console.log(e, " error get id token");
       }
     });
@@ -146,21 +229,32 @@ const SignIn = () => {
   ) => {
     try {
       if (isSuccess) {
-        console.log(data);
-        await AsyncStorage.setItem("@token", data.tokenResponse.accessToken);
-        dispatch(
-          userInfoSlice.actions.changeUserInfo({
-            info: data.accountResponse,
-            role: CommonConstants.USER_ROLE.USER,
-          })
-        );
-        dispatch(
-          globalSlice.actions.changeLoadings({
-            isLoading: false,
-            msg: "Đang đăng nhập",
-          })
-        );
-        router.push("/home");
+        if (data.accountResponse.isSelectedBuilding) {
+          console.log(data);
+          await AsyncStorage.setItem("@token", data.tokenResponse.accessToken);
+          dispatch(
+            userInfoSlice.actions.changeUserInfo({
+              info: data.accountResponse,
+              role: CommonConstants.USER_ROLE.USER,
+            })
+          );
+          dispatch(
+            globalSlice.actions.changeLoadings({
+              isLoading: false,
+              msg: "Đang đăng nhập",
+            })
+          );
+          router.replace("/home");
+        } else {
+          dispatch(
+            globalSlice.actions.changeLoadings({
+              isLoading: false,
+              msg: "Đang đăng nhập",
+            })
+          );
+          await AsyncStorage.setItem("@token", data.tokenResponse.accessToken);
+          router.push("/add-building");
+        }
       } else if (errorCode === "401") {
         dispatch(
           globalSlice.actions.changeLoadings({
@@ -180,11 +274,273 @@ const SignIn = () => {
       console.log(e);
     }
   };
+  const [listAllDormitory, setListAllDormitory] = useState([]);
+  const [listAllBuilding, setListAllBuilding] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [selectDormitoryId, setSelectDormitoryId] = useState(null);
+  const [selectBuildingId, setSelectBuildingId] = useState(null);
 
+  const [openModelCreateBuilding, setOpenModelCreateBuilding] = useState(false);
+  const [state, setState] = useState(false);
+  const [openB, setOpenB] = useState(false);
+  const handleGetAllDormitory = async () => {
+    try {
+      const res = await api.get(`/api/v1/dormitory/all`);
+      const data = await res.data;
+      const newList = data.value.map((i) => {
+        return {
+          label: i.name,
+          value: i.id,
+        };
+      });
+      setListAllDormitory(newList);
+    } catch (e) {
+      console.log("Get list all dormitory error: ", e);
+    }
+  };
+  const handleGetAllBuilding = async () => {
+    console.log(selectBuildingId);
+    try {
+      if (selectDormitoryId) {
+        const res = await api.get(
+          `/api/v1/dormitory/${selectDormitoryId}/building`
+        );
+        const data = await res.data;
+        const newList = data.value.map((i) => {
+          return {
+            label: i.name,
+            value: i.id,
+          };
+        });
+        setListAllBuilding(newList);
+      }
+    } catch (e) {
+      console.log("Get list all building error: ", e);
+    }
+  };
+  useEffect(() => {
+    handleGetAllDormitory();
+  }, [state]);
+
+  const [inRequest, setInRequest] = useState(false);
+  useEffect(() => {
+    handleGetAllBuilding();
+  }, [selectDormitoryId]);
+  const [errorBuilding, setErrorBuilding] = useState("");
+  const handleCreateNewUserAfterLoginGoogle = async () => {
+    let isValid = true;
+    if (
+      selectBuildingId == null ||
+      selectBuildingId == 0 ||
+      !selectBuildingId
+    ) {
+      setErrorBuilding("Cần chọn địa!");
+      isValid = false;
+    }
+    const isValidPhone = validatePhoneNumber(phoneNumber);
+    if (!isValidPhone.valid) {
+      setErrorPhoneNUmber(isValidPhone.message);
+      isValid = false;
+    }
+    if (isValid) {
+      setInRequest(true);
+      try {
+        const res = await api.post("/api/v1/auth/register-google", {
+          ...dataUserLogin,
+          phoneNumber: phoneNumber,
+          buildingId: selectBuildingId,
+        });
+        const data = await res.data;
+        if (data.isSuccess) {
+          setOpenModelCreateBuilding(false);
+          dispatch(
+            globalSlice.actions.changeLoadings({
+              isLoading: false,
+              msg: "Đang đăng nhập",
+            })
+          );
+          dispatch(
+            userInfoSlice.actions.changeUserInfo({
+              info: data.value.accountResponse,
+              role: CommonConstants.USER_ROLE.USER,
+            })
+          );
+
+          console.log(data.value, "dta login gooogle");
+          await AsyncStorage.setItem(
+            "@token",
+            data.value.tokenResponse.accessToken
+          );
+          setStateLogin((i) => !i);
+
+          setInRequest(false);
+        } else {
+          setInRequest(false);
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                icon: "camera",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "yellow",
+              },
+            })
+          );
+
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: data.error.message,
+            })
+          );
+        }
+      } catch (e) {
+        setInRequest(false);
+        console.log(e, "Unexpected error second time validation");
+      }
+    }
+  };
   return (
     <ScrollView
       contentContainerStyle={{ flexGrow: 1, backgroundColor: "#fffcfc" }}
     >
+      <Portal>
+        <Modal
+          visible={openModelCreateBuilding}
+          onDismiss={() => setOpenModelCreateBuilding(false)}
+          contentContainerStyle={{
+            borderRadius: 20,
+            backgroundColor: "white",
+            padding: 20,
+            marginHorizontal: 20,
+          }}
+        >
+          <Text className="font-bold text-xl mb-4">
+            Nhập thông tin để tạo tài khoản
+          </Text>
+          <Divider />
+          <Text className="font-bold text-lg my-1">Chọn địa chỉ</Text>
+          <Divider className="mb-2" />
+
+          <DropDownPicker
+            listMode="SCROLLVIEW"
+            open={open}
+            style={{
+              borderColor: Colors.primaryBackgroundColor,
+              width: "80%",
+            }}
+            zIndex={3000}
+            zIndexInverse={1000}
+            categorySelectable={true}
+            placeholderStyle={{ color: "grey" }}
+            dropDownContainerStyle={{
+              backgroundColor: "white",
+
+              borderColor: Colors.primaryBackgroundColor,
+              width: "80%",
+            }}
+            textStyle={{}}
+            value={selectDormitoryId}
+            items={listAllDormitory}
+            setOpen={setOpen}
+            onChangeValue={(value) => {
+              console.log(value);
+              setSelectDormitoryId(value);
+            }}
+            setValue={setSelectDormitoryId}
+            setItems={setListAllDormitory}
+            placeholder={"Khu"}
+          />
+          <View
+            style={{
+              height: 20,
+            }}
+          />
+          <DropDownPicker
+            listMode="SCROLLVIEW"
+            open={openB}
+            style={{
+              borderColor: Colors.primaryBackgroundColor,
+              width: "80%",
+            }}
+            zIndex={2000}
+            zIndexInverse={2000}
+            categorySelectable={true}
+            placeholderStyle={{ color: "grey" }}
+            dropDownContainerStyle={{
+              backgroundColor: "white",
+
+              borderColor: Colors.primaryBackgroundColor,
+              width: "80%",
+            }}
+            textStyle={{}}
+            value={selectBuildingId}
+            items={listAllBuilding}
+            setOpen={setOpenB}
+            onChangeValue={(value) => {}}
+            setValue={setSelectBuildingId}
+            setItems={setListAllBuilding}
+            placeholder={"Tòa"}
+          />
+          <View className="h-100">
+            <HelperText type="error" visible={errorBuilding}>
+              {errorBuilding}
+            </HelperText>
+          </View>
+
+          <Divider className="mt-5" />
+          <Text className="font-bold text-lg my-1">Chọn số điện thoại</Text>
+          <Divider className="mb-2" />
+          <View className="w-full">
+            <TextInput
+              style={{ backgroundColor: "transparent", width: "80%" }}
+              mode="outlined"
+              dense
+              value={phoneNumber}
+              onChangeText={(value) => {
+                const isValid = validatePhoneNumber(value);
+                console.log(value, isValid, "sdfasfd");
+                if (!isValid.valid) {
+                  setErrorPhoneNUmber(isValid.message);
+                } else {
+                  setErrorPhoneNUmber("");
+                }
+                setPhoneNumber(value);
+              }}
+              keyboardType="phone-pad"
+              placeholder="Nhập số điện thoại của bạn"
+              onSubmitEditing={Keyboard.dismiss}
+            />
+            <View className="w-[80%]">
+              <HelperText type="error" visible={errorPhoneNumber}>
+                {errorPhoneNumber}
+              </HelperText>
+            </View>
+          </View>
+          <View className="flex-row justify-end gap-2 mt-2">
+            <Button
+              mode="contained"
+              contentStyle={{
+                backgroundColor: "#000000",
+              }}
+              onPress={() => setOpenModelCreateBuilding(false)}
+            >
+              Hủy
+            </Button>
+            <Button
+              mode="contained-tonal"
+              disabled={inRequest}
+              loading={inRequest}
+              contentStyle={{}}
+              onPress={handleCreateNewUserAfterLoginGoogle}
+            >
+              Xác nhận
+            </Button>
+          </View>
+        </Modal>
+      </Portal>
       <Formik
         initialValues={{ email: "", password: "" }}
         onSubmit={(values) => {

@@ -49,7 +49,7 @@ const OrderReviewItem = ({ item }) => {
             })
           );
           router.push({
-            pathname: "/review-form",
+            pathname: "/order-review",
             params: {
               orderId: item.id,
             },

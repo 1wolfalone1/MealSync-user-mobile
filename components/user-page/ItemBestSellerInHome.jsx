@@ -1,10 +1,10 @@
-import { router } from 'expo-router';
-import SkeletonLoading from 'expo-skeleton-loading';
-import React from 'react';
-import { Dimensions, Image, StyleSheet, Text, View } from 'react-native';
-import { Avatar, TouchableRipple } from 'react-native-paper';
-import { Colors } from '../../constant';
-import { formatNumberVND } from '../../utils/MyUtils';
+import { router } from "expo-router";
+import SkeletonLoading from "expo-skeleton-loading";
+import React from "react";
+import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
+import { Avatar, Surface, TouchableRipple } from "react-native-paper";
+import { Colors } from "../../constant";
+import { formatNumberVND } from "../../utils/MyUtils";
 
 const styles = StyleSheet.create({
   shadow: {
@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
 });
 
 const ItemBestSellerInHome = ({ item }) => {
-  const { width, height } = Dimensions.get('window');
+  const { width, height } = Dimensions.get("window");
   const widthItem = parseInt((width * 30) / 100);
   const itemImage = {
     uri: item?.imageUrl,
@@ -45,44 +45,53 @@ const ItemBestSellerInHome = ({ item }) => {
         width: widthItem,
       }}
     >
-      <TouchableRipple
-        onPress={() =>
-          router.push({
-            pathname: '/shop',
-            params: {
-              shopId: item.shopId,
-            },
-          })
-        }
-        className="flex-1 w-full bg-white"
-      >
-        <View
-          className="w-full bg-black-100  rounded-2xl "
-          style={{
-            ...styles.shadow,
-            height: widthItem,
-          }}
+      <Surface elevation={1} className="w-full rounded-2xl">        
+        <TouchableRipple
+          borderless
+          onPress={() =>
+            router.push({
+              pathname: "/shop",
+              params: {
+                shopId: item.shopId,
+              },
+            })
+          }
+          className="bg-red-300 rounded-2xl"
         >
-          <View className="absolute top-2 left-2 bg-white flex-row rounded-full p-1.5 z-[1]">
-            <Text className="font-hnow64regular text-xs text-gray-500" style={{ fontSize: 10 }}>
-              {item.totalOrder} đã bán
-            </Text>
-          </View>
-          <Text
-            style
-            className="text-xs text-black font-hnow64regular absolute bottom-0 left-0 p-1 bg-glass z-[1]"
-          >
-            {formatNumberVND(item.price)}
-          </Text>
-          <Image
-            source={{
-              uri: item?.imageUrl,
+          <View
+            className="w-full bg-black-100  rounded-2xl "
+            style={{
+              height: widthItem,
             }}
-            resizeMode="cover"
-            className="w-full h-full z-[0] rounded-lg"
-          />
-        </View>
-      </TouchableRipple>
+          >
+            <View className="absolute top-2 left-2 bg-white flex-row rounded-full p-1.5 z-[1]">
+              <Text
+                className="font-hnow64regular text-xs text-gray-500"
+                style={{ fontSize: 10 }}
+              >
+                {item.totalOrder} đã bán
+              </Text>
+            </View>
+            <Text
+              style
+              className="text-xs text-black font-hnow64regular absolute bottom-0 left-0 p-1 bg-glass z-[1]"
+            >
+              {formatNumberVND(item.price)}
+            </Text>
+            <Image
+              source={{
+                uri: item?.imageUrl,
+              }}
+              style={{
+                width: widthItem,
+                height: widthItem,
+              }}
+              resizeMode="cover"
+              className="z-[0] rounded-2xl"
+            />
+          </View>
+        </TouchableRipple>
+      </Surface>
       <View className="pt-1 items-start w-full gap-1">
         <View className="flex  justify-center w-full items-start">
           <Text style className="text-xs text-gray-400 font-hnow64regular">
@@ -110,14 +119,24 @@ const ItemBestSellerInHome = ({ item }) => {
 export default ItemBestSellerInHome;
 
 const SkeletonItem = () => {
-  const { width, height } = Dimensions.get('window');
+  const { width, height } = Dimensions.get("window");
   const widthItem = parseInt((width * 30) / 100);
   return (
-    <SkeletonLoading background={Colors.skeleton.bg} highlight={Colors.skeleton.hl}>
-      <View style={{ marginBottom: 40, marginRight: 20, flexDirection: 'column', gap: 2 }}>
+    <SkeletonLoading
+      background={Colors.skeleton.bg}
+      highlight={Colors.skeleton.hl}
+    >
+      <View
+        style={{
+          marginBottom: 40,
+          marginRight: 20,
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
         <View
           style={{
-            flexDirection: 'row',
+            flexDirection: "row",
             height: widthItem,
             width: widthItem,
             borderRadius: 20,
@@ -135,12 +154,17 @@ const SkeletonItem = () => {
 
         <View
           style={{
-            flexDirection: 'row',
+            flexDirection: "row",
             gap: 5,
           }}
         >
           <View
-            style={{ height: 14, width: 14, borderRadius: 50, backgroundColor: Colors.skeleton.bg }}
+            style={{
+              height: 14,
+              width: 14,
+              borderRadius: 50,
+              backgroundColor: Colors.skeleton.bg,
+            }}
           />
           <View
             style={{
