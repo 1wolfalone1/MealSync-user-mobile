@@ -1,16 +1,25 @@
-import { router } from 'expo-router';
-import React, { useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
-import { Button, HelperText, Snackbar, Text, TextInput, TouchableRipple } from 'react-native-paper';
-import { useDispatch, useSelector } from 'react-redux';
-import api from '../../api/api';
-import HeaderInForgot from '../../components/common/HeaderInForgot';
-import { Colors } from '../../constant';
-import persistSlice, { persistSliceSelector } from '../../redux/slice/persistSlice';
+import { router } from "expo-router";
+import React, { useRef, useState } from "react";
+import { ScrollView, View } from "react-native";
+import {
+  Button,
+  HelperText,
+  Snackbar,
+  Text,
+  TextInput,
+  TouchableRipple,
+} from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
+import api from "../../api/api";
+import HeaderInForgot from "../../components/common/HeaderInForgot";
+import { Colors } from "../../constant";
+import persistSlice, {
+  persistSliceSelector,
+} from "../../redux/slice/persistSlice";
 
 export default function VerifyCode() {
   const { emailTemp } = useSelector(persistSliceSelector);
-  const [verificationCode, setVerificationCode] = useState(['', '', '', '']);
+  const [verificationCode, setVerificationCode] = useState(["", "", "", ""]);
   const inputRefs = useRef([]);
   const [message, setMessage] = useState();
   const dispatch = useDispatch();
@@ -19,7 +28,7 @@ export default function VerifyCode() {
   // Handle resend code when expired
   const handleResend = async () => {
     // Clear message and verification code
-    setVerificationCode(['', '', '', '']);
+    setVerificationCode(["", "", "", ""]);
     setMessage();
 
     const payload = {
@@ -28,10 +37,10 @@ export default function VerifyCode() {
     };
 
     try {
-      await api.post('/api/v1/customer/send-code', payload);
+      await api.post("/api/v1/auth/send-code", payload);
       setVisible(true);
     } catch (error) {
-      console.log('error ne', error);
+      console.log("error ne", error);
     }
   };
 
@@ -39,22 +48,33 @@ export default function VerifyCode() {
     const payload = {
       email: emailTemp,
       code: Number.parseInt(code),
+      isVerify: true,
+      verifyType: 1,
     };
 
     try {
-      const responseData = await api.post('/api/v1/customer/register/verify', payload);
+      const responseData = await api.post("/api/v1/auth/verify-code", payload);
       const data = await responseData.data;
-      handleVerifyCodeResponseData(data.isSuccess, data.error.code, data.error.message);
+      handleVerifyCodeResponseData(
+        data.isSuccess,
+        data.error.code,
+        data.error.message
+      );
     } catch (error) {
-      console.log('error ne', error);
+      console.log("error ne", error);
     }
   };
 
-  const handleVerifyCodeResponseData = async (isSuccess, errorCode, errorMessage) => {
+  const handleVerifyCodeResponseData = async (
+    isSuccess,
+    errorCode,
+    errorMessage
+  ) => {
     if (isSuccess) {
+      console.log("verifyCodeResponse")
       dispatch(persistSlice.actions.saveIsSignup(true));
       router.back();
-    } else if (errorCode === '400') {
+    } else if (errorCode === "400") {
       setMessage(errorMessage);
     }
   };
@@ -67,13 +87,13 @@ export default function VerifyCode() {
       return newCode;
     });
 
-    if (value !== '' && index < inputRefs.current.length - 1) {
+    if (value !== "" && index < inputRefs.current.length - 1) {
       inputRefs.current[index + 1].focus();
     }
   };
 
   const handleKeyDown = (e, index) => {
-    if (e.key === 'Backspace' && index > 0 && verificationCode[index] === '') {
+    if (e.key === "Backspace" && index > 0 && verificationCode[index] === "") {
       inputRefs.current[index - 1].focus();
     }
   };
@@ -81,19 +101,19 @@ export default function VerifyCode() {
   const onFormSubmit = async (e) => {
     try {
       e.preventDefault();
-      if (!verificationCode.join('')) {
-        setMessage('Vui lòng nhập mã xác thực!');
+      if (!verificationCode.join("")) {
+        setMessage("Vui lòng nhập mã xác thực!");
       }
-      handleVerifyCode(verificationCode.join(''));
+      handleVerifyCode(verificationCode.join(""));
     } catch (error) {
-      console.log('sahdosa', error);
+      console.log("sahdosa", error);
     }
   };
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <HeaderInForgot
-        back="sign-in/sign-up"
+        back="/"
         title="Nhập mã xác thực"
         des="Vui lòng kiểm tra email để lấy mã xác thực"
       />
@@ -101,7 +121,11 @@ export default function VerifyCode() {
         <View className="w-4/5 items-center justify-center flex flex-row gap-6">
           {verificationCode.map((digit, index) => (
             <TextInput
-              style={{ backgroundColor: 'transparent', textAlign: 'center', fontSize: 24 }}
+              style={{
+                backgroundColor: "transparent",
+                textAlign: "center",
+                fontSize: 24,
+              }}
               ref={(ref) => {
                 inputRefs.current[index] = ref;
               }}
@@ -134,14 +158,14 @@ export default function VerifyCode() {
           buttonColor={Colors.primaryBackgroundColor}
           textColor={Colors.commonBtnText}
           mode="elevated"
-          style={{ width: '80%' }}
+          style={{ width: "80%" }}
           theme={{ roundness: 2 }}
           contentStyle={{
             paddingVertical: 4,
           }}
           className="mt-8"
           labelStyle={{
-            fontFamily: 'HeadingNow-64Regular',
+            fontFamily: "HeadingNow-64Regular",
             fontSize: 16,
             fontWeight: 700,
           }}
@@ -154,11 +178,11 @@ export default function VerifyCode() {
         visible={visible}
         onDismiss={() => setVisible(false)}
         action={{
-          label: 'Ok',
+          label: "Ok",
           onPress: () => {
             setVisible(false);
           },
-          style: { color: 'red' },
+          style: { color: "red" },
         }}
         className="mb-4 text-center bg-gray-500 mx-8 rounded-md text-lg text-white"
       >

@@ -72,9 +72,16 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
           console.log(item, "item topppinggggggggggggg");
           if (item) {
             if (index === 0) {
-              toppingString += item.title + " : " + item.option.title;
+              toppingString +=
+                (item.title ? item.title : item?.topping?.title) +
+                " : " +
+                item.option.title;
             } else {
-              toppingString += " - " + item.title + " : " + item.option.title;
+              toppingString +=
+                " - " +
+                (item.title ? item.title : item?.topping?.title) +
+                " : " +
+                item.option.title;
             }
 
             priceTopping += item.option.price;
@@ -100,9 +107,15 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
             if (index == 0) {
               if (isHasRadio) {
                 toppingString +=
-                  " -&- " + item.title + ": " + checkBoxToppingString;
+                  " -&- " +
+                  (item.title ? item.title : item?.topping?.title) +
+                  ": " +
+                  checkBoxToppingString;
               } else {
-                toppingString += item.title + ": " + checkBoxToppingString;
+                toppingString +=
+                  (item.title ? item.title : item?.topping?.title) +
+                  ": " +
+                  checkBoxToppingString;
               }
             } else {
               toppingString +=
@@ -115,7 +128,7 @@ const ItemInCart = ({ itemsInfo: itemInCart, shopId }) => {
       setQuantity(itemInCart.quantity);
       setNoteTemp(itemInCart.note);
       setPriceToppingString(priceTopping);
-    }else {
+    } else {
       setItemInCart(null);
       setToppingString("");
       setQuantity(1);

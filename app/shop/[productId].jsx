@@ -69,12 +69,39 @@ const ProductDetail = () => {
     if (Array.isArray(topping)) {
       let isValid = true;
       topping.forEach((item) => {
-        if (item.isRequire) {
-          if (!toppingSelected.radio[item.id]) {
-            isValid = false;
+        if (item.type == 1) {
+          if (item.isRequire) {
+            if (!toppingSelected.radio[item.id]) {
+              isValid = false;
+            }
+          }
+        } else {
+          const min = item.minChoices;
+          const max = item.maxChoices;
+          console.log(
+            toppingSelected,
+            item.id,
+            toppingSelected.checkbox[item.id],
+            min,
+            max,
+            " testtttttttttttttttttttttt"
+          );
+          if (!toppingSelected.checkbox[item.id]) {
+            if (min > 0) {
+              isValid = false;
+            }
+          } else {
+            if (toppingSelected.checkbox[item.id].options) {
+              const checkedCount =
+                toppingSelected.checkbox[item.id].options.length;
+              if (checkedCount < min || checkedCount > max) {
+                isValid = false;
+              }
+            }
           }
         }
       });
+
       setCanAddTooCart(isValid);
     }
   }, [toppingSelected, topping]);
@@ -225,12 +252,14 @@ const ProductDetail = () => {
                   <Text className="text-base text-gray-800">
                     {item.title} từ {convertIntTimeToString(item.startTime)} đến{" "}
                     {convertIntTimeToString(item.endTime)}
-                    {item.isReceivingOrderPaused || info.isReceivingOrderPaused
-                      ? <Text className="text-sm text-red-400">
-                         {"\n"}Ngừng nhận đơn đặt hàng trong khung giờ này
+                    {item.isReceivingOrderPaused ||
+                    info.isReceivingOrderPaused ? (
+                      <Text className="text-sm text-red-400">
+                        {"\n"}Ngừng nhận đơn đặt hàng trong khung giờ này
                       </Text>
-                      : ""}
-                    
+                    ) : (
+                      ""
+                    )}
                   </Text>
                   <ChevronRight size={18} color={"grey"} />
                 </View>

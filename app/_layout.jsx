@@ -16,8 +16,9 @@ import SpinnerCustom from "../components/common/SpinnerCustom";
 import colors from "../constant/colors";
 import { store } from "../redux/store";
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import messaging from "@react-native-firebase/messaging";
+import { ChevronLeft } from "lucide-react-native";
+import { Colors } from "../constant";
 let persistor = persistStore(store);
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -56,9 +57,7 @@ export default function RootLayout() {
     messaging().onNotificationOpenedApp((remoteMessage) => {
       console.log(remoteMessage, "on open");
     });
-    messaging().setBackgroundMessageHandler(async (msg) => {
-      console.log(msg, "in background");
-    });
+    messaging().setBackgroundMessageHandler(async (msg) => {});
     const unsubscribe = messaging().onMessage(async (msg) => {});
     return unsubscribe;
   }, []);
@@ -67,19 +66,7 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
-  useEffect(() => {
-    checkLogin();
-  }, []);
-  const checkLogin = async () => {
-    try {
-      const token = await AsyncStorage.getItem("@token");
-      if (token) {
-        router.navigate("/home");
-      }
-    } catch (err) {
-      console.log(err, "error check login");
-    }
-  };
+
   if (!loaded) {
     return null;
   }
@@ -100,6 +87,10 @@ export default function RootLayout() {
               name="order-details"
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="add-building"
+              options={{ headerShown: false }}
+            />
             <Stack.Screen name="shop" options={{ headerShown: false }} />
             <Stack.Screen
               name="(settings)"
@@ -110,6 +101,162 @@ export default function RootLayout() {
             <Stack.Screen
               name="chat"
               options={{ headerShown: false, animation: "slide_from_bottom" }}
+            />
+            <Stack.Screen
+              name="form-reorder"
+              options={{
+                title: "Thông tin đặt lại đơn hàng",
+                animation: "slide_from_bottom",
+                headerStyle: {
+                  backgroundColor: Colors.primaryBackgroundColor,
+                },
+                headerBackTitleStyle: {
+                  color: "#fff",
+                },
+                headerTitleStyle: {
+                  color: "#fff",
+                },
+                headerLeft: () => (
+                  <TouchableRipple
+                    onPress={() => router.back()}
+                    borderless={true}
+                    className="rounded-full p-2"
+                  >
+                    <Ionicons name="close" size={24} color="white" />
+                    {/* "close" is the cancel icon */}
+                  </TouchableRipple>
+                ),
+              }}
+            />
+            <Stack.Screen
+              name="order-delivery-success"
+              options={{
+                title: "Đơn hàng giao thành công",
+                animation: "slide_from_bottom",
+                headerStyle: {
+                  backgroundColor: Colors.primaryBackgroundColor,
+                },
+                headerBackTitleStyle: {
+                  color: "#fff",
+                },
+                headerTitleStyle: {
+                  color: "#fff",
+                },
+                headerLeft: () => (
+                  <TouchableRipple
+                    onPress={() => router.back()}
+                    borderless={true}
+                    className="rounded-full p-2"
+                  >
+                    <Ionicons name="close" size={24} color="white" />
+                    {/* "close" is the cancel icon */}
+                  </TouchableRipple>
+                ),
+              }}
+            />
+            <Stack.Screen
+              name="order-review"
+              options={{
+                title: "Đơn hàng chờ đánh giá",
+                animation: "slide_from_bottom",
+                headerStyle: {
+                  backgroundColor: Colors.primaryBackgroundColor,
+                },
+                headerBackTitleStyle: {
+                  color: "#fff",
+                },
+                headerTitleStyle: {
+                  color: "#fff",
+                },
+                headerLeft: () => (
+                  <TouchableRipple
+                    onPress={() => router.back()}
+                    borderless={true}
+                    className="rounded-full p-2"
+                  >
+                    <Ionicons name="close" size={24} color="white" />
+                    {/* "close" is the cancel icon */}
+                  </TouchableRipple>
+                ),
+              }}
+            />
+            <Stack.Screen
+              name="order-issue"
+              options={{
+                title: "Đơn hàng có vấn đề",
+                animation: "slide_from_bottom",
+                headerStyle: {
+                  backgroundColor: Colors.primaryBackgroundColor,
+                },
+                headerBackTitleStyle: {
+                  color: "#fff",
+                },
+                headerTitleStyle: {
+                  color: "#fff",
+                },
+                headerLeft: () => (
+                  <TouchableRipple
+                    onPress={() => router.back()}
+                    borderless={true}
+                    className="rounded-full p-2"
+                  >
+                    <Ionicons name="close" size={24} color="white" />
+                    {/* "close" is the cancel icon */}
+                  </TouchableRipple>
+                ),
+              }}
+            />
+            <Stack.Screen
+              name="report-details"
+              options={{
+                title: "Chi tiết báo cáo đơn hàng",
+                animation: "slide_from_right",
+                headerStyle: {
+                  backgroundColor: Colors.primaryBackgroundColor,
+                },
+                headerBackTitleStyle: {
+                  color: "#fff",
+                },
+                headerTitleStyle: {
+                  color: "#fff",
+                },
+                headerLeft: () => (
+                  <TouchableRipple
+                    onPress={() => router.back()}
+                    borderless={true}
+                    className="rounded-full p-2"
+                  >
+                    <ChevronLeft size={24} color="white" />
+                    {/* "close" is the cancel icon */}
+                  </TouchableRipple>
+                ),
+              }}
+            />
+            <Stack.Screen
+              name="order-history-completed"
+              options={{
+                title: "Lịch sử đơn hàng",
+                animation: "slide_from_bottom",
+                headerStyle: {
+                  backgroundColor: Colors.primaryBackgroundColor,
+                },
+                headerBackTitleStyle: {
+                  color: "#fff",
+                },
+                headerTitleStyle: {
+                  color: "#fff",
+                },
+                headerLeft: () => (
+                  <TouchableRipple
+                    onPress={() => router.back()}
+                    borderless={true}
+                    className="rounded-full p-2"
+                  >
+                    <Ionicons name="close" size={24} color="white" />
+                    {/* "close" is the cancel icon */}
+                  </TouchableRipple>
+                ),
+              }}
             />
             <Stack.Screen
               name="review-form"
@@ -147,6 +294,17 @@ export default function RootLayout() {
               name="map"
               options={{
                 title: "Thay đổi địa chỉ",
+                animation: "slide_from_right",
+                headerStyle: {
+                  backgroundColor: colors.primaryBackgroundColor, // Set header background color to red
+                },
+                headerTintColor: "white", // Set header text color to white
+              }}
+            />
+            <Stack.Screen
+              name="map2"
+              options={{
+                title: "Thay đổi địa chỉ mặc định",
                 animation: "slide_from_right",
                 headerStyle: {
                   backgroundColor: colors.primaryBackgroundColor, // Set header background color to red

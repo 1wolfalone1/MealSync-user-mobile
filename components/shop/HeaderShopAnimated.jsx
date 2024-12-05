@@ -1,8 +1,4 @@
-import {
-  AntDesign,
-  FontAwesome5,
-  MaterialIcons
-} from "@expo/vector-icons";
+import { AntDesign, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { ChevronRight, MapPin } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
@@ -25,6 +21,10 @@ import { Colors } from "../../constant";
 import { router } from "expo-router";
 import SkeletonLoading from "expo-skeleton-loading";
 import { FlatList } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import shopDetailsSlice, {
+  dataShopDetailsSelector,
+} from "../../redux/slice/shopDetailsSlice";
 import { convertIntTimeToString } from "../../utils/MyUtils";
 const Header_Max_Height = 252;
 const Header_Min_Height = 0;
@@ -78,6 +78,8 @@ const HeaderShopAnimated = ({
   setSearchQuery,
 }) => {
   const { width, height } = Dimensions.get("window");
+  const { searchState } = useSelector(dataShopDetailsSelector);
+  const dispatch = useDispatch();
   console.log(isNotScroll, " is scroll");
   const [banner, setBanner] = useState(
     "https://img.freepik.com/free-photo/abstract-surface-textures-white-concrete-stone-wall_74190-8189.jpg"
@@ -92,7 +94,9 @@ const HeaderShopAnimated = ({
     outputRange: [Header_Max_Height, Header_Min_Height],
     extrapolate: "clamp",
   });
-  console.log(' =================================================================')
+  console.log(
+    " ================================================================="
+  );
   useEffect(() => {
     console.log(shopInfo, " asdfasdfasdfaaaaaaaaaaaaaaaaaaaaaa");
     if (shopInfo) {
@@ -166,8 +170,14 @@ const HeaderShopAnimated = ({
             <Searchbar
               onIconPress={() => {}}
               placeholder="Search"
-              onChangeText={setSearchQuery}
-              value={searchQuery}
+              onChangeText={(value) => {
+                dispatch(
+                  shopDetailsSlice.actions.changeSearchInfo({
+                    searchValue: value,
+                  })
+                );
+              }}
+              value={searchState.searchValue}
               style={{ height: 55, marginBottom: 8 }}
             />
           </ScrollView>
@@ -178,10 +188,10 @@ const HeaderShopAnimated = ({
                 <Text className="text-xs font-hnow64regular items-center">
                   {shopInfo.rating}
                 </Text>
-                <AntDesign name="star" size={16} color={Colors.star.defaut} />
                 <Text className="font-hnow63book text-gray-600 text-xs">
-                  ({shopInfo.totalProduct}+)
+                  {shopInfo.averageRating}+
                 </Text>
+                <AntDesign name="star" size={14} color={Colors.star.defaut} />
               </View>
               <TouchableRipple
                 onPress={() =>
@@ -215,7 +225,7 @@ const HeaderShopAnimated = ({
                   color={Colors.primaryBackgroundColor}
                 />
                 <Text className="text-xs text-gray-700 font-hnow64regular">
-                  Shipping Fee {shopInfo.shippingFee}k
+                  Shipping Fee
                 </Text>
               </View>
               <View className="flex-row gap-1 items-center">

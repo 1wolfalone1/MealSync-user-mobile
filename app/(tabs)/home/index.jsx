@@ -1,21 +1,29 @@
-import { useEffect, useState } from 'react';
-import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import api from '../../../api/api';
-import ItemBestSellerInHome from '../../../components/user-page/ItemBestSellerInHome';
-import ItemShopRegulerInHome from '../../../components/user-page/ItemShopRegulerInHome';
-import { Colors } from '../../../constant';
-import cartSlice, { cartSelector } from '../../../redux/slice/cartSlice';
-import globalSlice from '../../../redux/slice/globalSlice';
-import { userInfoSliceSelector } from '../../../redux/slice/userSlice';
+import { useEffect, useState } from "react";
+import {
+  Dimensions,
+  FlatList,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import api from "../../../api/api";
+import ItemBestSellerInHome from "../../../components/user-page/ItemBestSellerInHome";
+import ItemShopRegulerInHome from "../../../components/user-page/ItemShopRegulerInHome";
+import { Colors } from "../../../constant";
+import cartSlice, { cartSelector } from "../../../redux/slice/cartSlice";
+import globalSlice from "../../../redux/slice/globalSlice";
+import { userInfoSliceSelector } from "../../../redux/slice/userSlice";
 const Index = () => {
   const info = useSelector(userInfoSliceSelector);
 
-  const { width, height } = Dimensions.get('window');
-  const dispatch = useDispatch()
+  const { width, height } = Dimensions.get("window");
+  const dispatch = useDispatch();
   const widthCategory = parseInt((width * 15) / 100);
   const userData = useSelector(userInfoSliceSelector);
-  
+
   const data = useSelector(cartSelector);
   const styles = StyleSheet.create({
     shadow: {
@@ -40,50 +48,51 @@ const Index = () => {
   const [dataTopShop, setDataTopShop] = useState(null);
 
   const [dataTopProduct, setDataTopProduct] = useState(null);
- 
 
   const handleGetDataTopProduct = async () => {
     try {
-      const res = await api.get('/api/v1/food/top?pageIndex=1&pageSize=5');
+      const res = await api.get("/api/v1/food/top?pageIndex=1&pageSize=5");
       const data = await res.data;
-      console.log(data, ' data ItemBestSellerInHome');
+      console.log(data, " data ItemBestSellerInHome");
       setDataTopProduct(data.value.items);
     } catch (err) {
-      console.log(err, ' error in ItemBestSellerInHome');
+      console.log(err, " error in ItemBestSellerInHome");
     }
   };
 
   const handleGetDataTopShop = async () => {
     try {
-      const res = await api.get('/api/v1/shop/top?pageIndex=1&pageSize=5');
+      const res = await api.get("/api/v1/shop/top?pageIndex=1&pageSize=5");
       const data = await res.data;
-      console.log(data, ' data in ItemShop');
+      console.log(data, " data in ItemShop");
       setDataTopShop(data.value.items);
     } catch (err) {
-      console.log(err, ' error in ItemShopRegulerInHome ');
-
+      console.log(err, " error in ItemShopRegulerInHome ");
     }
   };
   useEffect(() => {
-    dispatch(cartSlice.actions.resetStateListItemInfo()) 
-  }, []) 
+    dispatch(cartSlice.actions.resetStateListItemInfo());
+  }, []);
   useEffect(() => {
-  dispatch(globalSlice.actions.changeLoadings({
-          isLoading: false,
-          msg: '',
-        }))   
+    dispatch(
+      globalSlice.actions.changeLoadings({
+        isLoading: false,
+        msg: "",
+      })
+    );
     handleGetDataTopShop();
     handleGetDataTopProduct();
   }, []);
   useEffect(() => {
-    console.log(userData, ' teset');
+    console.log(userData, " teset");
   }, [userData]);
   const blankData = [null, null, null, null, null];
   return (
     <>
-   
       <View className="pl-7">
-        <Text className="font-hnow65medium text-xl text-primary">Bán chạy nhất</Text>
+        <Text className="font-hnow65medium text-xl text-primary">
+          Bán chạy nhất
+        </Text>
       </View>
       <View className="flex-1 ">
         <View className="flex-row mt-2">
@@ -98,7 +107,9 @@ const Index = () => {
         </View>
       </View>
       <View className="pl-7">
-        <Text className="font-hnow65medium text-xl text-primary">Đặt lại quán quen</Text>
+        <Text className="font-hnow65medium text-xl text-primary">
+          Đặt lại quán quen
+        </Text>
       </View>
       <View className="flex-1 ">
         <View className="flex-row mt-2  ">
@@ -112,10 +123,16 @@ const Index = () => {
         </View>
       </View>
       <View className="pl-7">
-        <Text className="font-hnow65medium text-xl text-primary">Đặt hàng ngay!!!</Text>
+        <Text className="font-hnow65medium text-xl text-primary">
+          Đặt hàng ngay!!!
+        </Text>
       </View>
       <View className="flex-1 ">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-1">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="flex-1"
+        >
           <View className="flex-row  pl-7 mt-2  ">
             {Data2.map((item, index) => (
               <View
@@ -135,8 +152,13 @@ const Index = () => {
                 <View className="p-3 items-start w-full">
                   <Text className="text-sm font-hnow65medium">{item.t}</Text>
                   <View className="flex-row gap-2">
-                    <Text className="text-xs text-gray-500 font-hnow65medium">Ad</Text>
-                    <Text style className="text-xs text-gray-400 font-hnow64regular">
+                    <Text className="text-xs text-gray-500 font-hnow65medium">
+                      Ad
+                    </Text>
+                    <Text
+                      style
+                      className="text-xs text-gray-400 font-hnow64regular"
+                    >
                       {item.Ad}
                     </Text>
                   </View>
@@ -173,43 +195,43 @@ const data3 = [
 const Data2 = [
   {
     id: 1,
-    t: 'Quán ngon giá hời',
-    Ad: 'Cheese Food House',
+    t: "Quán ngon giá hời",
+    Ad: "Cheese Food House",
     image:
-      'https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/38da7d105303523.5f75e3e4e4fd7.jpg',
+      "https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/38da7d105303523.5f75e3e4e4fd7.jpg",
   },
   {
     id: 21,
-    t: 'Quán ngon giá hời',
-    Ad: 'Cheese Food House',
+    t: "Quán ngon giá hời",
+    Ad: "Cheese Food House",
     image:
-      'https://res.cloudinary.com/lush-banners/image/upload/v1570824624/lushbanners/blogs/restaurant-teardrop-banners.jpg',
+      "https://res.cloudinary.com/lush-banners/image/upload/v1570824624/lushbanners/blogs/restaurant-teardrop-banners.jpg",
   },
 ];
 const DATA = [
   {
     id: 1,
-    title: 'Đồ ăn nhanh',
-    image: '../../../assets/images/fastfood.png',
+    title: "Đồ ăn nhanh",
+    image: "../../../assets/images/fastfood.png",
   },
   {
     id: 2,
-    title: 'Đồ uống',
-    image: '../../../assets/images/drink.png',
+    title: "Đồ uống",
+    image: "../../../assets/images/drink.png",
   },
   {
     id: 3,
-    title: 'Mì phở',
-    image: '../../../assets/images/noodle.png',
+    title: "Mì phở",
+    image: "../../../assets/images/noodle.png",
   },
   {
     id: 4,
-    title: 'Bánh mì',
-    image: '../../../assets/images/bread.png',
+    title: "Bánh mì",
+    image: "../../../assets/images/bread.png",
   },
   {
     id: 5,
-    title: 'Chảo',
-    image: '../../../assets/images/otherfood.png',
+    title: "Chảo",
+    image: "../../../assets/images/otherfood.png",
   },
 ];

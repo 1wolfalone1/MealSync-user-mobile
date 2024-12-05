@@ -64,7 +64,7 @@ const OrderLayout = () => {
         <MaterialTopBar.Screen
           name="order-history"
           options={{
-            title: "Hoàn thành",
+            title: "Lịch sử đơn hàng",
           }}
         />
         <MaterialTopBar.Screen

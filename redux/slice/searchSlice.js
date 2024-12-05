@@ -1,5 +1,5 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import api from '../../api/api';
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import api from "../../api/api";
 const initialState = {
   searchProductInHome: {
     data: null,
@@ -7,7 +7,9 @@ const initialState = {
     error: null,
     filter: {
       categoryId: 0,
-      searchText: '',
+      searchText: "",
+      start: 0,
+      end: 2400,
     },
     paging: {
       pageIndex: 1,
@@ -20,7 +22,7 @@ const initialState = {
   },
 };
 const searchSlice = createSlice({
-  name: 'searchSlice',
+  name: "searchSlice",
   initialState: initialState,
   reducers: {
     resetSearchProductInProduct: (state, product) => {
@@ -39,7 +41,10 @@ const searchSlice = createSlice({
       };
     },
     updateSortInSearchProductInHome: (state, actions) => {
-      state.searchProductInHome.sort = { ...state.searchProductInHome.sort, ...actions.payload };
+      state.searchProductInHome.sort = {
+        ...state.searchProductInHome.sort,
+        ...actions.payload,
+      };
     },
   },
   extraReducers: (builder) =>
@@ -53,30 +58,37 @@ const searchSlice = createSlice({
 });
 
 export const getListSearchProductInHome = createAsyncThunk(
-  'searchSlice/getListSearchProductInHome',
+  "searchSlice/getListSearchProductInHome",
   async (data, { getState }) => {
     try {
       const state = getState().searchSlice;
-      const res = await api.get('/api/v1/customer/shop/search', {
+      const res = await api.get("/api/v1/shop/search", {
         params: {
-          ...state.searchProductInHome.filter,
+          searchValue: state.searchProductInHome.filter.searchText,
+          platformCategoryId:
+            state.searchProductInHome.filter.categoryId == 0
+              ? undefined
+              : state.searchProductInHome.filter.categoryId,
+          order: state.searchProductInHome.sort.orderType,
+          direct: state.searchProductInHome.sort.orderMode,
+          startTime: state.searchProductInHome.filter.start,
+          endTime: state.searchProductInHome.filter.end,
           ...state.searchProductInHome.paging,
-          ...state.searchProductInHome.sort,
         },
       });
       const data = await res.data;
 
-      console.log(data, ' data in get list search product in home');
+      console.log(data, " data in get list search product in home");
       if (data.isSuccess) {
         return data.value.items;
       } else {
         return [];
       }
     } catch (error) {
-      console.error('Error in getListSearchProductInHome:', error);
+      console.error("Error in getListSearchProductInHome:", error);
       throw error;
     }
-  },
+  }
 );
 export default searchSlice;
 

@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { router } from "expo-router";
 const api = axios.create({
-  baseURL: "https://api.mealsync.org",
+  baseURL: "https://api.1wolfalone1.com",
 
   withCredentials: true,
   headers: {
@@ -33,13 +33,15 @@ api.interceptors.response.use(
     console.log(response);
     return response;
   },
-  (error) => {
+  async (error) => {
     console.log(error);
     if (error.response.status === 423) {
       console.log("error 423");
     } else if (error.response.status === 406) {
     } else if (error.response.status === 401) {
-      console.log(error.response);
+      await AsyncStorage.setItem("@token", "");
+      await AsyncStorage.setItem("@statusLogin", "");
+      console.log(error.response, "error 401");
       router.navigate({
         pathname: "/",
         params: {
@@ -47,7 +49,10 @@ api.interceptors.response.use(
         },
       });
     } else if (error.response.status === 403) {
-      console.log(error.response);
+      console.log(error.response, "error 403333");
+
+      await AsyncStorage.setItem("@token", "");
+      await AsyncStorage.setItem("@statusLogin", "");
       router.navigate({
         pathname: "/",
         params: {

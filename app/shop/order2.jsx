@@ -1,6 +1,13 @@
 import { router, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { HandCoins, Ticket, Timer, Truck, Wallet } from "lucide-react-native";
+import {
+  HandCoins,
+  NotebookPen,
+  Ticket,
+  Timer,
+  Truck,
+  Wallet,
+} from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -8,10 +15,18 @@ import {
   Image,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Button, Divider, RadioButton } from "react-native-paper";
+import {
+  Button,
+  Divider,
+  Modal,
+  Portal,
+  RadioButton,
+  TouchableRipple,
+} from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import api from "../../api/api";
 import CartHeader from "../../components/cart-page/CartHeader";
@@ -34,12 +49,21 @@ import shopDetailsSlice, {
   getShopInfo,
 } from "../../redux/slice/shopDetailsSlice";
 import { userInfoSliceSelector } from "../../redux/slice/userSlice";
-import { convertIntTimeToString, formatQuantity } from "../../utils/MyUtils";
+import {
+  convertIntTimeToString,
+  formatQuantity,
+  getTimeSlotBelow,
+} from "../../utils/MyUtils";
 
 const CartItemInShop = () => {
   const apiKey = process.env.EXPO_PUBLIC_SERVICE_API;
   const { shopId, operatingSlotId, orderTomorrow } = useLocalSearchParams();
 
+  const [openNote, setOpenNote] = useState(false);
+  const [note, setNote] = useState("");
+  const [noteTemp, setNoteTemp] = useState("");
+
+  const [heightNote, setHeightNote] = useState(200);
   const [open, setOpen] = useState(false);
   const [orderIdAfterPayment, setOrderIdAfterPayment] = useState(0);
   const [isNotScroll, setIsNotScroll] = useState(true);
@@ -63,10 +87,17 @@ const CartItemInShop = () => {
   const [paymentMethod, setPaymentMethod] = useState(2);
   const [paymentUrl, setPaymentUrl] = useState(null);
   const order = useSelector(orderSelector);
+  const handleHideNote = () => setOpenNote(false);
   let scrollOffsetY = useRef(new Animated.Value(0)).current;
   const handleChangePaymentMethod = (value) => {
     setPaymentMethod(value);
   };
+
+  const handleSaveNote = () => {
+    setOpenNote(false);
+    setNote(noteTemp);
+  };
+
   useEffect(() => {
     dispatch(orderSlice.actions.calculateVoucherPrice());
   }, [voucher]);
@@ -143,12 +174,15 @@ const CartItemInShop = () => {
       if (index >= 0) {
         const slot = info.operatingSlots[index];
         setOperatingSlot(slot);
-        console.log(slot, " ---------------------------------");
         const result = [];
         let value = 0;
         const start = slot.startTime;
         const end = slot.endTime;
-        for (let i = start; i < end; i += 30) {
+        let startBelow = start;
+        if (orderTomorrow == "false") {
+          startBelow = getTimeSlotBelow(start);
+        }
+        for (let i = startBelow; i < end; i += 30) {
           if ((i - 60) % 100 == 0) {
             i = i - 60 + 100;
           }
@@ -156,12 +190,13 @@ const CartItemInShop = () => {
           if ((y - 60) % 100 == 0) {
             y = y - 60 + 100;
           }
-          const label = `Từ ${convertIntTimeToString(i)} đến ${convertIntTimeToString(y)}`;
-
-          result.push({
-            label: label,
-            value: `${i}-${y}`,
-          });
+          if (y <= slot.endTime) {
+            const label = `Từ ${convertIntTimeToString(i)} đến ${convertIntTimeToString(y)}`;
+            result.push({
+              label: label,
+              value: `${i}-${y}`,
+            });
+          }
         }
         setListOperatingTime(result);
       }
@@ -260,9 +295,6 @@ const CartItemInShop = () => {
       dispatch(orderSlice.actions.changeProducts(newFoods));
     }
   }, [items]);
-  useEffect(() => {
-    dispatch(orderSlice.actions.changeNote());
-  }, [products]);
   const handleOrder = async () => {
     try {
       if (
@@ -300,7 +332,7 @@ const CartItemInShop = () => {
         const dataOrder = {
           shopId: order.shopId,
           ...orderInfo,
-          note: order.note,
+          note: note,
           foods: order.products,
           orderTime,
           voucherId: order.voucherId,
@@ -317,7 +349,8 @@ const CartItemInShop = () => {
             msg: "Chờ tí nhé...",
           })
         );
-        const res = await api.post("api/v1/customer/order", dataOrder);
+        const res = await api.post("/api/v1/customer/order", dataOrder);
+        console.log(res, " testtttttttttttttttttttttttt ne");
         const data = await res.data;
         console.log("dataa ordrrrrrrrrrrr", data);
         if (data.isSuccess) {
@@ -346,10 +379,48 @@ const CartItemInShop = () => {
           );
         }
       } else {
-        console.log("");
+        dispatch(
+          globalSlice.actions.customSnackBar({
+            style: {
+              color: "white",
+              backgroundColor: Colors.glass.red,
+              pos: {
+                top: 40,
+              },
+              actionColor: "white",
+            },
+          })
+        );
+        dispatch(
+          globalSlice.actions.openSnackBar({
+            message: "Vui lòng chọn thời gian nhận hàng!!!",
+          })
+        );
       }
     } catch (e) {
       dispatch(globalSlice.actions.changeLoadings(false));
+
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message,
+            })
+          );
+        }
+      }
       console.error(e);
     }
   };
@@ -362,6 +433,55 @@ const CartItemInShop = () => {
   };
   return (
     <View className="flex-1 bg-white overflow-visible">
+      <Portal>
+        <Modal
+          visible={openNote}
+          onDismiss={handleHideNote}
+          contentContainerStyle={{
+            backgroundColor: "white",
+            padding: 10,
+            marginHorizontal: 20,
+            borderRadius: 20,
+          }}
+        >
+          <ScrollView style={{}}>
+            <View className="items-center flex-1">
+              <Text className="text-center text-lg font-hnow64regular">
+                Ghi chú cho quán nào
+              </Text>
+              <Divider style={{ width: "100%", marginVertical: 20 }} />
+            </View>
+            <View style={{ minHeight: 200, flex: 1 }}>
+              <TextInput
+                placeholder="Ghi chú tại đây cho toàn đơn..."
+                onContentSizeChange={(event) => {
+                  setHeightNote(event.nativeEvent.contentSize.height);
+                }}
+                numberOfLines={10}
+                multiline
+                defaultValue={noteTemp}
+                onChangeText={(e) => setNoteTemp(e)}
+                style={{
+                  height: heightNote,
+                  lineHeight: 28, // <- set the max height here
+                }}
+              />
+            </View>
+            <View className="flex-row justify-end items-center">
+              <Button
+                onPress={() => {
+                  setOpenNote(false);
+                }}
+                textColor="red"
+              >
+                Hủy
+              </Button>
+              <Button onPress={handleSaveNote}>Lưu</Button>
+            </View>
+          </ScrollView>
+        </Modal>
+      </Portal>
+
       <CartHeader info={info} scrollY={isNotScroll} />
       <ScrollView
         onScroll={Animated.event(
@@ -379,7 +499,11 @@ const CartItemInShop = () => {
         bounces={false}
       >
         <View className="flex-row justify-center my-4 "></View>
-        <OrderInfoViewInCart userInfo={userInfo} info={info} />
+        <OrderInfoViewInCart
+          userInfo={userInfo}
+          info={info}
+          isMainOrder={true}
+        />
         <View className="my-0 pl-8">
           <View className="flex-row items-center">
             <Truck color={"red"} size={28} />
@@ -433,7 +557,9 @@ const CartItemInShop = () => {
               placeholder={operatingSlot?.title}
             />
             <Text className="text-gray-700 text-lg">
-              {orderTomorrow == "true" ? "Đặt hàng cho ngày mai" : "Đặt hàng cho hôm nay"}
+              {orderTomorrow == "true"
+                ? "Đặt hàng cho ngày mai"
+                : "Đặt hàng cho hôm nay"}
             </Text>
           </View>
         </View>
@@ -610,6 +736,21 @@ const CartItemInShop = () => {
               </Text>
             </View>
           </View>
+          <TouchableRipple
+            onPress={() => setOpenNote(true)}
+            borderless
+            className="py-4"
+          >
+            <View className="flex-row">
+              <NotebookPen size={24} color={"#810000"} />
+              <Text
+                className="text-ellipsis flex-wrap text-gray-500 text-base ml-2"
+                numberOfLines={1}
+              >
+                {note ? note : "Thêm ghi chú cho toàn đơn hàng"}
+              </Text>
+            </View>
+          </TouchableRipple>
           <View className="mt-8" style={{ width: widthItem }}>
             <Button
               mode="elevated"

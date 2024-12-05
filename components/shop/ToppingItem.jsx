@@ -63,7 +63,7 @@ const ToppingRadio = ({ topping }) => {
         {topping.title}
         <Text className="text-sm text-gray-600 font-hnow63book">
           {" "}
-          (chọn 1)
+         {topping.isRequire ? "(chọn 1)" : "(tùy chọn)"} 
         </Text>{" "}
       </Text>
       <Divider />
@@ -134,9 +134,8 @@ const ToppingCheckBox = ({ topping }) => {
       <Text className="text-lg font-bold my-1">
         {topping.title}
         <Text className="text-sm text-gray-600 font-hnow63book">
-          {" "}
-          (tùy chọn)
-        </Text>{" "}
+          {`(Chọn tối thiểu ${topping.minChoices}, tối đa ${topping.maxChoices})`}
+        </Text>
       </Text>
       <Divider />
       <View className="gap-4 mt-0 mb-4">

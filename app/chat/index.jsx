@@ -57,7 +57,7 @@ const ListChatChannelPage = () => {
         return acc;
       }, {});
       const listChannelMergeInfo = listChannel.map((item, index) => {
-        return { ...mapChannelSocket[item.id], info: item.customer };
+        return { ...mapChannelSocket[item.id], info: item.shop };
       });
       listChannelMergeInfo.sort(
         (a, b) => new Date(b.updated_at) - new Date(a.updated_at)

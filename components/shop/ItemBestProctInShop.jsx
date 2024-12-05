@@ -83,7 +83,7 @@ const ItemBestProctInShop = ({ item }) => {
               <IconButton
                 icon={"plus"}
                 size={20}
-                onPress={() => {}}
+                onPress={() => router.push(`/shop/${item.id}`)}
                 iconColor="red"
                 mode="contained"
                 style={{

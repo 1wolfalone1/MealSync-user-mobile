@@ -3,6 +3,8 @@ import api from "../../api/api";
 const initialState = {
   products: [],
   itemsInCart: {},
+  dataReorder: null,
+  preDataReorder: null,
   shopId: 0,
   note: "",
   orderPrice: {
@@ -36,9 +38,85 @@ const orderSlice = createSlice({
   name: "orderSlice",
   initialState: initialState,
   reducers: {
+    setNoteReorder: (state, actions) => {
+      const { itemId, note } = actions.payload;
+      state.dataReorder.foods = state.dataReorder.foods.map((food) => {
+        if (food.productId == itemId) {
+          return {
+            ...food,
+            note: note,
+          };
+        }
+        return food;
+      });
+    },
+    setQuantityReorder: (state, actions) => {
+      const { itemId, quantity } = actions.payload;
+      state.dataReorder.foods = state.dataReorder.foods.map((food) => {
+        if (food.productId == itemId) {
+          food.quantity = quantity;
+        }
+        return food;
+      });
+    },
+    changePriceItemReorder: (state, actions) => {
+      const { itemId, price } = actions.payload;
+      state.dataReorder.foods = state.dataReorder.foods.map((food) => {
+        if (food.productId == itemId) {
+          food.totalPrice = price;
+        }
+        return food;
+      });
+    },
+    removeItemInCartReorder: (state, actions) => {
+      const { itemId } = actions.payload;
+      const tempList = state.dataReorder.foods.filter(
+        (food) => food.productId != itemId
+      );
+      state.dataReorder.foods = tempList;
+    },
+    changePreDataReorder: (state, actions) => {
+      state.preDataReorder = actions.payload;
+    },
+
+    changeFoodsReorder: (state, actions) => {
+      if (actions.payload && Array.isArray(actions.payload)) {
+        state.dataReorder.foods = actions.payload;
+      }
+    },
+    changeDataReorder: (state, actions) => {
+      state.dataReorder = actions.payload;
+    },
     changeItemsInCart: (state, actions) => {
-      console.log(actions.payload, " test item in cartttttttttttttt");
       state.itemsInCart = actions.payload;
+    },
+    changeProductsReorder: (state, actions) => {
+      const items = actions.payload;
+      state.products = items.map((i) => {
+        const listOptionRadioIds = i.optionGroupRadio.map((i) => {
+          return {
+            id: i.id,
+            optionId: i.option.id,
+          };
+        });
+        const listOptionCheckboxIds = i.optionGroupCheckbox.map((i) => {
+          return {
+            id: i.id,
+            optionIds: i.options.map((option) => {
+              return option.id;
+            }),
+          };
+
+        });
+        return {
+          id: i.productId,
+          note: i.note ? i.note : "",
+          quantity: i.quantity,
+          optionGroupRadio: listOptionRadioIds,
+
+          optionGroupCheckbox: listOptionCheckboxIds,
+        };
+      });
     },
     changeProducts: (state, actions) => {
       const products = actions.payload;
@@ -80,7 +158,7 @@ const orderSlice = createSlice({
         return {
           id: product.productId,
           quantity: product.quantity,
-          note: product.note2,
+          note: product.note,
           optionGroupCheckbox: newToppingCheckbox,
           optionGroupRadio: newToppingRadio,
         };
@@ -118,6 +196,14 @@ const orderSlice = createSlice({
         duration: duration,
       };
     },
+    changeOrderInfoReorder: (state, actions) => {
+      const { fullName, phoneNumber } = actions.payload;
+      state.orderInfo = {
+        ...state.orderInfo,
+        fullName: fullName,
+        phoneNumber: phoneNumber,
+      };
+    },
     changeOrderInfo: (state, actions) => {
       const { fullName, phoneNumber, building, buildingId } = actions.payload;
       state.orderInfo = {
@@ -138,6 +224,16 @@ const orderSlice = createSlice({
       state.voucherId = id;
     },
     changeItems: (state, actions) => {},
+    calculateTotalProductPriceReorder: (state, actions) => {
+      const items = actions.payload;
+      if (Array.isArray(items)) {
+        const totalProductPrice = items.reduce(
+          (acc, item) => acc + item.quantity * item.totalPrice,
+          0
+        );
+        state.orderPrice.totalProduct = totalProductPrice;
+      }
+    },
     calculateTotalProductPrice: (state, actions) => {
       const items = actions.payload;
       if (Array.isArray(items)) {

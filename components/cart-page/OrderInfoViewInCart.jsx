@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 import api from "../../api/api";
 import { orderSelector } from "../../redux/slice/orderSlice";
 
-const OrderInfoViewInCart = ({ userInfo, info }) => {
+const OrderInfoViewInCart = ({ userInfo, info, isMainOrder }) => {
   const { orderInfo } = useSelector(orderSelector);
 
   const [listBuilding, setListBuilding] = useState([]);
@@ -18,10 +18,10 @@ const OrderInfoViewInCart = ({ userInfo, info }) => {
       const data = await res.data;
       const list = data.value;
       console.log(list);
-      if(list && Array.isArray(list)){
-        const item = list.find(i => i.buildingId == orderInfo.buildingId)
-        console.log(item, orderInfo, ' dsfasfdasssssss')
-        setSelectBuilding(item.buildingName)
+      if (list && Array.isArray(list)) {
+        const item = list.find((i) => i.buildingId == orderInfo.buildingId);
+        console.log(item, orderInfo, " dsfasfdasssssss");
+        setSelectBuilding(item.buildingName);
       }
     } catch (e) {
       console.log("Get list building error: ", e);
@@ -38,7 +38,15 @@ const OrderInfoViewInCart = ({ userInfo, info }) => {
           <Text className="ml-2 text-lg font-bold">Thông tin giao hàng</Text>
         </View>
         <View>
-          <Button onPress={() => router.push("/shop/change-info")}>
+          <Button
+            onPress={() => {
+              if (isMainOrder) {
+                router.push("/shop/change-info");
+              } else {
+                router.push("/shop/change-info-reorder");
+              }
+            }}
+          >
             Thay đổi
           </Button>
         </View>

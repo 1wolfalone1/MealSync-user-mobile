@@ -5,12 +5,16 @@ import axios from "axios";
 import * as Location from "expo-location";
 import { router, useLocalSearchParams } from "expo-router";
 import {
+  CalendarCheck2,
+  Coins,
   ConciergeBell,
   MapPinned,
+  NotepadText,
   PackageCheck,
   TicketCheck,
   Timer,
   Truck,
+  Utensils,
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
@@ -42,8 +46,6 @@ import {
   convertIntTimeToString,
   formatDateTime,
   formatNumberVND,
-  isBeforeOneHour,
-  isTodayInVietnam,
 } from "../../utils/MyUtils";
 if (MapboxGL) {
   MapboxGL?.setAccessToken(
@@ -61,6 +63,8 @@ const OrderTracking = () => {
   const { width, height } = Dimensions.get("window");
   const widthItem = (width * 90) / 100;
   const heightItem = (height * 20) / 100;
+  const width2 = (width * 80) / 100;
+  const [qrUrl, setQrUrl] = useState("");
   const [loadMap, setLoadMap] = useState(
     "https://tiles.goong.io/assets/goong_map_web.json?api_key=PElNdAGV5G98AeTOVaRfIZVeBO6XdVPhJSn2HDku"
   );
@@ -80,29 +84,46 @@ const OrderTracking = () => {
   const [visible, setVisible] = useState(false);
   const [reasonCancel, setReasonCancel] = useState("");
   const [reasonError, setReasonError] = useState("");
-  const [canCancel, setCanCancel] = useState(true);
+  const [canCancel, setCanCancel] = useState(false);
   const dispatch = useDispatch();
   const [route, setRoute] = useState([]);
   const [routeInfo, setRouteInfo] = useState(null);
   const [routeProfile, setRouteProfile] = useState("car"); // 'car', 'bike', 'taxi', 'truck', 'hd'
   const [orderData, setOrderData] = useState(null);
+  const [pos, setPos] = useState(0);
+  const changePos = () => {
+    if (orderData) {
+      if (orderData.status == 1 || orderData.status == 3) {
+        console.log("111111111111111111111111111111111111111111111");
+        setPos(0);
+      } else if (orderData.status == 5) {
+        setPos(1);
+      } else if (orderData.status == 6) {
+        setPos(2);
+      } else {
+        setPos(3);
+      }
+    }
+  };
+  useEffect(() => {
+    changePos();
+  }, [orderData]);
   // callbacks
   useEffect(() => {
     fitBoundsWithPadding();
   }, [locations, fitBoundsWithPadding]);
   useEffect(() => {
+    console.log(orderStatusChange, "dsfafsfas asf asf as");
     handleGetOrderData();
   }, [isFocus, orderStatusChange]);
   const getDirections = async (start, end) => {
     try {
       const response = await axios.get(`https://rsapi.goong.io/Direction`, {
         params: {
-          
           origin: `${start[1]},${start[0]}`,
           destination: `${end[1]},${end[0]}`,
           vehicle: routeProfile,
           api_key: "rk92yVlnm1LVaN5ts1YRSjeii7a31TvGmaqfglh0",
-
         },
       });
 
@@ -134,7 +155,6 @@ const OrderTracking = () => {
                     ? leg.steps.map((step) => [
                         step.start_location.lng,
                         step.start_location.lat,
-
                       ])
                     : [start, end],
               },
@@ -188,11 +208,15 @@ const OrderTracking = () => {
         [coords[0], coords[0]]
       );
 
+      try {
+        mapRef.current?.fitBounds(bounds, {
+          padding: 0,
+          animationDuration: 200,
+        });
+      } catch (e) {
+        console.log(e);
+      }
       // Fit bounds with padding
-      mapRef.current?.fitBounds(bounds, {
-        padding: 0,
-        animationDuration: 200,
-      });
     }
   }, [locations]);
   const handleGetOrderData = async () => {
@@ -224,24 +248,31 @@ const OrderTracking = () => {
     Location.requestForegroundPermissionsAsync();
   }, []);
   useEffect(() => {
+    console.log(orderData, " order data");
     if (orderData) {
       const orderDate = orderData.orderDate;
-      if (orderData.isOrderNextDay) {
-        if (isTodayInVietnam(orderDate)) {
-          if (isBeforeOneHour(orderData.startTime)) {
-            setCanCancel(true);
-          } else {
-            setCanCancel(false);
-          }
-        } else {
+      if (
+        orderData.status == 1 ||
+        orderData.status == 3 ||
+        orderData.status == 5
+      ) {
+        if (orderData.isCancelAllowed) {
           setCanCancel(true);
         }
-      } else {
-        if (isBeforeOneHour(orderData.startTime)) {
-          setCanCancel(true);
-        } else {
-          setCanCancel(false);
-        }
+      } else if (orderData.status == 6) {
+        setCanCancel(true);
+      }
+    }
+  }, [orderData]);
+  useEffect(() => {
+    if (orderData) {
+      if (orderData.status == 7) {
+        router.replace({
+          pathname: "/order-delivery-success",
+          params: {
+            orderId: orderData.id,
+          },
+        });
       }
     }
   }, [orderData]);
@@ -258,8 +289,33 @@ const OrderTracking = () => {
       minHeight: translateY.value,
     };
   });
-  const handleOpenDialogCancelOrder = () => {
-    setVisible(true);
+  const handleOpenDialogCancelOrder = async () => {
+    if (
+      orderData.status == 1 ||
+      orderData.status == 3 ||
+      orderData.status == 5
+    ) {
+      setVisible(true);
+    } else if (orderData.status == 6) {
+      try {
+        const res = await api.get(
+          `api/v1/customer/order/${orderData.id}/qr/received`
+        );
+        const data = await res.data;
+        console.log(data, " data OrderTracking");
+        if (data.isSuccess) {
+        }
+        if (data.value) {
+          if (data.value.qrUrl) {
+            setQrUrl(data.value.qrUrl);
+            setVisible(true);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    } else if (orderData.status == 7) {
+    }
   };
   const hideModal = () => {
     setVisible(false);
@@ -355,13 +411,26 @@ const OrderTracking = () => {
     },
     {
       key: "2",
-      coord: [ 106.817837319592, 10.80607174450758],
+      coord: [106.817837319592, 10.80607174450758],
     },
   ]);
   const handleOnPress = (event) => {
     const loc = event.geometry.coordinates;
 
     camera.current?.moveTo(loc, 200);
+  };
+  const getButtonAction = () => {
+    if (
+      orderData.status == 3 ||
+      orderData.status == 1 ||
+      orderData.status == 5
+    ) {
+      return "Hủy đơn hàng";
+    } else if (orderData.status == 6) {
+      return "Đưa QR code cho shipper xác nhận";
+    } else if (orderData.status == 7) {
+      return "Xác nhận hoàn thành đơn hàng";
+    }
   };
   return orderData == null ? (
     <></>
@@ -388,7 +457,7 @@ const OrderTracking = () => {
             onPress={() => router.push("/order/")}
           />
           <Text className="font-hnow64regular text-lg text-primary">
-            Cart page
+            Đơn hàng đang giao
           </Text>
         </View>
       </SafeAreaView>
@@ -403,34 +472,72 @@ const OrderTracking = () => {
             marginHorizontal: 20,
           }}
         >
-          <Text className="font-bold text-lg mb-2">
-            Lý do hủy đơn hàng #{orderData.id}
-          </Text>
-          <TextInput
-            onChangeText={(value) => setReasonCancel(value)}
-            value={reasonCancel}
-            mode="outlined"
-            label="Lý do ..."
-            multiline
-            numberOfLines={4}
-          />
-          <HelperText type="error" visible={reasonError != ""}>
-            {reasonError}
-          </HelperText>
-          <View className="flex-row justify-end gap-2">
-            <Button
-              mode="contained"
-              contentStyle={{
-                backgroundColor: "#000000",
-              }}
-              onPress={hideModal}
-            >
-              Hủy
-            </Button>
-            <Button mode="contained" onPress={handleCancelOrder}>
-              Xác nhận
-            </Button>
-          </View>
+          {orderData.status == 6 ? (
+            <>
+              <View>
+                <View className="justify-center flex-row ">
+                  <Text className="font-bold text-lg">
+                    Mã QR cho đơn hàng #{orderData.id}
+                  </Text>
+                </View>
+                <Image
+                  source={{
+                    uri: qrUrl,
+                  }}
+                  style={{
+                    width: width2,
+                    height: width2,
+                    borderRadius: 10,
+                  }}
+                />
+                <View className="flex-row justify-end gap-2">
+                  <Button
+                    mode="contained"
+                    contentStyle={{
+                      backgroundColor: "#000000",
+                    }}
+                    onPress={() => {
+                      hideModal();
+                      setQrUrl("");
+                    }}
+                  >
+                    Đóng
+                  </Button>
+                </View>
+              </View>
+            </>
+          ) : (
+            <>
+              <Text className="font-bold text-lg mb-2">
+                Lý do hủy đơn hàng #{orderData.id}
+              </Text>
+              <TextInput
+                onChangeText={(value) => setReasonCancel(value)}
+                value={reasonCancel}
+                mode="outlined"
+                label="Lý do ..."
+                multiline
+                numberOfLines={4}
+              />
+              <HelperText type="error" visible={reasonError != ""}>
+                {reasonError}
+              </HelperText>
+              <View className="flex-row justify-end gap-2">
+                <Button
+                  mode="contained"
+                  contentStyle={{
+                    backgroundColor: "#000000",
+                  }}
+                  onPress={hideModal}
+                >
+                  Hủy
+                </Button>
+                <Button mode="contained" onPress={handleCancelOrder}>
+                  Xác nhận
+                </Button>
+              </View>
+            </>
+          )}
         </Modal>
       </Portal>
       <View className=" flex-1 items-center bg-red-300">
@@ -446,10 +553,8 @@ const OrderTracking = () => {
           zoomEnabled={true}
         >
           <MapboxGL.Camera
-
             ref={camera}
             zoomLevel={15}
-            
             centerCoordinate={coordinates}
           />
           {routeCoordinates && (
@@ -476,7 +581,7 @@ const OrderTracking = () => {
           {locations.map((item) => (
             <MapboxGL.PointAnnotation
               id="pointDirect"
-              key="0909"
+              key={item.coord[0]}
               coordinate={item.coord}
               draggable={true}
             >
@@ -539,11 +644,11 @@ const OrderTracking = () => {
           <StepIndicator
             stepCount={4}
             customStyles={customStyles}
-            currentPosition={orderData.status - 1}
+            currentPosition={pos}
             labels={labels}
             renderStepIndicator={renderStepIndicator}
           />
-          <View className="flex-row px-10 justify-between my-4 items-center">
+          <View className="flex-row px-10 justify-between my-2 items-center">
             <View className="flex-row gap-2 items-center">
               <Text className="text-sm">Tổng cộng: </Text>
               <Text className="text-primary text-lg">
@@ -565,10 +670,34 @@ const OrderTracking = () => {
             <Text className="font-hnow64regular text-blue-500 text-xs">
               Đặt lúc: {formatDateTime(orderData.orderDate)}
             </Text>
-            <Text className="font-hnow64regular text-green-800 text-xs">
-              Dự kiến giao:{" "}
-              {`${convertIntTimeToString(orderData.startTime)} - ${convertIntTimeToString(orderData.endTime)}`}
-            </Text>
+            {orderData.receiveAt ? (
+              <Text className="font-hnow64regular text-green-800 text-xs">
+                Giao lúc: {`${convertIntTimeToString(orderData.receiveAt)}`}
+              </Text>
+            ) : (
+              <Text className="font-hnow64regular text-green-800 text-xs">
+                Dự kiến giao:{" "}
+                {`${convertIntTimeToString(orderData.startTime)} - ${convertIntTimeToString(orderData.endTime)}`}
+              </Text>
+            )}
+          </View>
+          <View className="flex-row justify-end px-10 py-1">
+            {orderData.isOrderNextDay ? (
+              <>
+                <CalendarCheck2 color={"red"} size={16} />
+
+                <Text className="text-xs text-red-400">
+                  Đặt hàng cho ngày mai
+                </Text>
+              </>
+            ) : (
+              <>
+                <CalendarCheck2 color={"red"} size={16} />
+                <Text className="text-xs text-red-400">
+                  Đặt hàng cho hôm nay
+                </Text>
+              </>
+            )}
           </View>
           <View
             className="flex-row"
@@ -665,7 +794,9 @@ const OrderTracking = () => {
                 <Text>{orderData.voucher.title}</Text>
               </View>
             )}
-            <Text className="pl-7 text-lg font-bold">Thông tin giỏ hàng</Text>
+            <View>
+              <Text className="pl-7 text-lg font-bold">Thông tin giỏ hàng</Text>
+            </View>
             {orderData.orderDetails.map((product) => (
               <View className="flex-row gap-4 pl-7 mt-4">
                 <Image
@@ -680,7 +811,8 @@ const OrderTracking = () => {
                   <Text numberOfLines={2} className="font-bold text-lg">
                     {product.name}
                   </Text>
-                  <View className="flex-1">
+                  <View className="flex-1 flex-row gap-1">
+                    <Utensils size={16} color={"blue"} />
                     <Text>
                       {product.optionGroups &&
                         Array.isArray(product.optionGroups) &&
@@ -707,7 +839,18 @@ const OrderTracking = () => {
                           .join(" & ")}
                     </Text>
                   </View>
+                  <View className="gap-3 my-1 flex-row items-center">
+                    {product.note && (
+                      <>
+                        <NotepadText size={12} color="green" />
+                        <Text className="text-xs text-gray-500">
+                          Ghi chú: {product.note}
+                        </Text>
+                      </>
+                    )}
+                  </View>
                   <View className="flex-row items-center gap-2">
+                    <Coins size={18} color={"red"} />
                     <Text className="text-primary text-base">
                       {formatNumberVND(product.totalPrice)}
                     </Text>
@@ -760,7 +903,7 @@ const OrderTracking = () => {
             <Text numberOfLines={4} className="pl-7 text-sm text-gray-600 mb-8">
               {orderData.note}
             </Text>
-            <View className="px-7">
+            <View className="px-7 mb-5">
               <Button
                 mode="elevated"
                 textColor="white"
@@ -778,7 +921,7 @@ const OrderTracking = () => {
                 disabled={!canCancel}
                 onPress={handleOpenDialogCancelOrder}
               >
-                Hủy đơn hàng
+                {getButtonAction()}
               </Button>
             </View>
           </ScrollView>

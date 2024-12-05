@@ -11,14 +11,17 @@ import {
   Text,
   View,
 } from "react-native";
+import DropDownPicker from "react-native-dropdown-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
+import api from "../../api/api";
 import FloatCartButton from "../../components/shop/FloatCartButton";
 import HeaderShopAnimated from "../../components/shop/HeaderShopAnimated";
 import HeaderStickyShop from "../../components/shop/HeaderStickyShop";
 import ItemAllProductInShop from "../../components/shop/ItemAllProductInShop";
 import ListBestProductInShop from "../../components/shop/ListBestProductInShop";
 import ListPromotionInShop from "../../components/shop/ListPromotionInShop";
+import { Colors } from "../../constant";
 import images from "../../constant/images";
 import usePagination from "../../custom-hook/usePagination";
 import usePullToRefresh from "../../custom-hook/usePullToRefresh";
@@ -39,6 +42,8 @@ import shopDetailsSlice, {
 const listEmpty = new Array(9).fill(null);
 const ShopPage = () => {
   const { width, height } = Dimensions.get("window");
+  const widthIllu = width * 60 / 100
+  const { searchState } = useSelector(dataShopDetailsSelector);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   let scrollOffsetY = useRef(new Animated.Value(0)).current;
   const [isHeaderTop, setIsHeaderTop] = useState(false);
@@ -54,7 +59,7 @@ const ShopPage = () => {
   const dispatch = useDispatch();
   const { totalPage } = useSelector(dataShopDetailsSelector);
   const [isLoading, setLoading] = useState(true);
-  
+
   const isFocus = useIsFocused();
   const { refreshing, onRefreshHandler } = usePullToRefresh({
     onRefreshFunction() {
@@ -70,8 +75,7 @@ const ShopPage = () => {
     totalPages: totalPage,
     initialPage: 1,
   });
-  useEffect(() => {
-  }, [height]);
+  useEffect(() => {}, [height]);
   const { shopId } = params;
   const product = {
     id: "banhmi01",
@@ -88,15 +92,16 @@ const ShopPage = () => {
   useEffect(() => {
     const subscription = Dimensions.addEventListener(
       "change",
-      ({ window, screen }) => {
-      }
+      ({ window, screen }) => {}
     );
     return () => subscription?.remove();
   }, []);
   useEffect(() => {
+    dispatch(getListBestProduct(shopId));
+  }, [searchState]);
+  useEffect(() => {
     dispatch(getListPromotionInShop(shopId));
     dispatch(getShopInfo(shopId));
-    dispatch(getListBestProduct(shopId));
 
     dispatch(getListAllProductsInShop(shopId));
     const listener = scrollOffsetY.addListener(({ value }) => {
@@ -127,12 +132,55 @@ const ShopPage = () => {
     };
   }, []);
 
+  const [open, setOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [listCategory, setListCategory] = useState([]);
+  const getListCate = async () => {
+    try {
+      const res = await api.get("/api/v1/shop/" + shopId + "/category");
+      const data = await res.data;
+      if (data.isSuccess) {
+        setListCategory(
+          data.value.reduce(
+            (acc, i) => {
+              return [
+                ...acc,
+                {
+                  label: i.name,
+                  value: i.id,
+                },
+              ];
+            },
+            [
+              {
+                label: "Tất cả",
+                value: null,
+              },
+            ]
+          )
+        );
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  useEffect(() => {
+    getListCate();
+  }, []);
+  useEffect(() => {
+    dispatch(
+      shopDetailsSlice.actions.changeSearchInfo({
+        categoryId: selectedCategory,
+      })
+    );
+  }, [selectedCategory]);
   return (
     <SafeAreaView
       className="flex-1"
       style={{ zIndex: -1, backgroundColor: "#ffffffff" }}
     >
       <FloatCartButton />
+
       <HeaderStickyShop
         shopInfo={shopInfo}
         isHeaderTop={isHeaderTop}
@@ -153,6 +201,7 @@ const ShopPage = () => {
         image_url={product.image_url}
         animHeaderValue={scrollOffsetY}
       />
+
       <FlatList
         style={{ zIndex: -1, height: "100%" }}
         scrollEventThrottle={1}
@@ -165,7 +214,7 @@ const ShopPage = () => {
           }
         )}
         ListHeaderComponentStyle={{}}
-        data={listAllProduct ? listAllProduct : listEmpty}
+        data={[]}
         contentContainerStyle={{
           justifyContent: "center",
           backfaceVisibility: "black",
@@ -173,6 +222,35 @@ const ShopPage = () => {
         ListHeaderComponent={() => {
           return (
             <View className="mt-4" key={1}>
+              <View className="flex-row  items-center px-8  mt-5">
+                <DropDownPicker
+                  listMode="SCROLLVIEW"
+                  open={open}
+                  style={{
+                    borderColor: Colors.primaryBackgroundColor,
+                    width: "80%",
+                  }}
+                  zIndex={3000}
+                  zIndexInverse={1000}
+                  categorySelectable={true}
+                  placeholderStyle={{ color: "grey" }}
+                  dropDownContainerStyle={{
+                    backgroundColor: "white",
+
+                    borderColor: Colors.primaryBackgroundColor,
+                    width: "80%",
+                  }}
+                  textStyle={{}}
+                  value={selectedCategory}
+                  items={listCategory}
+                  setOpen={setOpen}
+                  onChangeValue={(value) => {}}
+                  setValue={setSelectedCategory}
+                  setItems={setListCategory}
+                  placeholder={"Lọc theo thể loại"}
+                />
+              </View>
+
               <View className="flex-row  items-center px-8  mt-5">
                 <Image
                   className="rounded-md"
@@ -188,14 +266,32 @@ const ShopPage = () => {
               </View>
               <ListPromotionInShop listPromotion={listPromotion} />
               {listBestProduct ? (
-                listBestProduct.map((item, index) => (
-                  <View key={item.id}>
-                    <Text className="text-lg font-hnow65medium px-8 mt-1">
-                      {item.categoryName}
-                    </Text>
-                    <ListBestProductInShop data={item.foods} />
-                  </View>
-                ))
+                listBestProduct &&
+                Array.isArray(listBestProduct) &&
+                listBestProduct.length > 0 ? (
+                  listBestProduct.map((item, index) => (
+                    <View key={item.id}>
+                      <Text className="text-lg font-hnow65medium px-8 mt-1">
+                        {item.categoryName}
+                      </Text>
+                      <ListBestProductInShop data={item.foods} />
+                    </View>
+                  ))
+                ) : (
+                  <>
+                    <View className=" mx-4 my-4 justify-center items-center h-100">
+                      <Image
+                        source={{
+                          uri: "https://www.edinburghpharma.in/wp-content/themes/twentythirteen/images/no.jpg",
+                        }}
+                        style={{
+                          height: widthIllu,
+                          width: widthIllu,
+                        }}
+                      />
+                    </View>
+                  </>
+                )
               ) : (
                 <>
                   <View>
@@ -212,9 +308,6 @@ const ShopPage = () => {
                   </View>
                 </>
               )}
-              <Text className="text-lg font-hnow65medium px-8 mt-1">
-                Tất cả sản phẩm
-              </Text>
             </View>
           );
         }}

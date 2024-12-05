@@ -10,6 +10,10 @@ const initialState = {
   listRecentFood: null,
   listBestProduct: null,
   listAllProduct: null,
+  searchState: {
+    categoryId: undefined,
+    searchValue: "",
+  },
   product: {
     id: 0,
     name: "",
@@ -96,6 +100,12 @@ const shopDetailsSlice = createSlice({
           topping: item,
           option: newOption,
         };
+      }
+    },
+    changeSearchInfo: (state, actions) => {
+      state.searchState = {
+        ...state.searchState,
+        ...actions.payload
       }
     },
     addToppingCheckbox: (state, actions) => {
@@ -241,9 +251,14 @@ export const addMoreProductInShopDetails = createAsyncThunk(
 );
 export const getListBestProduct = createAsyncThunk(
   "/shopDetails/getListBestProduct",
-  async (id) => {
+  async (id, { getState }) => {
     try {
-      const res = await api.get(`/api/v1/shop/${id}/food`);
+      const state = getState().shopDetailsSlice;
+      const res = await api.get(`/api/v1/shop/${id}/food`, {
+        params: {
+          ...state.searchState
+        }
+      });
       const data = await res.data;
       console.log(data, "  list best product shop api");
       return data.value;

@@ -13,7 +13,6 @@ const NotifyFisebaseForegroundItem = ({
   const { width, height } = Dimensions.get("window");
   const widthImage = (width * 20) / 100;
   const widthContent = (width * 90) / 100;
-  console.log("body");
   return (
     <BlurView
       className="flex-row"
