@@ -5,6 +5,7 @@ const usePullToRefresh = ({ onRefreshFunction }) => {
 
   const onRefreshHandler = useCallback(async () => {
     try {
+      
       setRefreshing(true);
       await onRefreshFunction();
     } finally {

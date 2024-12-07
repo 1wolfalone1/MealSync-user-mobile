@@ -97,18 +97,7 @@ const ItemReportDetails = ({ item, shopInfo }) => {
           Lý do: <Text className="text-gray-600">{item.content}</Text>
         </Text>
 
-        {item.reason && (
-          <View style={styles.reasonContainer}>
-            <Text variant="bodySmall" style={styles.reasonLabel}>
-              Reason:
-            </Text>
-            <Text variant="bodyMedium" style={styles.reason}>
-              {item.reason}
-            </Text>
-          </View>
-        )}
-
-        {renderImages()}
+              {renderImages()}
 
         <View style={styles.footer}>
           <Text variant="bodySmall" style={styles.timestamp}>

@@ -5,6 +5,7 @@ import React from "react";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
 import { TouchableRipple } from "react-native-paper";
 import { Colors } from "../../constant";
+import common from "../../constant/common";
 import {
   convertIntTimeToString,
   formatDateTime,
@@ -31,26 +32,78 @@ const OrderHistoryItem = ({ item }) => {
       .replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+)/, "$1/$2/$3 $4:$5");
   };
   const getUiBasedState = () => {
-    if (item.status == 2 || item.status == 4) {
+    if (item.status == 4) {
+      let suffix = "";
+      if (
+        item.reasonIdentity == common.OrderIdentity.ORDER_IDENTITY_SHOP_CANCEL
+      ) {
+        suffix = "Bị hủy do cửa hàng";
+      } else if (
+        item.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_CUSTOMER_CANCEL
+      ) {
+        suffix = "Đã hủy do khách hàng";
+      }
       return (
         <>
           <CircleX color={"red"} size={14} />
-          <Text className="text-xs text-red-500">{
-            item.status ==2 ? "Bị hủy" : "Đã hủy"}</Text>
+          <Text className="text-xs text-red-500">{suffix}</Text>
+        </>
+      );
+    } else if (item.status == 2) {
+      return (
+        <>
+          <CircleX color={"red"} size={14} />
+          <Text className="text-xs text-red-500">
+            {item.status == 2 ? "Cửa hàng từ chối nhận đơn" : "Đã hủy"}
+          </Text>
         </>
       );
     } else if (item.status == 9) {
-      return (
-        <>
-          <CircleCheckBig color={"green"} size={14} />
-          <Text className="text-xs text-green-600">Giao thành công</Text>
-        </>
-      );
+      if (
+        item.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_DELIVERY_FAIL_BY_CUSTOMER
+      ) {
+        return (
+          <>
+            <CircleX color={"red"} size={14} />
+            <Text className="text-xs text-red-600">
+              Giao thất bại do khách hàng
+            </Text>
+          </>
+        );
+      } else if (
+        item.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_DELIVERY_FAIL_BY_SHOP
+      ) {
+        return (
+          <>
+            <CircleX color={"red"} size={14} />
+            <Text className="text-xs text-red-600">
+              Giao thất bại do cửa hàng
+            </Text>
+          </>
+        );
+      } else {
+        return (
+          <>
+            <CircleCheckBig color={"green"} size={14} />
+            <Text className="text-xs text-green-600">Giao thành công</Text>
+          </>
+        );
+      }
     } else if (item.status == 8) {
       return (
         <>
           <CircleCheckBig color={"green"} size={14} />
           <Text className="text-xs text-green-600">Giao hành thất bại</Text>
+        </>
+      );
+    } else if (item.status == 12) {
+      return (
+        <>
+          <CircleCheckBig color={"orange"} size={14} />
+          <Text className="text-xs text-orange-500">Báo cáo đã được xử  lý</Text>
         </>
       );
     }
@@ -115,7 +168,7 @@ const OrderHistoryItem = ({ item }) => {
                 {formatNumberVND(item.totalPrice - item.totalPromotion)}
               </Text>
               <Text className="text-xs text-gray-600">
-                Số lượng món: {item.totalOrderDetail}
+                {item.isOrderTomorrow ? "Đặt cho ngày mai" : "Đặt cho hôm nay"}
               </Text>
             </View>
             <View className="flex-row gap-1 justify-between">
@@ -123,17 +176,22 @@ const OrderHistoryItem = ({ item }) => {
                 Đặt lúc: {formatDateTime(item.orderDate)}
               </Text>
             </View>
+
             <View className="flex-row gap-1 justify-between">
-              <Text className="text-green-800">
-                Khung thời gian giao:{" "}
-                {`${convertIntTimeToString(item.startTime)} - ${convertIntTimeToString(item.endTime)}`}
-              </Text>
+              {item.receiveAt == 0 ? (
+                <Text className="text-green-800">
+                  Khung thời gian giao:{" "}
+                  {`${convertIntTimeToString(item.startTime)} - ${convertIntTimeToString(item.endTime)}`}
+                </Text>
+              ) : (
+                <Text className="text-green-800">
+                  Giao lúc: {`${formatDateTime(item.receiveAt)}`}
+                </Text>
+              )}
             </View>
 
             <View className="flex-row items-center justify-between">
-              <Text className="text-xs text-gray-500">
-                Mã đơn hàng: #{item.id}
-              </Text>
+              <Text className="text-xs text-gray-500">#{item.id}</Text>
               <View className="flex-row items-center gap-1">
                 {getUiBasedState()}
               </View>

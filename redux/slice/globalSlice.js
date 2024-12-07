@@ -39,7 +39,7 @@ const initialState = {
     isLoading: false,
     msg: "Chờ tí nhé...",
   },
-
+  refreshScroll: false,
   orderStatusChange: false,
   searchPage: false,
 };
@@ -47,6 +47,9 @@ const globalSlice = createSlice({
   name: "globalSlice",
   initialState: initialState,
   reducers: {
+    changeRefreshScroll: (state, action) => {
+      state.refreshScroll = !state.refreshScroll;
+    },
     changeSearchPage: (state, actions) => {
       state.searchPage = true;
     },

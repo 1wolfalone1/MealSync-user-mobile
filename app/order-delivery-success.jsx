@@ -1,6 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
-import { Flag, MapPinned } from "lucide-react-native";
+import { CalendarCheck2, Coins, Flag, MapPinned, NotepadText, Utensils } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
@@ -578,6 +578,20 @@ const OrderHistoryCompleted = () => {
           </Text>
         )}
       </View>
+      <View className="flex-row justify-end px-10 py-1">
+        {orderData.isOrderNextDay ? (
+          <>
+            <CalendarCheck2 color={"red"} size={16} />
+
+            <Text className="text-xs text-red-400">Đặt hàng cho ngày mai</Text>
+          </>
+        ) : (
+          <>
+            <CalendarCheck2 color={"red"} size={16} />
+            <Text className="text-xs text-red-400">Đặt hàng cho hôm nay</Text>
+          </>
+        )}
+      </View>
       <View
         className="flex-row"
         style={{
@@ -643,21 +657,20 @@ const OrderHistoryCompleted = () => {
         <Text className="pl-7 text-lg font-bold">Thông tin giỏ hàng</Text>
         {orderData.orderDetails.map((product) => (
           <View className="flex-row gap-4 pl-7 mt-4">
-            <Surface elevation={4} className="rounded-lg bg-white">
-              <Image
-                source={{ uri: product.imageUrl }}
-                style={{
-                  height: parseInt((width * 25) / 100),
-                  width: parseInt((width * 25) / 100),
-                  borderRadius: 10,
-                }}
-              />
-            </Surface>
+            <Image
+              source={{ uri: product.imageUrl }}
+              style={{
+                height: parseInt((width * 25) / 100),
+                width: parseInt((width * 25) / 100),
+                borderRadius: 10,
+              }}
+            />
             <View className="flex-1 justify-between">
               <Text numberOfLines={2} className="font-bold text-lg">
                 {product.name}
               </Text>
-              <View className="flex-1">
+              <View className="flex-1 flex-row gap-1 mr-2">
+                <Utensils size={16} color={"blue"} />
                 <Text>
                   {product.optionGroups &&
                     Array.isArray(product.optionGroups) &&
@@ -681,7 +694,18 @@ const OrderHistoryCompleted = () => {
                       .join(" & ")}
                 </Text>
               </View>
+              <View className="gap-3 my-1 flex-row items-center">
+                {product.note && (
+                  <>
+                    <NotepadText size={12} color="green" />
+                    <Text className="text-xs text-gray-500">
+                      Ghi chú: {product.note}
+                    </Text>
+                  </>
+                )}
+              </View>
               <View className="flex-row items-center gap-2">
+                <Coins size={18} color={"red"} />
                 <Text className="text-primary text-base">
                   {formatNumberVND(product.totalPrice)}
                 </Text>
@@ -696,7 +720,7 @@ const OrderHistoryCompleted = () => {
           <>
             <Text className="pl-7 text-lg font-bold mt-8">Giảm giá</Text>
             <Surface
-              className="flex-row my-4 mx-7 flex-1"
+              className="flex-row my-4 mx-7"
               style={{
                 height: 50,
                 borderRadius: 16,

@@ -30,7 +30,7 @@ const ShopLikeItem = ({ item }) => {
   const { width, height } = Dimensions.get('window');
   const widthItem = parseInt((width * 80) / 100);
   const heightImage = parseInt((widthItem * 65) / 100);
-
+  console.log(item, 'asdfasfasdf')
   console.log(widthItem);
   return item == null ? (
     <SkeletonItem />

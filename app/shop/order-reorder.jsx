@@ -61,6 +61,7 @@ const CartItemInShop = () => {
     { label: "Sao", value: 2 },
   ]);
   const { width, height } = Dimensions.get("window");
+  const [disabled, setDisabled] = useState(false)
   const [noteTemp, setNoteTemp] = useState("");
   const widthItem = parseInt((width * 85) / 100);
   const { listItemInfo, items } = useSelector(cartSelector);
@@ -269,6 +270,7 @@ const CartItemInShop = () => {
     }
   }, [dataReorder]);
   const handleOrder = async () => {
+    setDisabled(true)
     try {
       if (
         orderInfo.fullName == "" ||
@@ -357,6 +359,8 @@ const CartItemInShop = () => {
     } catch (e) {
       dispatch(globalSlice.actions.changeLoadings(false));
       console.error(e);
+    } finally {
+      setDisabled(false)
     }
   };
 
@@ -698,6 +702,7 @@ const CartItemInShop = () => {
               contentStyle={{
                 paddingVertical: 4,
               }}
+              disabled={disabled}
               className="rounded-xl"
               labelStyle={{
                 fontFamily: "HeadingNow-64Regular",

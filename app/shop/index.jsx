@@ -42,7 +42,7 @@ import shopDetailsSlice, {
 const listEmpty = new Array(9).fill(null);
 const ShopPage = () => {
   const { width, height } = Dimensions.get("window");
-  const widthIllu = width * 60 / 100
+  const widthIllu = (width * 80) / 100;
   const { searchState } = useSelector(dataShopDetailsSelector);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   let scrollOffsetY = useRef(new Animated.Value(0)).current;
@@ -279,13 +279,13 @@ const ShopPage = () => {
                   ))
                 ) : (
                   <>
-                    <View className=" mx-4 my-4 justify-center items-center h-100">
+                    <View className=" mt-1">
                       <Image
                         source={{
-                          uri: "https://www.edinburghpharma.in/wp-content/themes/twentythirteen/images/no.jpg",
+                          uri: "https://mealsync.s3.ap-southeast-1.amazonaws.com/image/1733499673958-cca03ac5-281b-46b3-ae0c-46afe5cff5bb.png",
                         }}
                         style={{
-                          height: widthIllu,
+                          height: widthIllu - 100,
                           width: widthIllu,
                         }}
                       />

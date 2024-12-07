@@ -56,10 +56,17 @@ const ItemBestProctInShop = ({ item }) => {
             width: widthCard,
           }}
         >
-          <Image
-            style={{ height: widthItem, width: widthItem, borderRadius: 20 }}
-            source={itemImageUrl}
-          />
+          <View>
+            <Image
+              style={{ height: widthItem, width: widthItem, borderRadius: 20 }}
+              source={itemImageUrl}
+            />
+            <View className="p-1 bg-black-200 absolute top-0 left-0 rounded-lg">
+              <Text className="text-xs text-white">
+                {item.totalOrder} đã bán
+              </Text>
+            </View>
+          </View>
           <View className="pl-2 flex-1">
             <View>
               <Text
@@ -76,6 +83,7 @@ const ItemBestProctInShop = ({ item }) => {
                 {item.description}
               </Text>
             </View>
+
             <View className="flex-1 justify-between items-end flex-row">
               <Text className="text-primary text-lg">
                 {formatNumberVND(item.price)}

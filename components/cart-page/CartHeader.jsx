@@ -46,18 +46,7 @@ const CartHeader = ({ info, scrollY }) => {
             size={40}
             theme={{ padding: 5 }}
             onPress={() => {
-              router.replace({
-                pathname: "/home",
-                params: {
-                  shopId: info.id,
-                },
-              });
-              router.push({
-                pathname: "/shop",
-                params: {
-                  shopId: info.id,
-                },
-              });
+             router.back()
             }}
             className="p-0 m-0 absolute left-1"
             style={{ borderRadius: 16, alignSelf: "center" }}

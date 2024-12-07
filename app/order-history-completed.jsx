@@ -1,11 +1,27 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { MapPinned, TicketCheck } from "lucide-react-native";
+import {
+  CalendarCheck2,
+  Coins,
+  Flag,
+  MapPinned,
+  NotepadText,
+  TicketCheck,
+  Utensils,
+} from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import { Dimensions, Image, ScrollView, Text, View } from "react-native";
-import { Button, Divider, Modal, Portal, Surface } from "react-native-paper";
+import {
+  Button,
+  Divider,
+  Modal,
+  Portal,
+  Surface,
+  TouchableRipple,
+} from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../api/api";
 import { Colors, Images } from "../constant";
+import common from "../constant/common";
 import images from "../constant/images";
 import {
   convertIntTimeToString,
@@ -51,10 +67,39 @@ const OrderHistoryCompleted = () => {
   }, []);
   const hideModal = () => setVisible(false);
   const getOrderDataString = () => {
-    if (orderData.status == 2 || orderData.status == 4) {
-      return "Đơn hàng đã bị hủy";
+    let suffix = "";
+    if (orderData.status == 4) {
+      if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_SHOP_CANCEL
+      ) {
+        suffix = " bởi cửa hàng";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_CUSTOMER_CANCEL
+      ) {
+        suffix = " bởi khách hàng";
+      }
+
+      return "Đơn hàng đã bị hủy" + suffix;
+    } else if (orderData.status == 2) {
+      return "Đơn hàng đã bị từ chối bởi cửa hàng";
     } else if (orderData.status == 9) {
-      return "Đơn hàng đã giao hàng thành công";
+      if (orderData.reasonIdentity == null) {
+        return "Đơn hàng đã giao hàng thành công";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_DELIVERY_FAIL_BY_CUSTOMER
+      ) {
+        return "Đơn hàng giao thất bại (do khách hàng)";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_DELIVERY_FAIL_BY_SHOP
+      ) {
+        return "Đơn hàng giao thất bại (do cửa hàng)";
+      }
+    } else if (orderData.status == 12) {
+      return "Đã xử khiếu nại thành công";
     }
   };
   const genPromotionTitle = (item) => {
@@ -91,6 +136,23 @@ const OrderHistoryCompleted = () => {
             height: 1,
           }}
         />
+        {orderData.status == 12 && (
+          <TouchableRipple
+            borderless
+            onPress={() => {
+              router.push({
+                pathname: `/report-details`,
+                params: { orderId: orderData.id },
+              });
+            }}
+            className="p-2"
+          >
+            <View className="flex-row justify-end">
+              <Flag size={16} color={"red"} />
+              <Text className="text-sm text-red-600">Xem chi tiết báo cáo</Text>
+            </View>
+          </TouchableRipple>
+        )}
       </View>
       <View className="flex-row px-10 justify-between my-4 items-center">
         <View className="flex-row gap-2 items-center">
@@ -121,6 +183,20 @@ const OrderHistoryCompleted = () => {
             Dự kiến giao:{" "}
             {`${convertIntTimeToString(orderData.startTime)} - ${convertIntTimeToString(orderData.endTime)}`}
           </Text>
+        )}
+      </View>
+      <View className="flex-row justify-end px-10 py-1">
+        {orderData.isOrderNextDay ? (
+          <>
+            <CalendarCheck2 color={"red"} size={16} />
+
+            <Text className="text-xs text-red-400">Đặt hàng cho ngày mai</Text>
+          </>
+        ) : (
+          <>
+            <CalendarCheck2 color={"red"} size={16} />
+            <Text className="text-xs text-red-400">Đặt hàng cho hôm nay</Text>
+          </>
         )}
       </View>
       <View
@@ -195,21 +271,20 @@ const OrderHistoryCompleted = () => {
 
         {orderData.orderDetails.map((product) => (
           <View className="flex-row gap-4 pl-7 mt-4">
-            <Surface elevation={4} className="rounded-lg bg-white">
-              <Image
-                source={{ uri: product.imageUrl }}
-                style={{
-                  height: parseInt((width * 25) / 100),
-                  width: parseInt((width * 25) / 100),
-                  borderRadius: 10,
-                }}
-              />
-            </Surface>
+            <Image
+              source={{ uri: product.imageUrl }}
+              style={{
+                height: parseInt((width * 25) / 100),
+                width: parseInt((width * 25) / 100),
+                borderRadius: 10,
+              }}
+            />
             <View className="flex-1 justify-between">
               <Text numberOfLines={2} className="font-bold text-lg">
                 {product.name}
               </Text>
-              <View className="flex-1">
+              <View className="flex-1 flex-row gap-1 mr-2">
+                <Utensils size={16} color={"blue"} />
                 <Text>
                   {product.optionGroups &&
                     Array.isArray(product.optionGroups) &&
@@ -233,7 +308,18 @@ const OrderHistoryCompleted = () => {
                       .join(" & ")}
                 </Text>
               </View>
+              <View className="gap-3 my-1 flex-row items-center">
+                {product.note && (
+                  <>
+                    <NotepadText size={12} color="green" />
+                    <Text className="text-xs text-gray-500">
+                      Ghi chú: {product.note}
+                    </Text>
+                  </>
+                )}
+              </View>
               <View className="flex-row items-center gap-2">
+                <Coins size={18} color={"red"} />
                 <Text className="text-primary text-base">
                   {formatNumberVND(product.totalPrice)}
                 </Text>
@@ -248,7 +334,7 @@ const OrderHistoryCompleted = () => {
           <>
             <Text className="pl-7 text-lg font-bold mt-8">Giảm giá</Text>
             <Surface
-              className="flex-row my-4 mx-7 flex-1"
+              className="flex-row my-4 mx-7"
               style={{
                 height: 50,
                 borderRadius: 16,
@@ -281,11 +367,14 @@ const OrderHistoryCompleted = () => {
         <Text numberOfLines={4} className="pl-7 text-sm text-gray-600 mb-8">
           {handleGetPaymentMethodString(orderData.payments)}
         </Text>
-
-        <Text className="pl-7 text-lg font-bold mt-1">Ghi chú</Text>
-        <Text numberOfLines={4} className="pl-7 text-sm text-gray-600 mb-8">
-          {orderData.note}
-        </Text>
+        {orderData.note && (
+          <>
+            <Text className="pl-7 text-lg font-bold mt-1">Ghi chú</Text>
+            <Text numberOfLines={4} className="pl-7 text-sm text-gray-600 mb-8">
+              {orderData.note}
+            </Text>
+          </>
+        )}
         <View className="px-7 mb-5">
           <Button
             mode="elevated"

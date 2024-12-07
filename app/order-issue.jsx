@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { MapPinned, TicketCheck } from "lucide-react-native";
+import { CalendarCheck2, Coins, MapPinned, NotepadText, TicketCheck, Utensils } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 
 import * as ImagePicker from "expo-image-picker";
@@ -24,11 +24,12 @@ import {
   TouchableRipple,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import api from "../api/api";
 import { Colors, Images } from "../constant";
+import common from "../constant/common";
 import images from "../constant/images";
-import globalSlice from "../redux/slice/globalSlice";
+import globalSlice, { globalSelector } from "../redux/slice/globalSlice";
 import {
   convertIntTimeToString,
   formatDateTime,
@@ -46,6 +47,7 @@ const OrderHistoryCompleted = () => {
   const [inRequest, setInRequest] = useState(false);
   const dispatch = useDispatch();
 
+  const { orderStatusChange } = useSelector(globalSelector);
   const [visible, setVisible] = useState(false);
   const { width, height } = Dimensions.get("window");
   const widthImage2 = (width * 22) / 100;
@@ -64,6 +66,11 @@ const OrderHistoryCompleted = () => {
       console.log(err, " error in OrderTracking");
     }
   };
+  useEffect(() => {
+    if (orderData && orderData.status == 12) {
+      router.navigate(`/order/order-history`);
+    }
+  }, [orderData]);
   const handleGetPaymentMethodString = (payment) => {
     if (payment) {
       if (payment.paymentMethods == 1) {
@@ -78,15 +85,63 @@ const OrderHistoryCompleted = () => {
 
   useEffect(() => {
     handleGetOrderData();
-  }, []);
+  }, [orderStatusChange]);
   const hideModal = () => setVisible(false);
+  const [reason, setReason] = useState();
   const getOrderDataString = () => {
+    let suffix = "";
     if (orderData.status == 8) {
-      return "Đơn hàng giao thất bại";
+      if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_DELIVERY_FAIL_BY_SHOP
+      ) {
+        return "Đơn hàng giao thất bại (do cửa hàng)";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_DELIVERY_FAIL_BY_CUSTOMER
+      ) {
+        return "Đơn hàng giao thất bại (do khách hàng)";
+      }
     } else if (orderData.status == 10) {
-      return "Đơn hàng đang được báo cáo";
+      if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_DELIVERED_REPORTED_BY_CUSTOMER
+      ) {
+        suffix = "\nTừ đơn hàng giao thành công";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity
+          .ORDER_IDENTITY_DELIVERY_FAIL_BY_CUSTOMER_REPORTED_BY_CUSTOMER
+      ) {
+        suffix = "\nVì đơn hàng giao thất bại do khách hàng";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity
+          .ORDER_IDENTITY_DELIVERY_FAIL_BY_SHOP_REPORTED_BY_CUSTOMER
+      ) {
+        suffix = "\nVì đơn hàng giao thất bại do cửa hàng";
+      }
+      return "Đơn hàng đang được báo cáo" + suffix;
     } else {
-      return "Đơn hàng đang được xem xét báo cáo";
+      if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_DELIVERED_REPORTED_BY_CUSTOMER
+      ) {
+        suffix = "\nTừ đơn hàng giao thành công";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity
+          .ORDER_IDENTITY_DELIVERY_FAIL_BY_CUSTOMER_REPORTED_BY_CUSTOMER
+      ) {
+        suffix = "\nVì đơn hàng giao thất bại do khách hàng";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity
+          .ORDER_IDENTITY_DELIVERY_FAIL_BY_SHOP_REPORTED_BY_CUSTOMER
+      ) {
+        suffix = "\nVì đơn hàng giao thất bại do cửa hàng";
+      }
+      return "Đơn hàng đang được xem xét báo cáo" + suffix;
     }
   };
   const getStringButton = () => {
@@ -358,11 +413,11 @@ const OrderHistoryCompleted = () => {
                               iconColor="white"
                               onPress={() => {
                                 setImageUrls(
-                                  imageUrls.filter((_, i) => i!== index)
+                                  imageUrls.filter((_, i) => i !== index)
                                 );
                               }}
                               style={{
-                                margin: 0
+                                margin: 0,
                               }}
                               icon={"cancel"}
                             />
@@ -400,7 +455,7 @@ const OrderHistoryCompleted = () => {
         </Modal>
       </Portal>
       <View className="px-10">
-        <Text className="font-bold text-lg text-red-500">
+        <Text className="text-lg font-hnow64regular text-red-500">
           {getOrderDataString()}
         </Text>
         <Divider
@@ -438,6 +493,20 @@ const OrderHistoryCompleted = () => {
             Dự kiến giao:{" "}
             {`${convertIntTimeToString(orderData.startTime)} - ${convertIntTimeToString(orderData.endTime)}`}
           </Text>
+        )}
+      </View>
+      <View className="flex-row justify-end px-10 py-1">
+        {orderData.isOrderNextDay ? (
+          <>
+            <CalendarCheck2 color={"red"} size={16} />
+
+            <Text className="text-xs text-red-400">Đặt hàng cho ngày mai</Text>
+          </>
+        ) : (
+          <>
+            <CalendarCheck2 color={"red"} size={16} />
+            <Text className="text-xs text-red-400">Đặt hàng cho hôm nay</Text>
+          </>
         )}
       </View>
       <View
@@ -511,21 +580,20 @@ const OrderHistoryCompleted = () => {
         <Text className="pl-7 text-lg font-bold">Thông tin giỏ hàng</Text>
         {orderData.orderDetails.map((product) => (
           <View className="flex-row gap-4 pl-7 mt-4">
-            <Surface elevation={4} className="rounded-lg bg-white">
-              <Image
-                source={{ uri: product.imageUrl }}
-                style={{
-                  height: parseInt((width * 25) / 100),
-                  width: parseInt((width * 25) / 100),
-                  borderRadius: 10,
-                }}
-              />
-            </Surface>
+            <Image
+              source={{ uri: product.imageUrl }}
+              style={{
+                height: parseInt((width * 25) / 100),
+                width: parseInt((width * 25) / 100),
+                borderRadius: 10,
+              }}
+            />
             <View className="flex-1 justify-between">
               <Text numberOfLines={2} className="font-bold text-lg">
                 {product.name}
               </Text>
-              <View className="flex-1">
+              <View className="flex-1 flex-row gap-1 mr-2">
+                <Utensils size={16} color={"blue"} />
                 <Text>
                   {product.optionGroups &&
                     Array.isArray(product.optionGroups) &&
@@ -549,7 +617,18 @@ const OrderHistoryCompleted = () => {
                       .join(" & ")}
                 </Text>
               </View>
+              <View className="gap-3 my-1 flex-row items-center">
+                {product.note && (
+                  <>
+                    <NotepadText size={12} color="green" />
+                    <Text className="text-xs text-gray-500">
+                      Ghi chú: {product.note}
+                    </Text>
+                  </>
+                )}
+              </View>
               <View className="flex-row items-center gap-2">
+                <Coins size={18} color={"red"} />
                 <Text className="text-primary text-base">
                   {formatNumberVND(product.totalPrice)}
                 </Text>
@@ -564,7 +643,7 @@ const OrderHistoryCompleted = () => {
           <>
             <Text className="pl-7 text-lg font-bold mt-8">Giảm giá</Text>
             <Surface
-              className="flex-row my-4 mx-7 flex-1"
+              className="flex-row my-4 mx-7"
               style={{
                 height: 50,
                 borderRadius: 16,

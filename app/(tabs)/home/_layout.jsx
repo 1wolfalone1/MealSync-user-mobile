@@ -6,6 +6,7 @@ import {
   Animated,
   FlatList,
   PermissionsAndroid,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
@@ -26,6 +27,7 @@ import {
 } from "../../../redux/slice/userSlice";
 
 import messaging from "@react-native-firebase/messaging";
+import usePullToRefresh from "../../../custom-hook/usePullToRefresh";
 const styles = StyleSheet.create({
   container: {
     margin: 0,
@@ -205,6 +207,11 @@ const HomePage = () => {
     handleGetCategories();
     dispatch(loadInfo());
   }, []);
+  const { refreshing, onRefreshHandler } = usePullToRefresh({
+    onRefreshFunction() {
+      dispatch(globalSlice.actions.changeRefreshScroll());
+    },
+  });
   return (
     <SafeAreaView
       style={styles.container}
@@ -220,7 +227,7 @@ const HomePage = () => {
           paddingBottom: 100,
         }}
         style={{
-          flex: 1
+          flex: 1,
         }}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
@@ -228,6 +235,12 @@ const HomePage = () => {
             useNativeDriver: false,
           }
         )}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefreshHandler}
+          />
+        }
       >
         <View className="flex-1">
           <View className="flex-row mt-2">

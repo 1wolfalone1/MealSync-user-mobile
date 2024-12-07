@@ -17,7 +17,7 @@ const initialState = {
     },
     sort: {
       orderMode: 0,
-      orderType: 0,
+      orderType: 1,
     },
   },
 };

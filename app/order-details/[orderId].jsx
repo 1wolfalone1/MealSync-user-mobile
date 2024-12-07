@@ -259,8 +259,18 @@ const OrderTracking = () => {
         if (orderData.isCancelAllowed) {
           setCanCancel(true);
         }
+        return;
       } else if (orderData.status == 6) {
         setCanCancel(true);
+        return;
+      } else if (orderData.status == 8) {
+        router.replace("/order/order-issue");
+        return
+      } else if(orderData.status == 2 || orderData.status == 4) {
+        router.replace("/order/order-history");
+        return
+      } else {
+
       }
     }
   }, [orderData]);
@@ -338,10 +348,7 @@ const OrderTracking = () => {
         return;
       }
       const res = await api.put(
-        `/api/v1/customer/order/${orderData.id}/cancel`,
-        {
-          reason: reasonCancel,
-        }
+        `/api/v1/customer/order/${orderData.id}/cancel?reason=${reasonCancel}`
       );
       const data = await res.data;
 
@@ -364,7 +371,7 @@ const OrderTracking = () => {
             message: "Hủy đơn hàng thành công",
           })
         );
-        router.push("/order/order-history");
+        router.replace('/order/order-history')
       } else {
         dispatch(
           globalSlice.actions.customSnackBar({
@@ -428,7 +435,7 @@ const OrderTracking = () => {
       return "Hủy đơn hàng";
     } else if (orderData.status == 6) {
       return "Đưa QR code cho shipper xác nhận";
-    } else if (orderData.status == 7) {
+    } else if (orderData.status == 8) {
       return "Xác nhận hoàn thành đơn hàng";
     }
   };
@@ -672,7 +679,7 @@ const OrderTracking = () => {
             </Text>
             {orderData.receiveAt ? (
               <Text className="font-hnow64regular text-green-800 text-xs">
-                Giao lúc: {`${convertIntTimeToString(orderData.receiveAt)}`}
+                Giao lúc: {`${formatDateTime(orderData.receiveAt)}`}
               </Text>
             ) : (
               <Text className="font-hnow64regular text-green-800 text-xs">
@@ -865,7 +872,7 @@ const OrderTracking = () => {
               <>
                 <Text className="pl-7 text-lg font-bold mt-8">Giảm giá</Text>
                 <Surface
-                  className="flex-row my-4 mx-7 flex-1"
+                  className="flex-row my-4 mx-7"
                   style={{
                     height: 50,
                     borderRadius: 16,

@@ -101,7 +101,7 @@ const ReviewInShopPageItem = ({ item }) => {
           </View>
         </View>
         <Divider className="my-2" />
-        <View>
+        <View className="">
           <View className="">
             <Text className="flex-wrap ">{user.comment}</Text>
           </View>
@@ -140,7 +140,7 @@ const ReviewInShopPageItem = ({ item }) => {
               </View>
             )}
           </View>
-          <View className="flex-1 items-end">
+          <View className="items-end">
             <Text
               className="text-green-600 text-xs flex-wrap text-ellipsis"
               numberOfLines={1}

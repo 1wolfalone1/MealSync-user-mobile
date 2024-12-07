@@ -22,7 +22,9 @@ import { Colors } from "../constant";
 let persistor = persistStore(store);
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
-
+if (!__DEV__) {
+  console.log = () => {};
+}
 export default function RootLayout() {
   const [loaded] = useFonts({});
   const insets = useContext(SafeAreaInsetsContext);

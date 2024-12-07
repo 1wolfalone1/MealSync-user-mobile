@@ -34,6 +34,7 @@ const OrderLayout = () => {
           swipeEnabled: false,
           animationEnabled: true,
           headerShown: true,
+          lazy: true,
           headerStyle: {
             backgroundColor: "red",
           },

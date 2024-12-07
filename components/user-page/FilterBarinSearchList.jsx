@@ -13,7 +13,7 @@ const FilterBarinSearchList = () => {
   const [selectedTo, setSelectedTo] = useState(null);
   const [listFrom, setListFrom] = useState([]);
   const [listTo, setListTo] = useState([]);
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useState(1);
   const [items, setItems] = useState([
     { label: "Bỏ trống", value: 0 },
     { label: "Giá", value: 1 },
@@ -46,7 +46,7 @@ const FilterBarinSearchList = () => {
         value: 2400,
       });
       setSelectedTo(null) 
-      
+
       return;
     }
     setSelectedTo(null)

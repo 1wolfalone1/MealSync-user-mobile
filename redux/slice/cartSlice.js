@@ -256,7 +256,7 @@ export const getListShopInfo = createAsyncThunk(
         }
       });
       console.log(keysArray, "keys", state.items);
-      const res = await api.get("/api/v1/customer/shop", {
+      const res = await api.get("/api/v1/shop/cart", {
         params: {
           ids: keysArray,
         },

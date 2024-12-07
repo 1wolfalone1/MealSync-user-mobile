@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import {
   HandCoins,
@@ -62,7 +62,7 @@ const CartItemInShop = () => {
   const [openNote, setOpenNote] = useState(false);
   const [note, setNote] = useState("");
   const [noteTemp, setNoteTemp] = useState("");
-
+  const [disabled, setDisabled] = useState(false);
   const [heightNote, setHeightNote] = useState(200);
   const [open, setOpen] = useState(false);
   const [orderIdAfterPayment, setOrderIdAfterPayment] = useState(0);
@@ -121,7 +121,7 @@ const CartItemInShop = () => {
               msg: "Chờ tí nhé...",
             })
           );
-          router.push("/order-details/" + orderIdAfterPayment);
+          router.navigate("/order-details/" + orderIdAfterPayment);
         } else {
           // Handle payment failure
           dispatch(
@@ -297,6 +297,7 @@ const CartItemInShop = () => {
   }, [items]);
   const handleOrder = async () => {
     try {
+      setDisabled(true);
       if (
         orderInfo.fullName == "" ||
         orderInfo.phoneNumber == "" ||
@@ -422,6 +423,8 @@ const CartItemInShop = () => {
         }
       }
       console.error(e);
+    } finally {
+      setDisabled(false);
     }
   };
   const handleNavigateToOrderTracking = async (id) => {
@@ -431,6 +434,31 @@ const CartItemInShop = () => {
       console.error(e);
     }
   };
+  const navigation = useNavigation();
+  useEffect(() => {
+    navigation.addListener("beforeRemove", (e) => {
+      console.log("onback", e.data.action.type);
+      // Do your stuff here
+
+      if (e.data.action.type === "GO_BACK") {
+        e.preventDefault();
+        router.replace({
+          pathname: "/home",
+          params: {
+            shopId: info.id,
+          },
+        });
+        router.push({
+          pathname: "/shop",
+          params: {
+            shopId: info.id,
+          },
+        });
+      }
+
+      navigation.dispatch(e.data.action);
+    });
+  }, []);
   return (
     <View className="flex-1 bg-white overflow-visible">
       <Portal>
@@ -760,6 +788,7 @@ const CartItemInShop = () => {
               contentStyle={{
                 paddingVertical: 4,
               }}
+              disabled={disabled}
               className="rounded-xl"
               labelStyle={{
                 fontFamily: "HeadingNow-64Regular",

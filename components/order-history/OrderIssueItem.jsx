@@ -1,6 +1,11 @@
 import { router } from "expo-router";
 import SkeletonLoading from "expo-skeleton-loading";
-import { HandCoins, Loader, OctagonPause, ScanSearch } from "lucide-react-native";
+import {
+  HandCoins,
+  Loader,
+  OctagonPause,
+  ScanSearch,
+} from "lucide-react-native";
 import React from "react";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
 import { TouchableRipple } from "react-native-paper";
@@ -35,9 +40,7 @@ const OrderIssueItem = ({ item }) => {
       return (
         <>
           <OctagonPause color={"red"} size={16} />
-          <Text className="text-xs text-red-500">
-            Giao hàng thất bại
-          </Text>
+          <Text className="text-xs text-red-500">Giao hàng thất bại</Text>
         </>
       );
     } else if (item.status == 10) {
@@ -45,15 +48,13 @@ const OrderIssueItem = ({ item }) => {
         <>
           <Loader color={"blue"} size={16} />
           <Text className="text-xs text-blue-700">Chờ khiếu nại</Text>
-        
         </>
       );
     } else if (item.status == 11) {
       return (
         <>
-          <ScanSearch color={"Purple"} size={14} />
-          <Text className="text-xs text-purple-700"
-          >
+          <ScanSearch color={"purple"} size={14} />
+          <Text className="text-xs text-purple-700">
             Đang xem xét khiêu nại
           </Text>
         </>
@@ -129,10 +130,16 @@ const OrderIssueItem = ({ item }) => {
               </Text>
             </View>
             <View className="flex-row gap-1 justify-between">
-              <Text className="text-green-800">
-                Khung thời gian giao:{" "}
-                {`${convertIntTimeToString(item.startTime)} - ${convertIntTimeToString(item.endTime)}`}
-              </Text>
+              {item.receiveAt == 0 ? (
+                <Text className="text-green-800">
+                  Khung thời gian giao:{" "}
+                  {`${convertIntTimeToString(item.startTime)} - ${convertIntTimeToString(item.endTime)}`}
+                </Text>
+              ) : (
+                <Text className="text-green-800">
+                  Giao lúc: {`${formatDateTime(item.receiveAt)}`}
+                </Text>
+              )}
             </View>
 
             <View className="flex-row items-center justify-between">

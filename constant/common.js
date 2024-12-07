@@ -4,6 +4,23 @@ export default commonConstants = {
     SHOP: 2,
     GUEST: 0,
   },
+  RejectStatus: {
+    PENDING: 1,
+    APPROVED: 2,
+    REJECTED: 3,
+  },
+  OrderIdentity: {
+    ORDER_IDENTITY_SHOP_CANCEL: "ShopCancel",
+    ORDER_IDENTITY_CUSTOMER_CANCEL: "CustomerCancel",
+    ORDER_IDENTITY_DELIVERY_FAIL_BY_SHOP: "DeliveryFailByShop",
+    ORDER_IDENTITY_DELIVERY_FAIL_BY_CUSTOMER: "DeliveryFailByCustomer",
+    ORDER_IDENTITY_DELIVERY_FAIL_BY_CUSTOMER_REPORTED_BY_CUSTOMER:
+      "DeliveryFailByCustomerReportedByCustomer",
+    ORDER_IDENTITY_DELIVERY_FAIL_BY_SHOP_REPORTED_BY_CUSTOMER:
+      "DeliveryFailByShopReportedByCustomer",
+    ORDER_IDENTITY_DELIVERED_REPORTED_BY_CUSTOMER:
+      "DeliveredReportedByCustomer",
+  },
   ORDER_STATUS: {
     Pending: 1,
     Rejected: 2,

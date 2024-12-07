@@ -30,7 +30,21 @@ const ReportDetails = () => {
           <Text className="font-bold text-lg">Mã đơn hàng báo cáo</Text>
           <Text className="text-lg text-blue-900">#{params.orderId}</Text>
         </View>
-     
+        {reportDetails && reportDetails.reports &&
+          Array.isArray(reportDetails.reports) &&
+          reportDetails.reports.length > 0 &&
+          reportDetails.reports[0].status != 1 && (
+            <View className="px-4 py-2">
+
+              <Text className="text-red-600 text-base mt-4">
+                Quản trị viên {
+                  reportDetails.reports[0].status == 3
+                   ? "đã chấp nhận báo cáo"
+                    : "đã từ chối báo cáo"
+                }{reportDetails.reports[0] && " với lý do: " + reportDetails.reports[0].reason}
+              </Text>
+            </View>
+          )}
         {reportDetails &&
           reportDetails.reports &&
           Array.isArray(reportDetails.reports) &&

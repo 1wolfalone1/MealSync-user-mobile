@@ -1,6 +1,6 @@
-import { BlurView } from "expo-blur";
 import React from "react";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
+import { Surface } from "react-native-paper";
 import { Colors } from "../../constant";
 import { formatDateTime } from "../../utils/MyUtils";
 
@@ -14,47 +14,53 @@ const NotifyFisebaseForegroundItem = ({
   const widthImage = (width * 20) / 100;
   const widthContent = (width * 90) / 100;
   return (
-    <BlurView
+    <Surface
       className="flex-row"
+      elevation={3}
       style={{
         height: widthImage,
         borderRadius: 24,
         width: widthContent,
-        backgroundColor: Colors.glass.blue,
+
+        backgroundColor: "white",
 
         overflow: "hidden",
-        ...styles.shadowSelected,
       }}
-      intensity={90}
-      tint="dark"
     >
-      <Image
-        source={{ uri: ImageUrl }}
+      <View
         style={{
           width: widthImage,
           height: widthImage,
+          padding: 10,
           borderRadius: 24,
         }}
-      />
+      >
+        <Image
+          source={{ uri: ImageUrl }}
+          style={{
+            width: widthImage -20 ,
+            height: widthImage -20,
+            borderRadius: 24,
+          }}
+        />
+      </View>
       <View className="ml-2 flex-1 pr-2 justify-between pb-1">
         <View>
-          <Text className="font-bold text-lg text-yellow-100 mb-2">
-            {Title}
-          </Text>
+          <Text className="font-bold text-lg text-gray-800 mb-2">{Title}</Text>
           <Text
             numberOfLines={2}
-            className="flex-wrap font-hnow64regular text-white text-ellipsis"
+            className="flex-wrap font-hnow64regular text-lime-900 text-ellipsis"
           >
             {Content}
           </Text>
         </View>
         <View className="flex-row justify-end items-end">
-          <Text className="text-xs text-gray-300">
+          <Text className="text-xs text-gray-700">
             {formatDateTime(UpdatedDate)}
           </Text>
         </View>
       </View>
-    </BlurView>
+    </Surface>
   );
 };
 
