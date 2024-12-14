@@ -56,7 +56,7 @@ const ReviewInShopPageItem = ({ item }) => {
   return user == null ? (
     <></>
   ) : (
-    <View>
+    <View className="flex-1">
       <View
         className="rounded-xl bg-white p-4 mx-2"
         style={{

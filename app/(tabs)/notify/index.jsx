@@ -19,7 +19,8 @@ const NotifyIndex = () => {
   const { refreshing, onRefreshHandler } = usePullToRefresh({
     onRefreshFunction() {
       setCurrentPage(1);
-      getNoti(currentPage + 1, 12);
+      setData([])
+      getNoti(1, 12);
     },
   });
   const { currentPage, handleEndReached, setCurrentPage } = usePagination({
@@ -34,7 +35,7 @@ const NotifyIndex = () => {
   console.log(total, " totalPages");
   const getNoti = async (pageIndex, pageSize) => {
     try {
-      if (data == null) {
+      if (data2 == null) {
         dispatch(
           globalSlice.actions.changeLoadings({
             isLoading: true,
@@ -56,7 +57,7 @@ const NotifyIndex = () => {
           setData(data.value.items);
         } else {
           console.log(data.value.items, data2, " itemmmmmmm");
-          setData([...data.value.items, ...data2]);
+          setData([...data2, ...data.value.items]);
         }
       }
     } catch (e) {
@@ -134,7 +135,7 @@ const NotifyIndex = () => {
         ListFooterComponent={
           isLoading ? <ActivityIndicator size="small" className="mt-4" /> : null
         }
-        scrollEventThrottle={10}
+        scrollEventThrottle={60}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
         onMomentumScrollBegin={() => {}}
