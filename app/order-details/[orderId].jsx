@@ -221,6 +221,12 @@ const OrderTracking = () => {
   }, [locations]);
   const handleGetOrderData = async () => {
     try {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: true,
+          msg: "Đang tải dữ liệu...",
+        })
+      );
       const res = await api.get(`/api/v1/customer/order/${params.orderId}`);
       const data = await res.data;
       console.log(data, " data OrderTracking");
@@ -231,6 +237,13 @@ const OrderTracking = () => {
       }
     } catch (err) {
       console.log(err, " error in OrderTracking");
+    } finally {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Đang tải dữ liệu...",
+        })
+      );
     }
   };
   const handleSheetChanges = useCallback((index) => {
@@ -371,7 +384,7 @@ const OrderTracking = () => {
         );
         dispatch(
           globalSlice.actions.openSnackBar({
-            message: "Hủy đơn hàng thành công",
+            message: "Hủy đơn hàng thành công 🥳",
           })
         );
         router.replace("/order/order-history");
@@ -389,7 +402,7 @@ const OrderTracking = () => {
           })
         );
         dispatch(
-          globalSlice.actions.openSnackBar({ message: data?.error?.message })
+          globalSlice.actions.openSnackBar({ message: data?.error?.message + "😡" })
         );
       }
     } catch (e) {
@@ -409,7 +422,7 @@ const OrderTracking = () => {
           );
           dispatch(
             globalSlice.actions.openSnackBar({
-              message: e.response?.data?.error?.message,
+              message: e.response?.data?.error?.message + "😠",
             })
           );
         } else {
@@ -427,7 +440,7 @@ const OrderTracking = () => {
           );
           dispatch(
             globalSlice.actions.openSnackBar({
-              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+              message: "Có gì đó sai sai! Mong bạn thử lại sau 🥲",
             })
           );
         }

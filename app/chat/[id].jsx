@@ -1,9 +1,11 @@
 import { ResizeMode, Video } from "expo-av";
+import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Camera, Play, Send, X } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Dimensions,
   Image,
   Platform,
@@ -89,8 +91,22 @@ const MediaPreview = ({ media, onRemove }) => {
   );
 };
 
-const CustomInputToolbar = ({ selectedMedia, onRemoveMedia, ...props }) => {
-  return (
+const CustomInputToolbar = ({
+  isClose,
+  selectedMedia,
+  onRemoveMedia,
+  ...props
+}) => {
+  return isClose ? (
+    <>
+      <View className="h-20 justify-center items-center">
+        <Text className="text-gray-600">
+          {" "}
+          Phòng nhắn tin đã đóng, hiện tại không thể nhắn tin!!!
+        </Text>
+      </View>
+    </>
+  ) : (
     <View style={styles.inputContainer}>
       {selectedMedia && (
         <View style={styles.mediaPreviewContainer}>
@@ -174,13 +190,22 @@ const ChatChannel = () => {
         allowsEditing: true,
         quality: 1,
         videoMaxDuration: 60,
-      
       });
       console.log(result);
       if (!result.canceled) {
         const asset = result.assets[0];
         console.log(result, "result");
-
+        const fileInfo = await FileSystem.getInfoAsync(asset.uri);
+        if (!fileInfo.exists) {
+          return;
+        }
+        if (fileInfo.size / (1024 * 1024) > 5) {
+          Alert.alert(
+            "Tệp không hợp lệ",
+            "Tệp tải lên không được lớn hơn 5MB 😔"
+          );
+          return;
+        }
         const mediaUrl = await uploadMedia(asset.uri, asset.type);
         if (mediaUrl) {
           setSelectedMedia({
@@ -211,7 +236,7 @@ const ChatChannel = () => {
           );
           dispatch(
             globalSlice.actions.openSnackBar({
-              message: e.response?.data?.error?.message + " asdfasdf",
+              message: e.response?.data?.error?.message + " 😔",
             })
           );
         } else {
@@ -276,7 +301,7 @@ const ChatChannel = () => {
           );
           dispatch(
             globalSlice.actions.openSnackBar({
-              message: e.response?.data?.error?.message + " asdfasdf",
+              message: e.response?.data?.error?.message + " 😔",
             })
           );
         } else {
@@ -316,18 +341,22 @@ const ChatChannel = () => {
   useEffect(() => {
     handleGetChatData();
     dispatch(globalSlice.actions.setCurrentScreen("chat"));
+    if (socket) {
+    }
     return () => {
       dispatch(globalSlice.actions.setCurrentScreen(""));
-      socket.emit("leaveRoomsChat", { chatRoomId: Number(params.id) });
+      if (socket)
+        socket.emit("leaveRoomsChat", { chatRoomId: Number(params.id) });
     };
   }, []);
 
   const [dataHeader, setDataHeader] = useState(null);
+  const [channelData, setChannelData] = useState(null);
   useEffect(() => {
     console.log(socket, " socket ne ", chatData);
     if (chatData) {
       try {
-        if(!socket) {
+        if (!socket) {
           return;
         }
         socket.emit("joinRoomsChat", {
@@ -362,6 +391,11 @@ const ChatChannel = () => {
             console.log(e, "Unexpected error second time validation");
           }
         });
+        socket.on("receivedRoomData", (msg) => {
+          setChannelData(msg);
+        });
+
+        socket.emit("getRoomDataById", Number(params.id));
         socket.on("chatMessage", (msg) => {
           console.log(msg, "chatMessage");
           let user = {};
@@ -458,68 +492,32 @@ const ChatChannel = () => {
 
       const [message] = newMessages;
       console.log(message, " new messages");
-      const messageToSend = {
-        text: message.text,
-        chatRoomId: Number(params.id),
-        image: selectedMedia?.type === "image" ? selectedMediaUrl : null,
-        video: selectedMedia?.type === "video" ? selectedMediaUrl : null,
-        userId: userInfo.id,
-        id: message._id,
-        fullName: userInfo.fullName,
-        avatarUrl: userInfo.avatarUrl,
-      };
-      setSelectedMedia(null);
-      setSelectedMediaUrl(null);
-      socket.emit("chatMessage", messageToSend);
-      setMessages((previousMessages) =>
-        GiftedChat.append(previousMessages, [
-          {
-            ...message,
-            image: messageToSend.image,
-            video: messageToSend.video,
-          },
-        ])
-      );
-    } catch (error) {
-      if (e.response && e.response.data) {
-        if (e.response.status == 400) {
-          dispatch(
-            globalSlice.actions.customSnackBar({
-              style: {
-                color: "yellow",
-                backgroundColor: "black",
-                pos: {
-                  top: 40,
-                },
-                actionColor: "white",
-              },
-            })
-          );
-          dispatch(
-            globalSlice.actions.openSnackBar({
-              message: e.response?.data?.error?.message,
-            })
-          );
-        } else {
-          dispatch(
-            globalSlice.actions.customSnackBar({
-              style: {
-                color: "white",
-                backgroundColor: Colors.glass.red,
-                pos: {
-                  top: 40,
-                },
-                actionColor: "white",
-              },
-            })
-          );
-          dispatch(
-            globalSlice.actions.openSnackBar({
-              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
-            })
-          );
-        }
+      if (channelData?.is_close == 1) {
+        const messageToSend = {
+          text: message.text,
+          chatRoomId: Number(params.id),
+          image: selectedMedia?.type === "image" ? selectedMediaUrl : null,
+          video: selectedMedia?.type === "video" ? selectedMediaUrl : null,
+          userId: userInfo.id,
+          id: message._id,
+          fullName: userInfo.fullName,
+          avatarUrl: userInfo.avatarUrl,
+        };
+        setSelectedMedia(null);
+        setSelectedMediaUrl(null);
+        socket.emit("chatMessage", messageToSend);
+        setMessages((previousMessages) =>
+          GiftedChat.append(previousMessages, [
+            {
+              ...message,
+              image: messageToSend.image,
+              video: messageToSend.video,
+            },
+          ])
+        );
       }
+    } catch (error) {
+      console.log("Error send chat:", error);
     }
   };
 
@@ -592,7 +590,7 @@ const ChatChannel = () => {
           <View className="flex-row items-center ">
             <Avatar.Image source={{ uri: dataHeader?.avatarUrl }} size={50} />
             <Text className="text-white font-semibold text-lg ml-4">
-              { dataHeader?.fullName}
+              {dataHeader?.fullName}
             </Text>
           </View>
         </View>
@@ -601,10 +599,12 @@ const ChatChannel = () => {
         <GiftedChat
           messages={messages}
           onSend={onSend}
+          renderUsernameOnMessage={true}
           renderBubble={renderBubble}
           renderInputToolbar={(props) => (
             <CustomInputToolbar
               {...props}
+              isClose={channelData?.is_close == 1? false : true}
               selectedMedia={selectedMedia}
               onRemoveMedia={async () => {
                 setSelectedMedia(null);
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     position: "relative",
-    backgroundColor: "#f0f0f0", 
+    backgroundColor: "#f0f0f0",
   },
   mediaPreviewItem: {
     height: PREVIEW_HEIGHT - 16,
@@ -673,12 +673,11 @@ const styles = StyleSheet.create({
   previewImage: {
     width: "100%",
     height: "100%",
-    zIndex: 0
+    zIndex: 0,
   },
   previewVideo: {
     width: "100%",
     height: "100%",
-
   },
   removeButton: {
     position: "absolute",

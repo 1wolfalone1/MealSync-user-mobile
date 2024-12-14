@@ -19,10 +19,12 @@ import {
   TouchableRipple,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useDispatch } from "react-redux";
 import api from "../api/api";
 import { Colors, Images } from "../constant";
 import common from "../constant/common";
 import images from "../constant/images";
+import globalSlice from "../redux/slice/globalSlice";
 import {
   convertIntTimeToString,
   formatDateTime,
@@ -36,8 +38,15 @@ const OrderHistoryCompleted = () => {
   const [visible, setVisible] = useState(false);
   const { width, height } = Dimensions.get("window");
   const widthImageIllustration = (width * 30) / 100;
+  const dispatch = useDispatch();
   const handleGetOrderData = async () => {
     try {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: true,
+          msg: "Đang tải dữ liệu...",
+        })
+      );
       const res = await api.get(`/api/v1/customer/order/${params.orderId}`);
       const data = await res.data;
       console.log(data, " data orderhistory");
@@ -48,6 +57,13 @@ const OrderHistoryCompleted = () => {
       }
     } catch (err) {
       console.log(err, " error in OrderTracking");
+    } finally {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Đang tải dữ liệu...",
+        })
+      );
     }
   };
   const handleGetPaymentMethodString = (payment) => {
@@ -390,12 +406,12 @@ const OrderHistoryCompleted = () => {
               fontSize: 20,
               lineHeight: 22,
             }}
-            onPress={() =>
+            onPress={() => {
               router.push({
                 pathname: "form-reorder",
                 params: { orderId: orderData.id },
-              })
-            }
+              });
+            }}
           >
             Đặt lại đơn hàng
           </Button>

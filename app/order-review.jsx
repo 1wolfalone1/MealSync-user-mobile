@@ -39,6 +39,13 @@ const OrderHistoryCompleted = () => {
   const widthImageIllustration = (width * 30) / 100;
   const handleGetOrderData = async () => {
     try {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: true,
+          msg: "Đang tải dữ liệu...",
+        })
+      );
+
       const res = await api.get(`/api/v1/customer/order/${params.orderId}`);
       const data = await res.data;
       console.log(data, " data orderhistory");
@@ -49,6 +56,13 @@ const OrderHistoryCompleted = () => {
       }
     } catch (err) {
       console.log(err, " error in OrderTracking");
+    } finally {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Đang tải dữ liệu...",
+        })
+      );
     }
   };
   const handleGetPaymentMethodString = (payment) => {

@@ -29,7 +29,7 @@ const TempCartPage = () => {
 
   const data = useSelector(cartSelector);
   const { info } = useSelector(dataShopDetailsSelector);
-  const [listItemInCartBySlot, setListItemInCartBySlot] = useState([]);
+  const [listItemInCartBySlot, setListItemInCartBySlot] = useState(null);
   const dispatch = useDispatch();
   const { operatingSlotId, shopId } = useLocalSearchParams();
   const [isSwitchOn, setIsSwitchOn] = React.useState(false);
@@ -40,19 +40,8 @@ const TempCartPage = () => {
   const onToggleSwitch = () => setIsSwitchOn(!isSwitchOn);
   const [cartTitle, setCartTitle] = useState(null);
   const [isRouteToOrder, setIsRouteToOrder] = React.useState(false);
+  const listEmpty = [null, null, null];
   useEffect(() => {
-    if (!info || !listItemInfo) {
-      console.log(
-        info,
-        items,
-        listItemInfo,
-        data,
-        " - 234 ----------- errrorrr"
-      );
-      return () => {
-        dispatch(shopDetailsSlice.actions.resetProductDetails());
-      };
-    }
     dispatch(
       getCartInfo({
         id: shopId,
@@ -60,13 +49,19 @@ const TempCartPage = () => {
       })
     );
     dispatch(globalSlice.actions.changeStateOpenFabInShop(false));
+    if (!info) {
+      return () => {
+        dispatch(shopDetailsSlice.actions.resetProductDetails());
+      };
+    }
+
     return () => {
       dispatch(cartSlice.actions.resetStateListItemInfo());
       dispatch(cartSlice.actions.resetCartState());
+      dispatch(globalSlice.actions.changeStateOpenFabInShop(true));
       if (isRouteToOrder) {
         dispatch(globalSlice.actions.changeStateOpenFabInShop(false));
       } else {
-         dispatch(globalSlice.actions.changeStateOpenFabInShop(true));
       }
     };
   }, []);
@@ -93,13 +88,16 @@ const TempCartPage = () => {
       }
     }
   }, [cartState]);
+  console.log(listItemInfo, " sdfasdfasdfaaaa ;osttttt me");
   useEffect(() => {
-    if (
-      items &&
-      items[shopId] &&
-      Array.isArray(items[shopId]) &&
-      listItemInfo
-    ) {
+    if (!listItemInfo) {
+      setListItemInCartBySlot(null);
+      return;
+    } else if (listItemInfo.length == 0) {
+      setListItemInCartBySlot([]);
+      return;
+    }
+    if (items && items[shopId] && Array.isArray(items[shopId])) {
       const mapIdsNotFoundToday = {};
       const mapIdsNotFoundTomorrow = {};
       if (
@@ -168,12 +166,14 @@ const TempCartPage = () => {
     }
   }, [listItemInfo, items, cartState, isSwitchOn]);
   const handleClearCart = () => {
+    
     dispatch(
       cartSlice.actions.clearCart({
         shopId: shopId,
         operatingSlotId: operatingSlotId,
       })
     );
+    router.back()
   };
   return (
     <View className="bg-white flex-1">
@@ -267,8 +267,8 @@ const TempCartPage = () => {
           </Text>
           <Switch value={isSwitchOn} onValueChange={onToggleSwitch} />
         </View>
-        {listItemInfo && listItemInfo.length > 0 ? (
-          listItemInCartBySlot && listItemInCartBySlot.length > 0 ? (
+        {listItemInCartBySlot != null ? (
+          listItemInCartBySlot.length > 0 ? (
             listItemInCartBySlot?.map((item) => (
               <ItemInCart
                 key={item ? item.productId : null}
@@ -277,23 +277,21 @@ const TempCartPage = () => {
               />
             ))
           ) : (
-            listItemInfo?.map((item) => (
-              <ItemInCart
-                key={item ? item.productId : null}
-                itemsInfo={null}
-                shopId={shopId}
+            <>
+              <Image
+                style={{
+                  width: "100%",
+                  flex: 1,
+                }}
+                resizeMode="contain"
+                source={images.EmptyCart}
               />
-            ))
+            </>
           )
         ) : (
-          <Image
-            style={{
-              width: "100%",
-              flex: 1,
-            }}
-            resizeMode="contain"
-            source={images.EmptyCart}
-          />
+          listEmpty.map((item) => {
+            return <ItemInCart />;
+          })
         )}
         <Text className="text-red-600 text-sm mt-4">
           {isSwitchOn
@@ -306,6 +304,7 @@ const TempCartPage = () => {
           textColor="white"
           mode="elevated"
           disabled={
+
             !isSwitchOn
               ? !cartState.isAcceptingOrderToday
               : !cartState.isAcceptingOrderTomorrow

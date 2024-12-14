@@ -24,10 +24,18 @@ const ListChatChannelPage = () => {
   const hasNext2 = useRef(false);
   useEffect(() => {
     if (socket) {
+      socket.emit("regisListChannel", {
+        pageState: null,
+        pageSize: 10,
+      });
+    }
+  }, [isFocus]);
+  useEffect(() => {
+    if (socket) {
       socket.on("getListChannel", (msg) => {
         setOnRequest(true);
         console.log(msg, " messssage neeeeeeeeeeeeeeeeeeeeeeeee");
-
+        setHasNext(false);
         if (msg) {
           hasNext2.current = msg.hasNext;
         }
@@ -37,6 +45,8 @@ const ListChatChannelPage = () => {
           handleGetListChannelInfo(listRoomIds);
           setPageState(msg.pageState);
           console.log(msg, " message received");
+        } else {
+          setHasNext(hasNext2.current);
         }
       });
       socket.on("getNewMessage", async (msg) => {
@@ -111,10 +121,12 @@ const ListChatChannelPage = () => {
   };
   const dispatch = useDispatch();
   useEffect(() => {
-    socket.emit("regisListChannel", {
-      pageState: null,
-      pageSize: 5,
-    });
+    if (socket) {
+      socket.emit("regisListChannel", {
+        pageState: null,
+        pageSize: 10,
+      });
+    }
     dispatch(globalSlice.actions.setCurrentScreen("chatList"));
     return () => {
       dispatch(globalSlice.actions.setCurrentScreen(""));
@@ -184,7 +196,7 @@ const ListChatChannelPage = () => {
                         onPress={() => {
                           socket.emit("regisListChannel", {
                             pageState: pageState,
-                            pageSize: 5,
+                            pageSize: 10,
                           });
                         }}
                         mode="text"

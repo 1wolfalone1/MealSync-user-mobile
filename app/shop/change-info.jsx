@@ -48,7 +48,7 @@ const validationSchema = yup.object().shape({
 const ChangeInfoPage = () => {
   const { orderInfo } = useSelector(orderSelector);
   const [listBuilding, setListBuilding] = useState([]);
-  const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [selectedBuilding, setSelectedBuilding] = useState(orderInfo.buildingId);
   
   const [openModelCreateBuilding, setOpenModelCreateBuilding] = useState(false);
   const [selectDormitoryId, setSelectDormitoryId] = useState(null);
@@ -82,6 +82,7 @@ const ChangeInfoPage = () => {
       });
       const data = await res.data;
       if (data.isSuccess) {
+        setSelectedBuilding(selectBuildingId)
         dispatch(
           globalSlice.actions.customSnackBar({
             style: {

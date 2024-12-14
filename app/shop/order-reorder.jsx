@@ -43,7 +43,11 @@ import orderSlice, {
 } from "../../redux/slice/orderSlice";
 import { dataShopDetailsSelector } from "../../redux/slice/shopDetailsSlice";
 import { userInfoSliceSelector } from "../../redux/slice/userSlice";
-import { convertIntTimeToString, formatQuantity, getTimeSlotBelow } from "../../utils/MyUtils";
+import {
+  convertIntTimeToString,
+  formatQuantity,
+  getTimeSlotBelow,
+} from "../../utils/MyUtils";
 
 const CartItemInShop = () => {
   const apiKey = process.env.EXPO_PUBLIC_SERVICE_API;
@@ -61,7 +65,7 @@ const CartItemInShop = () => {
     { label: "Sao", value: 2 },
   ]);
   const { width, height } = Dimensions.get("window");
-  const [disabled, setDisabled] = useState(false)
+  const [disabled, setDisabled] = useState(false);
   const [noteTemp, setNoteTemp] = useState("");
   const widthItem = parseInt((width * 85) / 100);
   const { listItemInfo, items } = useSelector(cartSelector);
@@ -169,7 +173,7 @@ const CartItemInShop = () => {
         const start = slot.startTime;
         const end = slot.endTime;
         let startBelow = start;
-        if (orderTomorrow == 'false') {
+        if (orderTomorrow == "false") {
           startBelow = getTimeSlotBelow(start);
         }
         for (let i = startBelow; i < end; i += 30) {
@@ -193,8 +197,7 @@ const CartItemInShop = () => {
     }
   }, [info]);
   useEffect(() => {
-    
-      dispatch(globalSlice.actions.changeStateOpenFabInShop(false));
+    dispatch(globalSlice.actions.changeStateOpenFabInShop(false));
     console.log(dataReorder, "datareorrrrrrrrrrrrrrrrrrrrrr");
     if (dataReorder && dataReorder.foods && Array.isArray(dataReorder.foods)) {
       const listItemInCartBySlotTemp = dataReorder.foods.map((i) => {
@@ -272,7 +275,7 @@ const CartItemInShop = () => {
     }
   }, [dataReorder]);
   const handleOrder = async () => {
-    setDisabled(true)
+    setDisabled(true);
     try {
       if (
         orderInfo.fullName == "" ||
@@ -356,13 +359,29 @@ const CartItemInShop = () => {
           );
         }
       } else {
-        console.log("");
+        dispatch(
+          globalSlice.actions.customSnackBar({
+            style: {
+              color: "white",
+              backgroundColor: Colors.glass.red,
+              pos: {
+                top: 40,
+              },
+              actionColor: "white",
+            },
+          })
+        );
+        dispatch(
+          globalSlice.actions.openSnackBar({
+            message: "Vui lòng chọn thời gian nhận hàng!!!",
+          })
+        );
       }
     } catch (e) {
       dispatch(globalSlice.actions.changeLoadings(false));
       console.error(e);
     } finally {
-      setDisabled(false)
+      setDisabled(false);
     }
   };
 

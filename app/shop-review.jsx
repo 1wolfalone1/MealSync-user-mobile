@@ -64,7 +64,7 @@ const ShopReview = () => {
           className="flex-grow "
           contentContainerStyle={{
             flexGrow: 1,
-            backgroundColor: "#fdfafa",
+            backgroundColor: "#ffffffb0",
           }}
         >
           <View className="justify-center items-center my-3 mt-4">
@@ -81,7 +81,7 @@ const ShopReview = () => {
           />
           <View className="justify-center items-center my-3">
             <Text className="text-gray-500 text-lg">
-              Dựa trên {reviewOverview.shopTotalFeedback} đánh giá
+              Dựa trên {reviewOverview.totalReview} đánh giá
             </Text>
           </View>
           <View className="px-8">

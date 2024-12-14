@@ -1,6 +1,7 @@
+import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, StyleSheet, Text, View } from "react-native";
 import { Avatar, Button, IconButton } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import api from "../../api/api";
@@ -53,16 +54,30 @@ const AvatarChange = ({}) => {
         alert("Sorry, we need camera permissions to make this work!");
       }
     }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 4],
-      quality: 1,
-    });
-    console.log(result);
-    if (!result.cancelled) {
-      setAvatar(result.assets[0].uri);
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [4, 4],
+        quality: 1,
+      });
+      console.log(result);
+      if (!result.cancelled) {
+        const fileInfo = await FileSystem.getInfoAsync(result.assets[0].uri);
+        if (!fileInfo.exists) {
+          return;
+        }
+        if (fileInfo.size / (1024 * 1024) > 5) {
+          Alert.alert(
+            "Tệp không hợp lệ",
+            "Tệp tải lên không được lớn hơn 5MB 😔"
+          );
+          return;
+        }
+        setAvatar(result.assets[0].uri);
+      }
+    } catch (e) {
+      console.log(e, " error loading image");
     }
   };
   const handleSaveAvatar = async () => {
@@ -84,7 +99,7 @@ const AvatarChange = ({}) => {
       console.log(data, "data upload image");
     } catch (e) {
       console.log(e, "image upload error");
-      setAvatar(info.avatarUrl)
+      setAvatar(info.avatarUrl);
       if (e.response && e.response.data) {
         if (e.response.status == 400) {
           dispatch(

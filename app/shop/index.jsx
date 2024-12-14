@@ -60,7 +60,7 @@ const ShopPage = () => {
   const { totalPage } = useSelector(dataShopDetailsSelector);
   const [isLoading, setLoading] = useState(true);
   const isFocus = useIsFocused();
-  
+
   const { refreshing, onRefreshHandler } = usePullToRefresh({
     onRefreshFunction() {
       setCurrentPage(1);
@@ -79,6 +79,9 @@ const ShopPage = () => {
         let productId2 = productId;
         router.setParams({ productId: "" });
         router.push("/shop/" + productId2);
+      } else if (review == "true") {
+        router.setParams({review: "" });
+        router.push("/shop/review");
       }
     }
   }, [shopInfo]);
@@ -91,7 +94,7 @@ const ShopPage = () => {
     initialPage: 1,
   });
   useEffect(() => {}, [height]);
-  const { shopId, productId } = params;
+  const { shopId, productId, review } = params;
   const product = {
     id: "banhmi01",
     name: "Bánh mì",

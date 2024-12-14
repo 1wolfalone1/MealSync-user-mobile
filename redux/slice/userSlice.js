@@ -30,12 +30,15 @@ const userInfoSlice = createSlice({
   extraReducers: (builder) =>
     builder
       .addCase(loadInfo.fulfilled, (state, action) => {
+        
+        console.log("okkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk", action.payload)
         return {
           info: action.payload,
           role: CommonConstants.USER_ROLE.USER,
         };
       })
       .addCase(loadInfo.rejected, (state, action) => {
+        console.log(" errrrrrrrrrrrrrrrrr")
         return {
           info: {},
           role: CommonConstants.USER_ROLE.GUEST,
@@ -52,7 +55,7 @@ export const loadInfo = createAsyncThunk('userSlice/loadInfo', async () => {
     console.log(data, " user data 2");
     return data.value;
   } catch (e) {
-    console.log(e);
+    console.log(e, " errrrrrrrrrrrrr get info");
   }
 });
 export const userInfoSliceSelector = (state) => {

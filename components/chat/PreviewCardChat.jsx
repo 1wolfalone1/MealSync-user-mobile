@@ -27,24 +27,29 @@ const styles = StyleSheet.create({
 });
 const PreviewCardChat = ({ item }) => {
   const { width, height } = Dimensions.get("window");
-  const userInfo = useSelector(userInfoSliceSelector)
-  const widthImage = (width * 20) / 100;
+  const userInfo = useSelector(userInfoSliceSelector);
+  const widthImage = (width * 18) / 100;
   const widthItem = (width * 90) / 100;
   return (
     item != null && (
       <View
         style={{
           borderRadius: 16,
-          backgroundColor:  item.map_user_is_read[userInfo.id]
-                      ? "#dffff3"
-                      : "white",
-          
+          backgroundColor: !item.map_user_is_read[userInfo.id]
+            ? "#dffff3"
+            : "white",
+
           ...styles.shadow,
         }}
       >
         <TouchableRipple
           borderless
-          onPress={() => router.push("/chat/" + item.id)}
+          onPress={() => router.push({
+            pathname: "/chat/" + item.id,
+            params: {
+              isClose: item.is_close == 1 ? false : true
+            },
+          })}
           style={{
             borderRadius: 16,
           }}
@@ -67,11 +72,21 @@ const PreviewCardChat = ({ item }) => {
               }}
             />
             <View className=" pl-4 gap-2 pr-3 pt-1 flex-1">
-              <View className="flex-row justify-between items-start">
+              <View className="flex-row justify-between items-center">
                 <Text className="text-base font-bold text-blue-800">
-                  {item.info.fullName}
-                  <Text className="text-lg text-gray-400">#{item.id}</Text>
+                  Đơn hàng mã số
+                  <Text className="text-base text-gray-400">#{item.id}</Text>
+                
                 </Text>
+                  {
+                    item.is_close == 2 && (
+                      <Text
+                        className="text-xs text-red-600"
+                      >
+                        Đã đóng
+                      </Text>
+                    )
+                  }
               </View>
               <View className="flex-1 pr-2 flex-row">
                 <Text
@@ -83,7 +98,17 @@ const PreviewCardChat = ({ item }) => {
                       : "bold",
                   }}
                 >
-                  {item.last_message}
+                  ~{item.info.fullName}:{" "}
+                  <Text
+                    className="text-xs text-gray-950"
+                    style={{
+                      fontWeight: item.map_user_is_read[userInfo.id]
+                        ? 400
+                        : "bold",
+                    }}
+                  >
+                    {item.last_message}
+                  </Text>
                 </Text>
               </View>
               <View className="items-end">

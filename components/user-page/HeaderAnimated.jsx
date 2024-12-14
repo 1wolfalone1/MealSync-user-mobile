@@ -41,23 +41,12 @@ export default function DynamicHeader({ animHeaderValue }) {
   const isFocus = useIsFocused();
   useEffect(() => {
     if (socket) {
-      socket.emit("regisListChannel", {
-        pageState: null,
-        pageSize: 5,
-      });
       socket.on("getCountNotRead", (msg) => {
         setNotRead(msg);
       });
     }
   }, [socket]);
-  useEffect(() => {
-    if (socket) {
-      socket.emit("regisListChannel", {
-        pageState: null,
-        pageSize: 5,
-      });
-    }
-  }, [isFocus]);
+
   const animateHeaderHeight = animHeaderValue.interpolate({
     inputRange: [0, Header_Max_Height - Header_Min_Height],
     outputRange: [Header_Max_Height, Header_Min_Height],

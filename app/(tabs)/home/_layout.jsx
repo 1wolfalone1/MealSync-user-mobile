@@ -22,8 +22,7 @@ import DynamicHeader from "../../../components/user-page/HeaderAnimated";
 import globalSlice, { globalSelector } from "../../../redux/slice/globalSlice";
 import searchSlice from "../../../redux/slice/searchSlice";
 import {
-  loadInfo,
-  userInfoSliceSelector,
+  userInfoSliceSelector
 } from "../../../redux/slice/userSlice";
 
 import messaging from "@react-native-firebase/messaging";
@@ -116,7 +115,6 @@ const HomePage = () => {
       const token = await AsyncStorage.getItem("@token"); // Retrieve token from AsyncStorage
 
       if (!token) {
-        Alert.alert("Error", "No token found. Please log in again.");
         return;
       }
 
@@ -168,7 +166,7 @@ const HomePage = () => {
       if (socket) {
       }
     };
-  }, []);
+  }, [info]);
   const [categories, setCategories] = useState(null);
   const [idCategorySelected, setCategorySelected] = useState(0);
   const handleGetCategories = async () => {
@@ -205,7 +203,6 @@ const HomePage = () => {
   let scrollOffsetY = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     handleGetCategories();
-    dispatch(loadInfo());
   }, []);
   const { refreshing, onRefreshHandler } = usePullToRefresh({
     onRefreshFunction() {

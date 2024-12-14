@@ -155,7 +155,7 @@ const ProductDetail = () => {
 
       dispatch(
         globalSlice.actions.openSnackBar({
-          message: "Add to Cart successfully a",
+          message: "Thêm vào đơn hàng thành công 🥳",
         })
       );
       router.back();
@@ -173,7 +173,7 @@ const ProductDetail = () => {
         })
       );
       dispatch(
-        globalSlice.actions.openSnackBar({ message: "Đơn hàng phải lớn hơn 0" })
+        globalSlice.actions.openSnackBar({ message: "Đơn hàng phải lớn hơn 0 😠" })
       );
     }
   };

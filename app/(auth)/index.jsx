@@ -145,11 +145,7 @@ const SignIn = () => {
           const res = await api.post("/api/v1/auth/login-google", {
             idToken: idToken.token,
           });
-          try {
-            auth().signOut();
-          } catch (e) {
-            console.log(e);
-          }
+
           const data = await res.data;
           console.log(data, " asdfasd daaaaaaaaaaaaaaaaa");
           if (data.isSuccess) {
@@ -166,7 +162,7 @@ const SignIn = () => {
               })
             );
 
-            console.log(data.value, "dta login gooogle");
+            console.log(data.value, "dtaaaaa login gooogle");
             await AsyncStorage.setItem(
               "@token",
               data.value.tokenResponse.accessToken
@@ -187,13 +183,56 @@ const SignIn = () => {
           }
         }
       } catch (e) {
+        if (e.response && e.response.data) {
+          if (e.response.status == 400) {
+            dispatch(
+              globalSlice.actions.customSnackBar({
+                style: {
+                  color: "white",
+                  backgroundColor: "red",
+                  pos: {
+                    top: 40,
+                  },
+                  actionColor: "white",
+                },
+              })
+            );
+            dispatch(
+              globalSlice.actions.openSnackBar({
+                message: e.response?.data?.error?.message,
+              })
+            );
+          } else {
+            dispatch(
+              globalSlice.actions.customSnackBar({
+                style: {
+                  color: "white",
+                  backgroundColor: Colors.glass.red,
+                  pos: {
+                    top: 40,
+                  },
+                  actionColor: "white",
+                },
+              })
+            );
+            dispatch(
+              globalSlice.actions.openSnackBar({
+                message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+              })
+            );
+          }
+        }
+      } finally {
+        try {
+        } catch (e) {
+          console.log(e);
+        }
         dispatch(
           globalSlice.actions.changeLoadings({
             isLoading: false,
             msg: "Đang đăng nhập",
           })
         );
-        console.log(e, " error get id token");
       }
     });
     return subscriber; // unsubscribe on unmount
@@ -222,6 +261,45 @@ const SignIn = () => {
           msg: "Đang đăng nhập",
         })
       );
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message,
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
       console.log("error ne", error);
     }
   };
