@@ -1,6 +1,13 @@
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
-import { CalendarCheck2, Coins, Flag, MapPinned, NotepadText, Utensils } from "lucide-react-native";
+import {
+  CalendarCheck2,
+  Coins,
+  Flag,
+  MapPinned,
+  NotepadText,
+  Utensils,
+} from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
@@ -299,6 +306,46 @@ const OrderHistoryCompleted = () => {
       setInRequest(false);
     } catch (e) {
       setInRequest(false);
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message,
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
+
       console.log(e);
     }
   };

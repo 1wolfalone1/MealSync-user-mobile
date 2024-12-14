@@ -193,6 +193,8 @@ const CartItemInShop = () => {
     }
   }, [info]);
   useEffect(() => {
+    
+      dispatch(globalSlice.actions.changeStateOpenFabInShop(false));
     console.log(dataReorder, "datareorrrrrrrrrrrrrrrrrrrrrr");
     if (dataReorder && dataReorder.foods && Array.isArray(dataReorder.foods)) {
       const listItemInCartBySlotTemp = dataReorder.foods.map((i) => {
@@ -695,7 +697,7 @@ const CartItemInShop = () => {
           </View>
           <View className="mt-8" style={{ width: widthItem }}>
             <Button
-              mode="elevated"
+              mode="contained-tonal"
               textColor="white"
               buttonColor={Colors.cyan500}
               theme={{ roundness: 2 }}

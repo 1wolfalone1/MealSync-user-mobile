@@ -89,6 +89,7 @@ const CartItemInShop = () => {
   const order = useSelector(orderSelector);
   const handleHideNote = () => setOpenNote(false);
   let scrollOffsetY = useRef(new Animated.Value(0)).current;
+
   const handleChangePaymentMethod = (value) => {
     setPaymentMethod(value);
   };
@@ -436,6 +437,7 @@ const CartItemInShop = () => {
   };
   const navigation = useNavigation();
   useEffect(() => {
+    dispatch(globalSlice.actions.changeStateOpenFabInShop(false));
     navigation.addListener("beforeRemove", (e) => {
       console.log("onback", e.data.action.type);
       // Do your stuff here
@@ -781,7 +783,7 @@ const CartItemInShop = () => {
           </TouchableRipple>
           <View className="mt-8" style={{ width: widthItem }}>
             <Button
-              mode="elevated"
+              mode="contained-tonal"
               textColor="white"
               buttonColor={Colors.cyan500}
               theme={{ roundness: 2 }}

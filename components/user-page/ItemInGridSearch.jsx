@@ -39,10 +39,11 @@ const ItemInGridSearch = ({ item }) => {
     >
       <TouchableRipple
         onPress={() => {
-          router.navigate({
+          router.replace({
             pathname: "/shop",
             params: {
               shopId: item.shopId,
+              productId: item.id,
             },
           });
         }}

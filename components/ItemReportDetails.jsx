@@ -97,16 +97,25 @@ const ItemReportDetails = ({ item, shopInfo }) => {
           Lý do: <Text className="text-gray-600">{item.content}</Text>
         </Text>
 
-              {renderImages()}
+        {renderImages()}
 
-        <View style={styles.footer}>
+        <View style={styles.footer} className="justify-between">
           <Text variant="bodySmall" style={styles.timestamp}>
             {formatDateTime(item.createdDate)}
           </Text>
-          <Text variant="bodySmall" style={styles.reporter}>
-            Báo cáo từ:{" "}
-            {item.isReportedByCustomer ? info.fullName + ` (Bạn)` : "Cửa hàng " + shopInfo.name}
-          </Text>
+          <View className="flex-1 flex-row justify-end ml-20">
+            <Text
+              variant="bodySmall"
+              className="flex-wrap text-ellipsis"
+              style={styles.reporter}
+              numberOfLines={2}
+            >
+              Báo cáo từ:{" "}
+              {item.isReportedByCustomer
+                ? info.fullName + ` (Bạn)`
+                : "Cửa hàng " + shopInfo.name}
+            </Text>
+          </View>
         </View>
       </Card.Content>
     </Card>

@@ -262,8 +262,9 @@ const FormReorder = () => {
         </View>
         <View className="px-4 mt-8 mb-8">
           <Button
-            mode="elevated"
+            mode="contained-tonal"
             textColor="white"
+
             buttonColor={Colors.primaryBackgroundColor}
             theme={{ roundness: 2 }}
             contentStyle={{

@@ -5,7 +5,8 @@ const initialState = {
   tabBar: {
     translateY: 0,
   },
-  openFabInShop: true,
+  idBuilding: null,
+  openFabInShop: false,
   currentScreen: "1",
   map: {
     origin: {
@@ -47,6 +48,9 @@ const globalSlice = createSlice({
   name: "globalSlice",
   initialState: initialState,
   reducers: {
+    changeIdBuilding: (state,actions) => {
+      state.idBuilding = actions.payload
+    },
     changeRefreshScroll: (state, action) => {
       state.refreshScroll = !state.refreshScroll;
     },

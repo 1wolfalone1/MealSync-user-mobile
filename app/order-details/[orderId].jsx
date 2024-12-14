@@ -265,12 +265,11 @@ const OrderTracking = () => {
         return;
       } else if (orderData.status == 8) {
         router.replace("/order/order-issue");
-        return
-      } else if(orderData.status == 2 || orderData.status == 4) {
+        return;
+      } else if (orderData.status == 2 || orderData.status == 4) {
         router.replace("/order/order-history");
-        return
+        return;
       } else {
-
       }
     }
   }, [orderData]);
@@ -306,7 +305,11 @@ const OrderTracking = () => {
       orderData.status == 5
     ) {
       setVisible(true);
+      if (orderData.status == 5) {
+        setCanCancel(false);
+      }
     } else if (orderData.status == 6) {
+      setCanCancel(true);
       try {
         const res = await api.get(
           `api/v1/customer/order/${orderData.id}/qr/received`
@@ -371,7 +374,7 @@ const OrderTracking = () => {
             message: "Hủy đơn hàng thành công",
           })
         );
-        router.replace('/order/order-history')
+        router.replace("/order/order-history");
       } else {
         dispatch(
           globalSlice.actions.customSnackBar({
@@ -390,23 +393,45 @@ const OrderTracking = () => {
         );
       }
     } catch (e) {
-      dispatch(
-        globalSlice.actions.customSnackBar({
-          style: {
-            color: "white",
-            backgroundColor: Colors.glass.green,
-            pos: {
-              top: 40,
-            },
-            actionColor: "red",
-          },
-        })
-      );
-      dispatch(
-        globalSlice.actions.openSnackBar({
-          message: "Đã có lỗi xảy ra ở phía máy chủ",
-        })
-      );
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message,
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
       console.log(e);
     }
   };

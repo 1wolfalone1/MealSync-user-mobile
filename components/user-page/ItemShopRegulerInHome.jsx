@@ -64,10 +64,10 @@ const ItemShopRegulerInHome = ({ item }) => {
               width: widthItem
             }}
           >
-            <View className="absolute top-2 left-2 bg-glass flex-row rounded-full p-1.5 z-[1]">
-              <Text className="font-hnow64regular text-xs ">{item.rating}</Text>
+            <View className="absolute top-2 left-2 bg-glass-100 flex-row rounded-full p-1.5 z-[1] items-center">
+              <Text className="font-hnow64regular text-sm text-white mx-1">{item.averageRating}</Text>
               <AntDesign name="star" size={14} color={Colors.star.defaut} />
-              <Text className="font-hnow64regular text-xs text-gray-700">(25+)</Text>
+              <Text className="font-hnow64regular text-xs ml-1 text-gray-300"> trong {item.totalOrder} đã bán </Text>
             </View>
             <View className="rounded-full bg-primary absolute right-2 top-2 w-23 p-1.5 z-[1]">
               <AntDesign name="heart" size={18} color="white" />
@@ -107,7 +107,6 @@ const ItemShopRegulerInHome = ({ item }) => {
               </View>
             </View>
             <View className="flex-row gap-2 justify-between w-full items-center flex-1 items-end">
-              <Text className="text-xs font-hnow65medium text-primary">12k - 30k</Text>
               <Text style className="text-xs text-gray-400 font-hnow64regular">
                 {item.buildingName}
               </Text>

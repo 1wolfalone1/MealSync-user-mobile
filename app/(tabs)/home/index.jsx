@@ -15,6 +15,7 @@ import ItemShopRegulerInHome from "../../../components/user-page/ItemShopReguler
 import { Colors } from "../../../constant";
 import cartSlice, { cartSelector } from "../../../redux/slice/cartSlice";
 import globalSlice, { globalSelector } from "../../../redux/slice/globalSlice";
+import shopDetailsSlice from "../../../redux/slice/shopDetailsSlice";
 import { userInfoSliceSelector } from "../../../redux/slice/userSlice";
 const Index = () => {
   const info = useSelector(userInfoSliceSelector);
@@ -72,6 +73,7 @@ const Index = () => {
   };
   useEffect(() => {
     dispatch(cartSlice.actions.resetStateListItemInfo());
+      dispatch(shopDetailsSlice.actions.resetState());
   }, []);
   useEffect(() => {
     dispatch(

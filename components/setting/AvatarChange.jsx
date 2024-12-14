@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import api from "../../api/api";
 import { Colors } from "../../constant";
 import commonConstants from "../../constant/common";
+import globalSlice from "../../redux/slice/globalSlice";
 import { loadInfo, userInfoSliceSelector } from "../../redux/slice/userSlice";
 const styles = StyleSheet.create({
   shadow: {
@@ -82,7 +83,47 @@ const AvatarChange = ({}) => {
       dispatch(loadInfo());
       console.log(data, "data upload image");
     } catch (e) {
-      console.log(e);
+      console.log(e, "image upload error");
+      setAvatar(info.avatarUrl)
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message,
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
     }
   };
   return (
@@ -110,7 +151,7 @@ const AvatarChange = ({}) => {
         />
       </View>
       <Text className="font-hnow64regular text-2xl mt-8">
-        {info?.fullname ? info.fullname : "Khách hàng"}
+        {info?.fullName ? info.fullName : "Khách hàng"}
       </Text>
       {isChangeMode ? (
         <>

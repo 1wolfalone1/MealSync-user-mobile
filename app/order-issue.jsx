@@ -1,5 +1,12 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { CalendarCheck2, Coins, MapPinned, NotepadText, TicketCheck, Utensils } from "lucide-react-native";
+import {
+  CalendarCheck2,
+  Coins,
+  MapPinned,
+  NotepadText,
+  TicketCheck,
+  Utensils,
+} from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 
 import * as ImagePicker from "expo-image-picker";
@@ -157,6 +164,25 @@ const OrderHistoryCompleted = () => {
       if (orderData.isReportAllowed) {
         setVisible(true);
       } else {
+        dispatch(
+          globalSlice.actions.customSnackBar({
+            style: {
+              color: "white",
+              icon: "camera",
+              backgroundColor: Colors.glass.red,
+              pos: {
+                top: 40,
+              },
+              actionColor: "yellow",
+            },
+          })
+        );
+
+        dispatch(
+          globalSlice.actions.openSnackBar({
+            message: "Không thể báo cáo đơn hàng lúc này!!",
+          })
+        );
       }
     } else if (orderData.status == 10 || orderData.status == 11) {
       router.push({

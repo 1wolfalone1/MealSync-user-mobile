@@ -138,24 +138,45 @@ const ReviewForm = () => {
       }
     } catch (e) {
       setLoading(false);
-      dispatch(
-        globalSlice.actions.customSnackBar({
-          style: {
-            color: "white",
-            backgroundColor: Colors.glass.red,
-            pos: {
-              top: 40,
-            },
-            actionColor: "red",
-          },
-        })
-      );
-      dispatch(
-        globalSlice.actions.openSnackBar({
-          message: "Đã có lỗi xảy ra ở máy chủ :_)",
-        })
-      );
-      console.log("Review failed: ", e);
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message ,
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
     }
   };
   return (

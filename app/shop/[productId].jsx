@@ -59,7 +59,7 @@ const ProductDetail = () => {
     dispatch(globalSlice.actions.changeStateOpenFabInShop(false));
     return () => {
       dispatch(shopDetailsSlice.actions.resetProductDetails());
-
+      console.log(" is change to true");
       dispatch(globalSlice.actions.changeStateOpenFabInShop(true));
     };
   }, []);
@@ -184,138 +184,143 @@ const ProductDetail = () => {
     setOpenOperatingSlotsSelect(false);
   };
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <Portal>
-        <Dialog
-          visible={openDialogIsSoldOut}
-          onDismiss={() => {
-            setOpenDialogIsSoldOut(false);
-          }}
-        >
-          <Dialog.Title>Đồ ăn đã bán hết</Dialog.Title>
-          <Dialog.Content>
-            <Text variant="bodyMedium">
-              Hiện tại, cửa hàng đã ngừng nhận đơn đặt hàng cho đồ ăn/thức uống
-              này trong hôm nay. Bạn vẫn có thể đặt trước cho ngày mai.
-            </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button
-              onPress={() => {
+    <SafeAreaView className="flex-1 bg-white pt-5">
+      {product && (
+        <>
+          <Portal>
+            <Dialog
+              visible={openDialogIsSoldOut}
+              onDismiss={() => {
                 setOpenDialogIsSoldOut(false);
               }}
             >
-              Hủy
-            </Button>
-            <Button
-              onPress={() => {
-                setOpenDialogIsSoldOut(false);
-                setOpenOperatingSlotsSelect(true);
+              <Dialog.Title>Đồ ăn đã bán hết</Dialog.Title>
+              <Dialog.Content>
+                <Text variant="bodyMedium">
+                  Hiện tại, cửa hàng đã ngừng nhận đơn đặt hàng cho đồ ăn/thức
+                  uống này trong hôm nay. Bạn vẫn có thể đặt trước cho ngày mai.
+                </Text>
+              </Dialog.Content>
+              <Dialog.Actions>
+                <Button
+                  onPress={() => {
+                    setOpenDialogIsSoldOut(false);
+                  }}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  onPress={() => {
+                    setOpenDialogIsSoldOut(false);
+                    setOpenOperatingSlotsSelect(true);
+                  }}
+                >
+                  Tiếp tục
+                </Button>
+              </Dialog.Actions>
+            </Dialog>
+          </Portal>
+          <Portal>
+            <Modal
+              visible={openOperatingSlotsSelect}
+              onDismiss={handleDismissOperatingSlotsSelect}
+              contentContainerStyle={{
+                borderRadius: 20,
+                backgroundColor: "white",
+                padding: 20,
+                marginHorizontal: 20,
               }}
             >
-              Tiếp tục
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-      <Portal>
-        <Modal
-          visible={openOperatingSlotsSelect}
-          onDismiss={handleDismissOperatingSlotsSelect}
-          contentContainerStyle={{
-            borderRadius: 20,
-            backgroundColor: "white",
-            padding: 20,
-            marginHorizontal: 20,
-          }}
-        >
-          <Text className="font-bold text-xl mb-4">
-            Chọn khung thời gian giao hàng
-          </Text>
-          {product.operatingSlots.map((item) => (
-            <View key={item.id}>
-              <TouchableRipple
-                className="py-4"
-                onPress={() => {
-                  if (
-                    info.isReceivingOrderPaused ||
-                    item.isReceivingOrderPaused
-                  ) {
-                    setOpenDialogIsOrderPaused(true);
-                    setDataOperatingSlotsSelect(item);
-                  } else {
-                    handleAddToCart(item.id);
-                  }
-                }}
-              >
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-base text-gray-800">
-                    {item.title} từ {convertIntTimeToString(item.startTime)} đến{" "}
-                    {convertIntTimeToString(item.endTime)}
-                    {item.isReceivingOrderPaused ||
-                    info.isReceivingOrderPaused ? (
-                      <Text className="text-sm text-red-400">
-                        {"\n"}Ngừng nhận đơn đặt hàng trong khung giờ này
-                      </Text>
-                    ) : (
-                      ""
-                    )}
-                  </Text>
-                  <ChevronRight size={18} color={"grey"} />
-                </View>
-              </TouchableRipple>
-
-              <Divider />
-            </View>
-          ))}
-          <View className="flex-row justify-end gap-2 mt-2">
-            <Button
-              mode="contained"
-              contentStyle={{
-                backgroundColor: "#000000",
-              }}
-              onPress={handleDismissOperatingSlotsSelect}
-            >
-              Hủy
-            </Button>
-          </View>
-          <Dialog
-            visible={openDialogIsOrderPaused}
-            onDismiss={() => {
-              setOpenDialogIsOrderPaused(false);
-            }}
-          >
-            <Dialog.Title>Cửa hàng ngừng nhận hàng</Dialog.Title>
-            <Dialog.Content>
-              <Text variant="bodyMedium">
-                Cửa hàng đã ngừng nhận đơn đặt hàng cho đồ ăn/thức uống này
-                trong khoảng thời gian {dataOperatingSlotsSelect.title} từ{" "}
-                {convertIntTimeToString(dataOperatingSlotsSelect.startTime)} đến{" "}
-                {convertIntTimeToString(dataOperatingSlotsSelect.endTime)}. Bạn
-                vẫn có thể đặt trước cho ngày mai.
+              <Text className="font-bold text-xl mb-4">
+                Chọn khung thời gian giao hàng
               </Text>
-            </Dialog.Content>
-            <Dialog.Actions>
-              <Button
-                onPress={() => {
+              {product.operatingSlots.map((item) => (
+                <View key={item.id}>
+                  <TouchableRipple
+                    className="py-4"
+                    onPress={() => {
+                      if (
+                        info.isReceivingOrderPaused ||
+                        item.isReceivingOrderPaused
+                      ) {
+                        setOpenDialogIsOrderPaused(true);
+                        setDataOperatingSlotsSelect(item);
+                      } else {
+                        handleAddToCart(item.id);
+                      }
+                    }}
+                  >
+                    <View className="flex-row justify-between items-center">
+                      <Text className="text-base text-gray-800">
+                        {item.title} từ {convertIntTimeToString(item.startTime)}{" "}
+                        đến {convertIntTimeToString(item.endTime)}
+                        {item.isReceivingOrderPaused ||
+                        info.isReceivingOrderPaused ? (
+                          <Text className="text-sm text-red-400">
+                            {"\n"}Ngừng nhận đơn đặt hàng trong khung giờ này
+                          </Text>
+                        ) : (
+                          ""
+                        )}
+                      </Text>
+                      <ChevronRight size={18} color={"grey"} />
+                    </View>
+                  </TouchableRipple>
+
+                  <Divider />
+                </View>
+              ))}
+              <View className="flex-row justify-end gap-2 mt-2">
+                <Button
+                  mode="contained"
+                  contentStyle={{
+                    backgroundColor: "#000000",
+                  }}
+                  onPress={handleDismissOperatingSlotsSelect}
+                >
+                  Hủy
+                </Button>
+              </View>
+              <Dialog
+                visible={openDialogIsOrderPaused}
+                onDismiss={() => {
                   setOpenDialogIsOrderPaused(false);
                 }}
               >
-                Hủy
-              </Button>
-              <Button
-                onPress={() => {
-                  setOpenDialogIsOrderPaused(false);
-                  setOpenOperatingSlotsSelect(false);
-                  handleAddToCart(dataOperatingSlotsSelect.id);
-                }}
-              >
-                Tiếp tục
-              </Button>
-            </Dialog.Actions>
-          </Dialog>
-        </Modal>
-      </Portal>
+                <Dialog.Title>Cửa hàng ngừng nhận hàng</Dialog.Title>
+                <Dialog.Content>
+                  <Text variant="bodyMedium">
+                    Cửa hàng đã ngừng nhận đơn đặt hàng cho đồ ăn/thức uống này
+                    trong khoảng thời gian {dataOperatingSlotsSelect.title} từ{" "}
+                    {convertIntTimeToString(dataOperatingSlotsSelect.startTime)}{" "}
+                    đến{" "}
+                    {convertIntTimeToString(dataOperatingSlotsSelect.endTime)}.
+                    Bạn vẫn có thể đặt trước cho ngày mai.
+                  </Text>
+                </Dialog.Content>
+                <Dialog.Actions>
+                  <Button
+                    onPress={() => {
+                      setOpenDialogIsOrderPaused(false);
+                    }}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    onPress={() => {
+                      setOpenDialogIsOrderPaused(false);
+                      setOpenOperatingSlotsSelect(false);
+                      handleAddToCart(dataOperatingSlotsSelect.id);
+                    }}
+                  >
+                    Tiếp tục
+                  </Button>
+                </Dialog.Actions>
+              </Dialog>
+            </Modal>
+          </Portal>
+        </>
+      )}
       <FloatCartButton />
       {product.id == 0 ? (
         <SkeletonItem />
@@ -347,15 +352,6 @@ const ProductDetail = () => {
               <View className="flex-row items-center my-1">
                 <AntDesign name="star" size={24} style={{ color: "#FFC529" }} />
                 <Text className="font-bold ml-1">4.5</Text>
-                <Button
-                  labelStyle={{
-                    color: Colors.btnText,
-                    textDecorationLine: "underline",
-                  }}
-                  onPress={() => router.push("/review")}
-                >
-                  Đánh giá
-                </Button>
               </View>
 
               <View className="flex-row justify-between">

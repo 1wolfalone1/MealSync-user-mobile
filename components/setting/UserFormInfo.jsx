@@ -46,7 +46,7 @@ const UserFormInfo = () => {
   const info = useSelector(userInfoSliceSelector);
   const dispatch = useDispatch();
   const [visible, setVisible] = React.useState(false);
-  const { map } = useSelector(globalSelector);
+  const { idBuilding, map } = useSelector(globalSelector);
 
   const [openB, setOpenB] = useState(false);
 
@@ -65,15 +65,14 @@ const UserFormInfo = () => {
     },
   ]);
 
-  const [selectGender, setSelectGender] = useState(null);
+  const [selectGender, setSelectGender] = useState(info.genders);
   const handleUpdateUserprofile = async (value) => {
     try {
-      const res = await api.put("/api/v1/customer/profile/" + info.id, {
+      const res = await api.put("/api/v1/customer/profile/", {
         phoneNumber: value.phoneNumber,
         fullName: value.fullName,
-        address: address.name,
-        latitude: address.latitude,
-        longitude: address.longitude,
+        genders: selectGender,
+        buildingId: idBuilding ? idBuilding.id : info.building.id,
       });
       const data = await res.data;
       console.log(data);
@@ -116,34 +115,59 @@ const UserFormInfo = () => {
         );
       }
     } catch (e) {
-      console.log(e);
-      dispatch(
-        globalSlice.actions.customSnackBar({
-          style: {
-            color: "white",
-            backgroundColor: Colors.glass.red,
-            pos: {
-              top: 40,
-            },
-            actionColor: "yellow",
-          },
-        })
-      );
-      dispatch(
-        globalSlice.actions.openSnackBar({
-          message: "Có gì lỗi rồi, thử lại sau nhé :(",
-        })
-      );
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message ,
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
     }
   };
   const handleOpenMap = () => {
-    router.push("/map");
+    router.push({
+      pathname: "/map",
+      params: {
+        idBuilding: idBuilding ? idBuilding.id : info.building.id,
+      },
+    });
   };
-  console.log(address, " addresssss");
   useEffect(() => {
-    console.log(map, info, " map ne");
-    if (map.isChange) {
-      setAddress(map.origin);
+    console.log(map, info, " map ne", idBuilding);
+    if (idBuilding) {
+      setAddress(idBuilding);
     } else {
       if (info.building) {
         setAddress(info.building);
@@ -156,10 +180,11 @@ const UserFormInfo = () => {
         ); */
       }
     }
-  }, [map, info]);
+  }, [map, info, idBuilding]);
   useEffect(() => {
     return () => {
       dispatch(globalSlice.actions.resetMapsState());
+      dispatch(globalSlice.actions.changeIdBuilding(null));
     };
   }, []);
   const hideModal = () => {
@@ -247,7 +272,7 @@ const UserFormInfo = () => {
                 {errors.phoneNumber}
               </HelperText>
             </View>
-            <View className="mb-3">              
+            <View className="mb-3">
               <DropDownPicker
                 listMode="SCROLLVIEW"
                 open={openB}

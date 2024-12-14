@@ -1,5 +1,5 @@
 import { useIsFocused } from "@react-navigation/native";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -59,14 +59,29 @@ const ShopPage = () => {
   const dispatch = useDispatch();
   const { totalPage } = useSelector(dataShopDetailsSelector);
   const [isLoading, setLoading] = useState(true);
-
   const isFocus = useIsFocused();
+  
   const { refreshing, onRefreshHandler } = usePullToRefresh({
     onRefreshFunction() {
       setCurrentPage(1);
       dispatch(getListAllProductsInShop(shopId));
     },
   });
+  useEffect(() => {
+    if (shopInfo) {
+      console.log(
+        productId != null,
+        " ???SDFasdljkfjasdlkfkaljsdfl;kasdjf",
+        productId
+      );
+      if (productId) {
+        console.log(productId, " isssssssssssssssssssssssssss");
+        let productId2 = productId;
+        router.setParams({ productId: "" });
+        router.push("/shop/" + productId2);
+      }
+    }
+  }, [shopInfo]);
   const { currentPage, handleEndReached, setCurrentPage } = usePagination({
     fetchFunction: () => {
       dispatch(addMoreProductInShopDetails(currentPage + 1));
@@ -76,7 +91,7 @@ const ShopPage = () => {
     initialPage: 1,
   });
   useEffect(() => {}, [height]);
-  const { shopId } = params;
+  const { shopId, productId } = params;
   const product = {
     id: "banhmi01",
     name: "Bánh mì",
@@ -126,7 +141,6 @@ const ShopPage = () => {
 
     dispatch(globalSlice.actions.changeStateOpenFabInShop(true));
     return () => {
-      dispatch(globalSlice.actions.changeStateOpenFabInShop(false));
       dispatch(shopDetailsSlice.actions.resetState());
       scrollOffsetY.removeListener(listener);
     };

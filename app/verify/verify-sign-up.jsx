@@ -73,7 +73,7 @@ export default function VerifyCode() {
     if (isSuccess) {
       console.log("verifyCodeResponse")
       dispatch(persistSlice.actions.saveIsSignup(true));
-      router.back();
+      router.replace('/');
     } else if (errorCode === "400") {
       setMessage(errorMessage);
     }

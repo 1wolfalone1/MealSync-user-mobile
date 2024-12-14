@@ -1,13 +1,14 @@
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { Button, Modal, Portal, RadioButton } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import api from "../api/api";
 import { Colors } from "../constant";
 import colors from "../constant/colors";
-import globalSlice from "../redux/slice/globalSlice";
+import globalSlice, { globalSelector } from "../redux/slice/globalSlice";
 
 const Map = () => {
   const [listBuilding, setListBuilding] = useState([]);
@@ -102,7 +103,7 @@ const Map = () => {
       );
     }
   };
-
+  const { idBuilding } = useSelector(globalSelector);
   const handleUpdateOrderInfo = (values) => {
     if (false) {
     } else {
@@ -133,8 +134,18 @@ const Map = () => {
       router.back();
     }
   };
-  const handleBuildingChange = (value) => {
-    setSelectedBuilding(value);
+  const handleBuildingChange = (value, label) => {
+    console.log(label, "label", value, listBuilding);
+    const newValue = listBuilding.find((i) => i.buildingId == value);
+    console.log(newValue, "value", value);
+    if (newValue)
+      dispatch(
+        globalSlice.actions.changeIdBuilding({
+          id: newValue.buildingId,
+          name: newValue.buildingName,
+        })
+      );
+    router.back();
   };
   const handleGetAllDormitory = async () => {
     try {
@@ -175,7 +186,7 @@ const Map = () => {
     handleGetListBuilding();
     handleGetAllDormitory();
   }, [state]);
-
+  const params = useLocalSearchParams()
   useEffect(() => {
     handleGetAllBuilding();
   }, [selectDormitoryId]);
@@ -294,7 +305,11 @@ const Map = () => {
                   <Text>{i.buildingName}</Text>
                   <RadioButton.Android
                     value={i.buildingId}
-                    status={i.isDefault ? "checked" : "unchecked"}
+                    status={
+                      (params.idBuilding == i.buildingId)
+                        ? "checked"
+                        : "unchecked"
+                    }
                     color={colors.primaryBackgroundColor}
                   />
                 </View>

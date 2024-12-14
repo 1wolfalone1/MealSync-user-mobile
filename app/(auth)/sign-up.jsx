@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { Formik } from "formik";
 import React, { useState } from "react";
 import { Keyboard, ScrollView, Text, View } from "react-native";
+import DropDownPicker from "react-native-dropdown-picker";
 import { Button, Divider, HelperText, TextInput } from "react-native-paper";
 import { useDispatch } from "react-redux";
 import * as yup from "yup";
@@ -17,7 +18,12 @@ const validationSchema = yup.object().shape({
       /^((?!\.)[\w\-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/,
       "Email không hợp lệ!"
     )
+    .max(100, "Email chỉ có tối đa 100 ký tự")
     .required("Vui lòng nhập email"),
+  fullName: yup
+    .string()
+    .max(50, "Họ và tên chỉ có tối đa 50 ký tự")
+    .required("Vui lòng nhập họ và tên"),
   phoneNumber: yup
     .string()
     .matches(
@@ -28,7 +34,7 @@ const validationSchema = yup.object().shape({
   password: yup
     .string()
     .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
-    .max(25, "Mật khẩu chỉ có tối đa 25 ký tự")
+    .max(50, "Mật khẩu chỉ có tối đa 50 ký tự")
     .matches(/[0-9]/, "Mật khẩu phải chứa ít nhất một ký tự số (0-9)")
     .matches(/[a-z]/, "Mật khẩu phải chứa ít nhất một chữ cái in thường (a-z)")
     .matches(/[A-Z]/, "Mật khẩu phải chứa ít nhất một chữ cái in hoa (A-Z)")
@@ -39,21 +45,43 @@ const validationSchema = yup.object().shape({
     .required("Vui lòng nhập mật khẩu"),
   confirmPassword: yup
     .string()
+    .max(50, "Mật khẩu chỉ có tối đa 50 ký tự")
     .oneOf([yup.ref("password"), null], "Mật khẩu không khớp")
     .required("Vui lòng nhập lại mật khẩu"),
 });
-
 const SignUp = () => {
   const dispatch = useDispatch();
   const [loginErrorGoogleMessage, setLoginErrorGoogleMessage] = useState("");
   const [isShowPassword, setIsShownPassword] = useState(false);
   const [isShowConfirmPassword, setIsShownConfirmPassword] = useState(false);
   const [message, setMessage] = useState();
+  const [openB, setOpenB] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [genders, setGenders] = useState([
+    {
+      label: "Nam",
+      value: 1,
+    },
+    {
+      label: "Nữ",
+      value: 2,
+    },
+    {
+      label: "Không xác định",
+      value: 3,
+    },
+  ]);
+
+  const [selectGender, setSelectGender] = useState(1);
+
   const handleSignUp = async (values) => {
+    setLoading(true);
     const payload = {
       email: values.email,
       phoneNumber: values.phoneNumber,
       password: values.password,
+      fullName: values.fullName,
+      gender: selectGender,
     };
     try {
       const responseData = await api.post(
@@ -91,6 +119,8 @@ const SignUp = () => {
         }
       }
       console.log("error ne", e);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,13 +142,14 @@ const SignUp = () => {
     }
   };
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: 'white' }}>
       <Formik
         initialValues={{
           phoneNumber: "",
           email: "",
           password: "",
           confirmPassword: "",
+          fullName: "",
         }}
         onSubmit={(values) => {
           handleSignUp(values);
@@ -137,14 +168,13 @@ const SignUp = () => {
             <View className="w-full flex-1 items-center">
               <TextInput
                 style={{ backgroundColor: "transparent", width: "80%" }}
-                type="flat"
+                mode="outlined"
                 dense
                 onBlur={handleBlur("email")}
                 value={values.email}
                 onChangeText={handleChange("email")}
                 keyboardType="email-address"
                 placeholder="Nhập email của bạn"
-                onSubmitEditing={Keyboard.dismiss}
               />
               <View className="w-[80%]">
                 <HelperText
@@ -159,7 +189,30 @@ const SignUp = () => {
               <TextInput
                 style={{ backgroundColor: "transparent", width: "80%" }}
                 type="flat"
+                mode="outlined"
                 dense
+                onBlur={handleBlur("fullName")}
+                value={values.fullName}
+                onChangeText={handleChange("fullName")}
+                keyboardType="email-address"
+                placeholder="Nhập họ và tên của bạn"
+                onSubmitEditing={Keyboard.dismiss}
+              />
+              <View className="w-[80%]">
+                <HelperText
+                  type="error"
+                  visible={touched.fullName && errors.fullName}
+                >
+                  {errors.fullName}
+                </HelperText>
+              </View>
+            </View>
+            <View className="w-full flex-1 items-center">
+              <TextInput
+                style={{ backgroundColor: "transparent", width: "80%" }}
+                type="flat"
+                dense
+                mode="outlined"
                 onBlur={handleBlur("phoneNumber")}
                 value={values.phoneNumber}
                 onChangeText={handleChange("phoneNumber")}
@@ -176,11 +229,39 @@ const SignUp = () => {
                 </HelperText>
               </View>
             </View>
+            <View className="mb-3">
+              <DropDownPicker
+                listMode="SCROLLVIEW"
+                open={openB}
+                style={{
+                  borderColor: Colors.primaryBackgroundColor,
+                  width: '80%'
+                }}
+                zIndex={2000}
+                zIndexInverse={2000}
+                categorySelectable={true}
+                placeholderStyle={{ color: "grey" }}
+                dropDownContainerStyle={{
+                  backgroundColor: "white",
+                  width: "80%",
+                  borderColor: Colors.primaryBackgroundColor,
+                }}
+                textStyle={{}}
+                value={selectGender}
+                items={genders}
+                setOpen={setOpenB}
+                onChangeValue={(value) => {}}
+                setValue={setSelectGender}
+                setItems={setGenders}
+                placeholder={"Giới tính"}
+              />
+            </View>
             <View className="w-full flex-1 items-center">
               <TextInput
                 style={{ backgroundColor: "transparent", width: "80%" }}
                 type="flat"
                 dense
+                mode="outlined"
                 onChangeText={handleChange("password")}
                 onBlur={handleBlur("password")}
                 value={values.password}
@@ -215,6 +296,7 @@ const SignUp = () => {
                 style={{ backgroundColor: "transparent", width: "80%" }}
                 type="flat"
                 dense
+                mode="outlined"
                 onChangeText={handleChange("confirmPassword")}
                 onBlur={handleBlur("confirmPassword")}
                 value={values.confirmPassword}
@@ -253,7 +335,11 @@ const SignUp = () => {
             <Button
               buttonColor={Colors.primaryBackgroundColor}
               textColor={Colors.commonBtnText}
-              mode="elevated"
+              loading={loading}
+              mode="contained-tonal"
+              disabled={loading}
+              elevation={2}
+              
               style={{ width: "80%" }}
               theme={{ roundness: 5 }}
               contentStyle={{

@@ -67,6 +67,11 @@ const SignIn = () => {
   useEffect(() => {
     checkLogin();
   }, [stateLogin]);
+  /*  const rootNavigationState = useRootNavigationState();
+  if (true) {
+    if (!rootNavigationState?.key) return null;
+    return <Redirect href={'/home'}/>
+  } */
   const checkLogin = async () => {
     try {
       const token = await AsyncStorage.getItem("@token");
@@ -334,7 +339,7 @@ const SignIn = () => {
       selectBuildingId == 0 ||
       !selectBuildingId
     ) {
-      setErrorBuilding("Cần chọn địa!");
+      setErrorBuilding("Cần chọn địa chỉ!");
       isValid = false;
     }
     const isValidPhone = validatePhoneNumber(phoneNumber);
@@ -376,6 +381,8 @@ const SignIn = () => {
           setInRequest(false);
         } else {
           setInRequest(false);
+
+          setOpenModelCreateBuilding(false);
           dispatch(
             globalSlice.actions.customSnackBar({
               style: {
@@ -397,8 +404,50 @@ const SignIn = () => {
           );
         }
       } catch (e) {
+        setOpenModelCreateBuilding(false);
         setInRequest(false);
+        if (e.response && e.response.data) {
+          if (e.response.status == 400) {
+            dispatch(
+              globalSlice.actions.customSnackBar({
+                style: {
+                  color: "white",
+                  backgroundColor: "red",
+                  pos: {
+                    top: 40,
+                  },
+                  actionColor: "white",
+                },
+              })
+            );
+            dispatch(
+              globalSlice.actions.openSnackBar({
+                message: e.response?.data?.error?.message,
+              })
+            );
+          } else {
+            dispatch(
+              globalSlice.actions.customSnackBar({
+                style: {
+                  color: "white",
+                  backgroundColor: Colors.glass.red,
+                  pos: {
+                    top: 40,
+                  },
+                  actionColor: "white",
+                },
+              })
+            );
+            dispatch(
+              globalSlice.actions.openSnackBar({
+                message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+              })
+            );
+          }
+        }
         console.log(e, "Unexpected error second time validation");
+      } finally {
+        setOpenModelCreateBuilding(false);
       }
     }
   };

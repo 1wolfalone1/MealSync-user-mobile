@@ -46,10 +46,10 @@ const NotifyFisebaseForegroundItem = ({
       </View>
       <View className="ml-2 flex-1 pr-2 justify-between pb-1">
         <View>
-          <Text className="font-bold text-lg text-gray-800 mb-2">{Title}</Text>
+          <Text className="font-bold text-base text-gray-800 mb-2">{Title}</Text>
           <Text
             numberOfLines={2}
-            className="flex-wrap font-hnow64regular text-lime-900 text-ellipsis"
+            className="flex-wrap font-hnow64regular text-sm text-purple-900 text-ellipsis"
           >
             {Content}
           </Text>

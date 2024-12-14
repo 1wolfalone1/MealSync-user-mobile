@@ -4,7 +4,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Camera, Play, Send, X } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Dimensions,
   Image,
   Platform,
@@ -175,6 +174,7 @@ const ChatChannel = () => {
         allowsEditing: true,
         quality: 1,
         videoMaxDuration: 60,
+      
       });
       console.log(result);
       if (!result.canceled) {
@@ -193,9 +193,47 @@ const ChatChannel = () => {
           setSelectedMediaUrl(mediaUrl);
         }
       }
-    } catch (error) {
-      console.log(error, " error pick media in chat");
-      Alert.alert("Error", "Failed to pick media");
+    } catch (e) {
+      console.log(e, " error pick media in chat");
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "black",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message + " asdfasdf",
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
     }
   };
 
@@ -221,19 +259,52 @@ const ChatChannel = () => {
       if (data.isSuccess) {
         return data?.value?.url;
       }
-    } catch (error) {
-      console.error("Upload error:", error);
-      throw error;
+    } catch (e) {
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "black",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message + " asdfasdf",
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
     }
   };
   const handleGetChatData = async () => {
     try {
-      console.log("asdfasdfasdfasfasfd -----------------------------");
-
       const res = await api.get(`/api/v1/order/${params.id}/chat-info`);
-      console.log(res, "asdfasdfasdf");
       const data = await res.data;
-      console.log(data, "data ssssssssssssssssssss");
       if (data.isSuccess) {
         setChatData(data.value);
       }
@@ -241,42 +312,70 @@ const ChatChannel = () => {
       console.error(error, " erorsefasdfasf");
     }
   };
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   useEffect(() => {
     handleGetChatData();
-    dispatch(globalSlice.actions.setCurrentScreen("chat"))
+    dispatch(globalSlice.actions.setCurrentScreen("chat"));
     return () => {
-    dispatch(globalSlice.actions.setCurrentScreen(""))
+      dispatch(globalSlice.actions.setCurrentScreen(""));
+      socket.emit("leaveRoomsChat", { chatRoomId: Number(params.id) });
     };
   }, []);
+
+  const [dataHeader, setDataHeader] = useState(null);
   useEffect(() => {
     console.log(socket, " socket ne ", chatData);
     if (chatData) {
       try {
+        if(!socket) {
+          return;
+        }
         socket.emit("joinRoomsChat", {
           chatRoomId: Number(params.id),
           chatData,
         });
+        Object.keys(chatData).forEach((key) => {
+          if (chatData[key].roleId === 2) {
+            setDataHeader(chatData[key]);
+          }
+        });
+        socket.on("errorChat", (msg) => {
+          if (msg) {
+            dispatch(
+              globalSlice.actions.customSnackBar({
+                style: {
+                  color: "white",
+                  backgroundColor: "red",
+                  pos: {
+                    top: 40,
+                  },
+                  actionColor: "white",
+                },
+              })
+            );
+            dispatch(
+              globalSlice.actions.openSnackBar({
+                message: msg,
+              })
+            );
+
+            console.log(e, "Unexpected error second time validation");
+          }
+        });
         socket.on("chatMessage", (msg) => {
           console.log(msg, "chatMessage");
           let user = {};
-          if (msg.role_id === 1) {
+          if (chatData[msg.account_id]) {
             user = {
-              _id: chatData.customer.id,
-              name: chatData.customer.fullName,
-              avatar: chatData.avatarUrl,
-            };
-          } else if (msg.role_id === 2) {
-            user = {
-              _id: chatData.shop.id,
-              name: chatData.shop.fullName,
-              avatar: chatData.shop.avatarUrl,
+              _id: chatData[msg.account_id].id,
+              name: chatData[msg.account_id].fullName,
+              avatar: chatData[msg.account_id].avatarUrl,
             };
           } else {
             user = {
-              _id: chatData.deliveryStaff.id,
-              name: chatData.deliveryStaff.fullName,
-              avatar: chatData.deliveryStaff.avatarUrl,
+              _id: msg.id,
+              name: "",
+              avatar: "",
             };
           }
           console.log(user, " user for chatg");
@@ -305,32 +404,25 @@ const ChatChannel = () => {
             ])
           );
         });
-
+        console.log(chatData, "asdfasfd asdfasas");
         socket.on("previousMessages", (previousMessages) => {
-          console.log(previousMessages, "previousMessages");
           setMessages(
             previousMessages.map((msg) => {
               let user = {};
-              if (msg.role_id === 1) {
+
+              if (chatData[msg.account_id]) {
                 user = {
-                  _id: chatData.customer.id,
-                  name: chatData.customer.fullName,
-                  avatar: chatData.avatarUrl,
-                };
-              } else if (msg.role_id === 2) {
-                user = {
-                  _id: chatData.shop.id,
-                  name: chatData.shop.fullName,
-                  avatar: chatData.shop.avatarUrl,
+                  _id: chatData[msg.account_id].id,
+                  name: chatData[msg.account_id].fullName,
+                  avatar: chatData[msg.account_id].avatarUrl,
                 };
               } else {
                 user = {
-                  _id: chatData.deliveryStaff.id,
-                  name: chatData.deliveryStaff.fullName,
-                  avatar: chatData.deliveryStaff.avatarUrl,
+                  _id: msg.id,
+                  name: "",
+                  avatar: "",
                 };
               }
-              console.log(user, "userrrrrrrrrrrrrr");
               let imageUrl = null;
               let videoUrl = null;
               if (msg.file_url) {
@@ -374,7 +466,7 @@ const ChatChannel = () => {
         userId: userInfo.id,
         id: message._id,
         fullName: userInfo.fullName,
-        avatarUrl: userInfo.avatarUrl
+        avatarUrl: userInfo.avatarUrl,
       };
       setSelectedMedia(null);
       setSelectedMediaUrl(null);
@@ -389,7 +481,45 @@ const ChatChannel = () => {
         ])
       );
     } catch (error) {
-      Alert.alert("Error", "Failed to send message");
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "yellow",
+                backgroundColor: "black",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message,
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
     }
   };
 
@@ -420,7 +550,9 @@ const ChatChannel = () => {
       </View>
     );
   };
-
+  const handlerLoadEarlier = () => {
+    console.log("Loading earlier ne");
+  };
   const renderBubble = (props) => {
     return (
       <Bubble
@@ -458,9 +590,9 @@ const ChatChannel = () => {
             <ArrowLeft size={25} color={"white"} strokeWidth={2} />
           </TouchableRipple>
           <View className="flex-row items-center ">
-            <Avatar.Image source={{ uri: userInfo.avatarUrl }} size={50} />
+            <Avatar.Image source={{ uri: dataHeader?.avatarUrl }} size={50} />
             <Text className="text-white font-semibold text-lg ml-4">
-              {userInfo.fullName}
+              { dataHeader?.fullName}
             </Text>
           </View>
         </View>
@@ -521,9 +653,13 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   mediaPreviewContainer: {
-    height: PREVIEW_HEIGHT,
-    backgroundColor: "#f5f5f5",
-    paddingVertical: 8,
+    height: PREVIEW_HEIGHT - 16,
+    width: PREVIEW_HEIGHT - 16,
+    marginHorizontal: 15,
+    borderRadius: 12,
+    overflow: "hidden",
+    position: "relative",
+    backgroundColor: "#f0f0f0", 
   },
   mediaPreviewItem: {
     height: PREVIEW_HEIGHT - 16,
@@ -537,10 +673,12 @@ const styles = StyleSheet.create({
   previewImage: {
     width: "100%",
     height: "100%",
+    zIndex: 0
   },
   previewVideo: {
     width: "100%",
     height: "100%",
+
   },
   removeButton: {
     position: "absolute",

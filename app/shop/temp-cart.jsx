@@ -39,6 +39,7 @@ const TempCartPage = () => {
 
   const onToggleSwitch = () => setIsSwitchOn(!isSwitchOn);
   const [cartTitle, setCartTitle] = useState(null);
+  const [isRouteToOrder, setIsRouteToOrder] = React.useState(false);
   useEffect(() => {
     if (!info || !listItemInfo) {
       console.log(
@@ -62,7 +63,11 @@ const TempCartPage = () => {
     return () => {
       dispatch(cartSlice.actions.resetStateListItemInfo());
       dispatch(cartSlice.actions.resetCartState());
-      dispatch(globalSlice.actions.changeStateOpenFabInShop(true));
+      if (isRouteToOrder) {
+        dispatch(globalSlice.actions.changeStateOpenFabInShop(false));
+      } else {
+         dispatch(globalSlice.actions.changeStateOpenFabInShop(true));
+      }
     };
   }, []);
   useEffect(() => {
@@ -131,7 +136,9 @@ const TempCartPage = () => {
       }
 
       const listItemInCartBySlotTemp = items[shopId].filter((i) => {
-        return filterByConditionList.find((j) => j.id == i.productId && i.operatingSlotId == operatingSlotId);
+        return filterByConditionList.find(
+          (j) => j.id == i.productId && i.operatingSlotId == operatingSlotId
+        );
       });
       console.log(listItemInfo, " list item in cartt ttt");
       const listItemInCartBySlotWithInfo = listItemInCartBySlotTemp.map((i) => {
@@ -168,7 +175,6 @@ const TempCartPage = () => {
       })
     );
   };
-  console.log(listItemInfo, ' list item info neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
   return (
     <View className="bg-white flex-1">
       <Portal>
@@ -320,13 +326,14 @@ const TempCartPage = () => {
                 [item.productId]: item,
               };
             }, {});
+            setIsRouteToOrder(true);
             dispatch(orderSlice.actions.changeItemsInCart(mapCartIds));
-            router.push({
+            router.navigate({
               pathname: "/shop/order2",
               params: {
                 shopId: shopId,
                 operatingSlotId: operatingSlotId,
-                orderTomorrow: isSwitchOn
+                orderTomorrow: isSwitchOn,
               },
             });
           }}
