@@ -89,7 +89,7 @@ const CartItemInShop = () => {
   };
   useEffect(() => {
     dispatch(orderSlice.actions.calculateVoucherPrice());
-  }, [voucher]);
+  }, [voucher, products]);
 
   useEffect(() => {
     const handleVNPayRedirect = async () => {
@@ -110,7 +110,7 @@ const CartItemInShop = () => {
               msg: "Chờ tí nhé...",
             })
           );
-          router.push("/order-details/" + orderIdAfterPayment);
+          router.replace("/order-details/" + orderIdAfterPayment);
         } else {
           // Handle payment failure
           dispatch(
@@ -258,9 +258,9 @@ const CartItemInShop = () => {
     if (userInfo) {
       dispatch(
         orderSlice.actions.changeOrderInfo({
-          fullName: userInfo.fullName,
-          phoneNumber: userInfo.phoneNumber,
-          buildingId: preDataReorder.buildingOrderId,
+          fullName: userInfo?.fullName,
+          phoneNumber: userInfo?.phoneNumber,
+          buildingId: preDataReorder?.buildingOrderId,
         })
       );
     }
@@ -274,12 +274,18 @@ const CartItemInShop = () => {
       dispatch(orderSlice.actions.changeProductsReorder(dataReorder.foods));
     }
   }, [dataReorder]);
+  useEffect(() => {
+    return () => {
+      dispatch(orderSlice.actions.resetVoucher());
+      dispatch(orderSlice.actions.resetState());
+    };
+  }, []);
   const handleOrder = async () => {
     setDisabled(true);
     try {
       if (
         orderInfo.fullName == "" ||
-        orderInfo.phoneNumber == "" ||
+        !orderInfo.phoneNumber ||
         orderInfo.buildingId == 0
       ) {
         dispatch(
@@ -348,7 +354,7 @@ const CartItemInShop = () => {
             setPaymentUrl(qrUrl);
             // Linking.openURL(qrUrl)
           } else {
-            router.push("/order-details/" + data?.value?.order?.id);
+            router.replace("/order-details/" + data?.value?.order?.id);
           }
         } else {
           dispatch(
@@ -378,9 +384,36 @@ const CartItemInShop = () => {
         );
       }
     } catch (e) {
-      dispatch(globalSlice.actions.changeLoadings(false));
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message,
+            })
+          );
+        }
+      }
+      console.error(e);
       console.error(e);
     } finally {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Chờ tí nhé...",
+        })
+      );
       setDisabled(false);
     }
   };

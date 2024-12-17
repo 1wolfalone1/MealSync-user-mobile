@@ -71,7 +71,7 @@ const PreviewCardChat = ({ item }) => {
                 borderRadius: 16,
               }}
             />
-            <View className=" pl-4 gap-2 pr-3 pt-1 flex-1">
+            <View className=" pl-4 gap-1 pr-3 pt-1 flex-1">
               <View className="flex-row justify-between items-center">
                 <Text className="text-base font-bold text-blue-800">
                   Đơn hàng mã số
@@ -91,7 +91,7 @@ const PreviewCardChat = ({ item }) => {
               <View className="flex-1 pr-2 flex-row">
                 <Text
                   numberOfLines={1}
-                  className="flex-wrap flex-1 text-xs text-gray-600 text-ellipsis"
+                  className="flex-wrap text-xs text-gray-600 text-ellipsis flex-1"
                   style={{
                     fontWeight: item.map_user_is_read[userInfo.id]
                       ? 400

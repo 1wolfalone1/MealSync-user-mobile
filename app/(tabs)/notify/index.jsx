@@ -19,7 +19,6 @@ const NotifyIndex = () => {
   const { refreshing, onRefreshHandler } = usePullToRefresh({
     onRefreshFunction() {
       setCurrentPage(1);
-      setData([])
       getNoti(1, 12);
     },
   });

@@ -61,12 +61,15 @@ const orderSlice = createSlice({
     },
     changePriceItemReorder: (state, actions) => {
       const { itemId, price } = actions.payload;
-      state.dataReorder.foods = state.dataReorder.foods.map((food) => {
-        if (food.productId == itemId) {
-          food.totalPrice = price;
-        }
-        return food;
-      });
+      if (state.dataReorder.foods && Array.isArray(state.dataReorder.foods)){
+
+        state.dataReorder.foods = state.dataReorder.foods.map((food) => {
+          if (food.productId == itemId) {
+            food.totalPrice = price;
+          }
+          return food;
+        });
+      }
     },
     removeItemInCartReorder: (state, actions) => {
       const { itemId } = actions.payload;
@@ -106,7 +109,6 @@ const orderSlice = createSlice({
               return option.id;
             }),
           };
-
         });
         return {
           id: i.productId,
@@ -182,6 +184,7 @@ const orderSlice = createSlice({
     },
     resetVoucher: (state, action) => {
       state.voucher = initialState.voucher;
+      state.voucherId = initialState.voucherId;
     },
     resetState: (state, actions) => {
       return initialState;
@@ -255,7 +258,7 @@ const orderSlice = createSlice({
           const listPrice = [];
           listPrice.push(voucher.maximumApplyValue);
           listPrice.push(
-            parseInt(
+            Math.round(
               ((totalProductPrice + shippingFee) * voucher.amountRate) / 100
             )
           );

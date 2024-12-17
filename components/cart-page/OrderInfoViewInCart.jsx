@@ -17,7 +17,7 @@ const OrderInfoViewInCart = ({ userInfo, info, isMainOrder }) => {
       const res = await api.get("/api/v1/customer/building");
       const data = await res.data;
       const list = data.value;
-      console.log(list);
+      console.log(list, " test ne");
       if (list && Array.isArray(list)) {
         const item = list.find((i) => i.buildingId == orderInfo.buildingId);
         console.log(item, orderInfo, " dsfasfdasssssss");

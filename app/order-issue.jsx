@@ -4,6 +4,7 @@ import {
   CalendarCheck2,
   Coins,
   MapPinned,
+  MessageCircleQuestion,
   NotepadText,
   TicketCheck,
   Utensils,
@@ -23,6 +24,7 @@ import {
 } from "react-native";
 import {
   Button,
+  Dialog,
   Divider,
   HelperText,
   IconButton,
@@ -371,11 +373,59 @@ const OrderHistoryCompleted = () => {
       return `Giảm ${formatNumberVND(item.amountValue)}.  Áp dụng đơn hàng từ ${formatNumberVND(item.minOrdervalue)}`;
     }
   };
-
+  const [visible2, setVisible2] = useState(false);
+  const hideDialog2 = () => setVisible2(false);
+  
+  const widthImage3 = (width * 22) / 100;
   return orderData == null ? (
     <></>
   ) : (
     <SafeAreaView className="flex-1 bg-white">
+      <Portal>
+        <Dialog visible={visible2} onDismiss={hideDialog2}>
+          <Dialog.Title>Lý do giao thất bại</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">{orderData.reason}</Text>
+            <Text variant="bodyMedium" >Hình ảnh: </Text>
+            {orderData.shopDeliveryFailEvidence && (
+              <View className="flex-row flex-wrap bg-transparent justify-between">
+                <FlatList
+                  contentContainerStyle={{}}
+                  data={orderData.shopDeliveryFailEvidence}
+                  scrollEnabled={false}
+                  numColumns={3}
+                  renderItem={({ item, index }) => {
+                    return (
+                      <Surface
+                        elevation={2}
+                        style={{
+                          overflow: "hidden",
+                          width: widthImage3,
+                          height: widthImage3,
+                          margin: 10,
+                          borderRadius: 24,
+                        }}
+                      >
+                        <Image
+                          source={{ uri: item.imageUrl }}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            resizeMode: "cover",
+                          }}
+                        />
+                      </Surface>
+                    );
+                  }}
+                />
+              </View>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideDialog2}>Xong</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
       <Portal>
         <Modal
           visible={visible}
@@ -393,6 +443,7 @@ const OrderHistoryCompleted = () => {
                 Báo cáo đơn hàng #${orderData.id}
               </Text>
               <Divider style={{ height: 1 }} />
+
               <View className="mt-4">
                 <TextInput
                   onChangeText={(value) => setTitle(value)}
@@ -520,6 +571,22 @@ const OrderHistoryCompleted = () => {
           }}
         />
       </View>
+      <View className="flex-row justify-start px-10">
+        {orderData.reason && (
+          <TouchableRipple
+            borderless
+            onPress={() => {setVisible2(true);}}
+            className="p-2 rounded-lg"
+          >
+            <View className="flex-row justify-end items-center gap-1">
+              <MessageCircleQuestion size={16} color={"blue"} />
+              <Text className="text-sm text-blue-700">
+                Xem lý do
+              </Text>
+            </View>
+          </TouchableRipple>
+        )}
+      </View>
       <View className="flex-row px-10 justify-between my-4 items-center">
         <View className="flex-row gap-2 items-center">
           <Text className="text-sm">Tổng cộng: </Text>
@@ -581,7 +648,9 @@ const OrderHistoryCompleted = () => {
         <View className="justify-between py-4 flex-1 pr-10 ">
           <View className="flex-row items-center gap-2">
             <Image
-              source={images.PromotionShopLogo}
+              source={{
+                uri: orderData?.shopInfo?.logoUrl,
+              }}
               style={{
                 height: 40,
                 width: 40,
@@ -650,7 +719,10 @@ const OrderHistoryCompleted = () => {
               </Text>
               <View className="flex-1 flex-row gap-1 mr-2">
                 <Utensils size={16} color={"blue"} />
-                <Text>
+                <Text
+                  className="flex-wrap flex-1 text-ellipsis"
+                  numberOfLines={3}
+                >
                   {product.optionGroups &&
                     Array.isArray(product.optionGroups) &&
                     product.optionGroups.length > 0 &&

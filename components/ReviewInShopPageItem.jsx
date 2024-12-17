@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
     shadowColor: Colors.shadow[400],
 
     shadowOpacity: 0.1,
-    elevation: 1,
+    elevation: 2,
     // background color must be set
   },
   shadowSelected: {
@@ -56,7 +56,7 @@ const ReviewInShopPageItem = ({ item }) => {
   return user == null ? (
     <></>
   ) : (
-    <View className="flex-1">
+    <View className="">
       <View
         className="rounded-xl bg-white p-4 mx-2"
         style={{
@@ -157,7 +157,7 @@ const ReviewInShopPageItem = ({ item }) => {
         <></>
       ) : (
         <>
-          <View className="flex-row p-6 flex-1">
+          <View className="flex-row p-6">
             <Divider
               style={{
                 width: 0.5,

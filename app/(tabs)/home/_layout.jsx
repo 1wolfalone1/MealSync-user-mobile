@@ -104,10 +104,13 @@ const HomePage = () => {
     }
     console.log(message.EntityType, " message websocket type");
     if (message.EntityType == 1) {
-      dispatch(globalSlice.actions.notifyOrderStatusChange());
+      dispatch(globalSlice.actions.notifyOrderStatusChange({
+        referenceId: message.ReferenceId,
+        entityType: message.EntityType
+      }));
     }
     showToastable({
-      renderContent: () => <NotifyFisebaseForegroundItem {...message} />,
+      renderContent: () => <NotifyFisebaseForegroundItem {...message} item={message} />,
     });
   };
   const initializeSocket = async () => {

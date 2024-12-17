@@ -62,11 +62,11 @@ const ActiveVoucher = ({ item }) => {
           width: widthImage,
         }}
       />
-      <View className="ml-2 flex-1 justify-between p-2">
-        <Text numberOfLines={5} className=" flex-1">
-          {item.title}
+      <View className="ml-2 justify-between p-1 flex-1">
+        <Text numberOfLines={1} className="text-ellipsis flex-wrap flex-row">
+         {item.title}
         </Text>
-        <Text className="text-xs mb-1 text-gray-500">
+        <Text className="text-xs mb-1 text-gray-500 flex-1">
           {genPromotionTitle(item)}
         </Text>
         <Text className="text-xs mb-1 text-gray-500">

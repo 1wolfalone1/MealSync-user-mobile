@@ -104,7 +104,13 @@ const SignIn = () => {
         idToken = signInResult.idToken;
       }
       if (!idToken) {
-        throw new Error("No ID token found");
+        dispatch(
+          globalSlice.actions.changeLoadings({
+            isLoading: false,
+            msg: "Đang đăng nhập",
+          })
+        );
+        return;
       }
       console.log(idToken, "Google Sign In Result");
       // Create a Google credential with the token
@@ -117,7 +123,7 @@ const SignIn = () => {
     } catch (e) {
       dispatch(
         globalSlice.actions.changeLoadings({
-          isLoading: true,
+          isLoading: false,
           msg: "Đang đăng nhập",
         })
       );
@@ -222,6 +228,12 @@ const SignIn = () => {
             );
           }
         }
+        dispatch(
+          globalSlice.actions.changeLoadings({
+            isLoading: false,
+            msg: "Đang đăng nhập",
+          })
+        );
       } finally {
         try {
         } catch (e) {
@@ -254,7 +266,7 @@ const SignIn = () => {
         data.error.code,
         data.error.message
       );
-    } catch (error) {
+    } catch (e) {
       dispatch(
         globalSlice.actions.changeLoadings({
           isLoading: false,
@@ -300,7 +312,7 @@ const SignIn = () => {
           );
         }
       }
-      console.log("error ne", error);
+      console.log("error ne", e);
     }
   };
 
@@ -354,6 +366,45 @@ const SignIn = () => {
           msg: "Đang đăng nhập",
         })
       );
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message + "😠",
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau 😅",
+            })
+          );
+        }
+      }
       console.log(e);
     }
   };
@@ -827,7 +878,7 @@ const SignIn = () => {
             </View>
           </TouchableRipple>
         </View>
-        <View className="items-center flex-row justify-between mt-4">
+        <View className="items-center flex-row justify-between mt-4 px-10">
           <Text className="text-red-600">
             {loginErrorGoogleMessage || params.messageError}
           </Text>

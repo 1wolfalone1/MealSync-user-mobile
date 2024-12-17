@@ -131,7 +131,7 @@ const ProductDetail = () => {
       dispatch(
         cartSlice.actions.addToCart({
           productId: product.id,
-          shopId: info.id,
+          shopId: info?.id,
           quantity: totalOrder,
           topping: toppingSelected,
           price: product.price,
@@ -240,8 +240,8 @@ const ProductDetail = () => {
                     className="py-4"
                     onPress={() => {
                       if (
-                        info.isReceivingOrderPaused ||
-                        item.isReceivingOrderPaused
+                        info?.isReceivingOrderPaused ||
+                        item?.isReceivingOrderPaused
                       ) {
                         setOpenDialogIsOrderPaused(true);
                         setDataOperatingSlotsSelect(item);
@@ -254,8 +254,8 @@ const ProductDetail = () => {
                       <Text className="text-base text-gray-800">
                         {item.title} từ {convertIntTimeToString(item.startTime)}{" "}
                         đến {convertIntTimeToString(item.endTime)}
-                        {item.isReceivingOrderPaused ||
-                        info.isReceivingOrderPaused ? (
+                        {item?.isReceivingOrderPaused ||
+                        info?.isReceivingOrderPaused ? (
                           <Text className="text-sm text-red-400">
                             {"\n"}Ngừng nhận đơn đặt hàng trong khung giờ này
                           </Text>

@@ -8,6 +8,8 @@ import {
   Alert,
   Dimensions,
   Image,
+  Keyboard,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -551,6 +553,12 @@ const ChatChannel = () => {
   const handlerLoadEarlier = () => {
     console.log("Loading earlier ne");
   };
+  useEffect(() => {
+    Keyboard.dismiss();
+    return () => {
+      Keyboard.dismiss();
+    };
+  }, []);
   const renderBubble = (props) => {
     return (
       <Bubble
@@ -578,72 +586,81 @@ const ChatChannel = () => {
   };
   return (
     <>
-      <SafeAreaView className="bg-primary p-2" edges={["top"]}>
-        <View className="flex-row items-center gap-4 pl-2">
-          <TouchableRipple
-            className="rounded-full p-2"
-            borderless
-            onPress={() => router.back()}
-          >
-            <ArrowLeft size={25} color={"white"} strokeWidth={2} />
-          </TouchableRipple>
-          <View className="flex-row items-center ">
-            <Avatar.Image source={{ uri: dataHeader?.avatarUrl }} size={50} />
-            <Text className="text-white font-semibold text-lg ml-4">
-              {dataHeader?.fullName}
-            </Text>
-          </View>
-        </View>
-      </SafeAreaView>
-      <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
-        <GiftedChat
-          messages={messages}
-          onSend={onSend}
-          renderUsernameOnMessage={true}
-          renderBubble={renderBubble}
-          renderInputToolbar={(props) => (
-            <CustomInputToolbar
-              {...props}
-              isClose={channelData?.is_close == 1? false : true}
-              selectedMedia={selectedMedia}
-              onRemoveMedia={async () => {
-                setSelectedMedia(null);
-                try {
-                  const res = await api.delete(
-                    `/api/v1/storage/file/delete?url=${selectedMediaUrl}`
-                  );
-                  const data = await res.data;
-                  console.log(data, " result after delete image");
-                  setSelectedMediaUrl(null);
-                } catch (e) {
-                  console.log("Error remove media:", e);
-                }
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
+      >
+        <SafeAreaView className="bg-primary p-2" edges={["top"]}>
+          <View className="flex-row items-center gap-4 pl-2">
+            <TouchableRipple
+              className="rounded-full p-2"
+              borderless
+              onPress={() => {
+                Keyboard.dismiss();
+                router.back();
               }}
-            />
-          )}
-          renderComposer={(props) => (
-            <View style={styles.composerContainer}>
-              <TouchableRipple onPress={pickMedia} style={styles.mediaButton}>
-                <Camera size={24} color={Colors.primaryBackgroundColor} />
-              </TouchableRipple>
-              <Composer {...props} textInputStyle={styles.textInput} />
+            >
+              <ArrowLeft size={25} color={"white"} strokeWidth={2} />
+            </TouchableRipple>
+            <View className="flex-row items-center ">
+              <Avatar.Image source={{ uri: dataHeader?.avatarUrl }} size={50} />
+              <Text className="text-white font-semibold text-lg ml-4">
+                {dataHeader?.fullName}
+              </Text>
             </View>
-          )}
-          renderSend={(props) => (
-            <SendMess {...props} containerStyle={styles.sendButton}>
-              <TouchableRipple className="rounded-full p-2" borderless>
-                <Send color={Colors.primaryBackgroundColor} size={24} />
-              </TouchableRipple>
-            </SendMess>
-          )}
-          user={{
-            _id: userInfo.id,
-            name: userInfo.fullName,
-            avatar: userInfo.avatarUrl,
-          }}
-          minInputToolbarHeight={selectedMedia ? 150 : 60}
-        />
-      </SafeAreaView>
+          </View>
+        </SafeAreaView>
+        <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+          <GiftedChat
+            messages={messages}
+            onSend={onSend}
+            renderUsernameOnMessage={true}
+            renderBubble={renderBubble}
+            keyboardShouldPersistTaps="always"
+            renderInputToolbar={(props) => (
+              <CustomInputToolbar
+                {...props}
+                isClose={channelData?.is_close == 1 ? false : true}
+                selectedMedia={selectedMedia}
+                onRemoveMedia={async () => {
+                  setSelectedMedia(null);
+                  try {
+                    const res = await api.delete(
+                      `/api/v1/storage/file/delete?url=${selectedMediaUrl}`
+                    );
+                    const data = await res.data;
+                    console.log(data, " result after delete image");
+                    setSelectedMediaUrl(null);
+                  } catch (e) {
+                    console.log("Error remove media:", e);
+                  }
+                }}
+              />
+            )}
+            renderComposer={(props) => (
+              <View style={styles.composerContainer}>
+                <TouchableRipple onPress={pickMedia} style={styles.mediaButton}>
+                  <Camera size={24} color={Colors.primaryBackgroundColor} />
+                </TouchableRipple>
+                <Composer {...props} textInputStyle={styles.textInput} />
+              </View>
+            )}
+            renderSend={(props) => (
+              <SendMess {...props} containerStyle={styles.sendButton}>
+                <TouchableRipple className="rounded-full p-2" borderless>
+                  <Send color={Colors.primaryBackgroundColor} size={24} />
+                </TouchableRipple>
+              </SendMess>
+            )}
+            user={{
+              _id: userInfo.id,
+              name: userInfo.fullName,
+              avatar: userInfo.avatarUrl,
+            }}
+            minInputToolbarHeight={selectedMedia ? 150 : 60}
+          />
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </>
   );
 };

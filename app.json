@@ -14,6 +14,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "androidStatusBar": {
+      "translucent": false
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "mealsync.org"

@@ -240,7 +240,9 @@ const OrderHistoryCompleted = () => {
         <View className="justify-between py-4 flex-1 pr-10 ">
           <View className="flex-row items-center gap-2">
             <Image
-              source={images.PromotionShopLogo}
+              source={{
+                uri: orderData?.shopInfo?.logoUrl,
+              }}
               style={{
                 height: 40,
                 width: 40,
@@ -309,7 +311,7 @@ const OrderHistoryCompleted = () => {
               </Text>
               <View className="flex-1 flex-row gap-1 mr-2">
                 <Utensils size={16} color={"blue"} />
-                <Text>
+                <Text className="flex-wrap flex-1 text-ellipsis" numberOfLines={3}>
                   {product.optionGroups &&
                     Array.isArray(product.optionGroups) &&
                     product.optionGroups.length > 0 &&

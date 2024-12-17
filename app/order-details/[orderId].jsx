@@ -42,6 +42,7 @@ import { Colors, Images } from "../../constant";
 import colors from "../../constant/colors";
 import images from "../../constant/images";
 import globalSlice, { globalSelector } from "../../redux/slice/globalSlice";
+import { userInfoSliceSelector } from "../../redux/slice/userSlice";
 import {
   convertIntTimeToString,
   formatDateTime,
@@ -70,6 +71,8 @@ const OrderTracking = () => {
   );
   const mapRef = useRef(null);
   const [coordinates] = useState([106.83196028706885, 10.821764739534105]);
+  const [point1, setPoint1] = useState(null); // Longitude, Latitude
+  const [point2, setPoint2] = useState(null);
   const widthImageIllustration = (width * 30) / 100;
   const camera = useRef(null);
   const [openInfoOrder, setOpenInfoOrder] = useState(false);
@@ -80,7 +83,7 @@ const OrderTracking = () => {
   const translateY = useSharedValue(0);
   const bottomSheetRef = useRef(null);
   const isFocus = useIsFocused();
-  const { orderStatusChange } = useSelector(globalSelector);
+  const { orderStatusChange, isOrderDetails } = useSelector(globalSelector);
   const [visible, setVisible] = useState(false);
   const [reasonCancel, setReasonCancel] = useState("");
   const [reasonError, setReasonError] = useState("");
@@ -91,6 +94,8 @@ const OrderTracking = () => {
   const [routeProfile, setRouteProfile] = useState("car"); // 'car', 'bike', 'taxi', 'truck', 'hd'
   const [orderData, setOrderData] = useState(null);
   const [pos, setPos] = useState(0);
+  const info = useSelector(userInfoSliceSelector);
+  console.log(point1, point2, " point1 , ponin 2 ne");
   const changePos = () => {
     if (orderData) {
       if (orderData.status == 1 || orderData.status == 3) {
@@ -105,120 +110,98 @@ const OrderTracking = () => {
       }
     }
   };
+  console.log(info, orderData, " dta order ne");
   useEffect(() => {
     changePos();
   }, [orderData]);
   // callbacks
-  useEffect(() => {
-    fitBoundsWithPadding();
-  }, [locations, fitBoundsWithPadding]);
-  useEffect(() => {
-    console.log(orderStatusChange, "dsfafsfas asf asf as");
-    handleGetOrderData();
-  }, [isFocus, orderStatusChange]);
-  const getDirections = async (start, end) => {
+  //----------------------------------------------------------------
+
+  const apiKey = "rk92yVlnm1LVaN5ts1YRSjeii7a31TvGmaqfglh0";
+  const fetchDirections = async () => {
     try {
+      const start = point1;
+      const end = point2;
+      if (!start || !end) {
+        return;
+      }
       const response = await axios.get(`https://rsapi.goong.io/Direction`, {
         params: {
           origin: `${start[1]},${start[0]}`,
           destination: `${end[1]},${end[0]}`,
           vehicle: routeProfile,
-          api_key: "rk92yVlnm1LVaN5ts1YRSjeii7a31TvGmaqfglh0",
+          api_key: apiKey,
         },
       });
+      console.log(response, " response  neeeeeeeeeeeeeeeeeeeeee");
+      const polyline = response.data.routes[0]?.overview_polyline?.points;
 
-      if (response.data?.routes?.[0]) {
-        const route = response.data.routes[0];
-        const leg = route.legs[0];
-
-        // Store route information
-        setRouteInfo({
-          distance: leg.distance,
-          duration: leg.duration,
-        });
-
-        // Create route GeoJSON
-        const geoJson = {
-          type: "FeatureCollection",
-          features: [
-            {
-              type: "Feature",
-              properties: {
-                distance: leg.distance.text,
-                duration: leg.duration.text,
-              },
-              geometry: {
-                type: "LineString",
-                // If steps array is empty, use start and end points
-                coordinates:
-                  leg.steps.length > 0
-                    ? leg.steps.map((step) => [
-                        step.start_location.lng,
-                        step.start_location.lat,
-                      ])
-                    : [start, end],
-              },
-            },
-          ],
-        };
-
-        setRouteCoordinates(geoJson);
-
-        // Adjust zoom level based on distance
-        const distance = leg.distance.value;
-        if (distance < 2000) {
-          setZoomlevel(15);
-        } else if (distance < 5000) {
-          setZoomlevel(14);
-        } else if (distance < 10000) {
-          setZoomlevel(12);
-        } else if (distance < 15000) {
-          setZoomlevel(11);
-        } else {
-          setZoomlevel(9);
-        }
+      if (polyline) {
+        const decodedCoordinates = decodePolyline(polyline);
+        setRouteCoordinates(decodedCoordinates);
+      } else {
+        Alert.alert("Error", "No route found");
       }
     } catch (error) {
       console.error("Error fetching directions:", error);
+      Alert.alert("Error", "Failed to fetch directions");
+    } finally {
     }
   };
-
   useEffect(() => {
-    if (locations.length >= 2) {
-      getDirections(locations[0].coord, locations[1].coord);
-    }
-  }, [locations, routeProfile]);
-  const fitBoundsWithPadding = useCallback(() => {
-    if (mapRef.current && locations.length >= 2) {
-      // Convert locations to bounds
-      const coords = locations.map((loc) => loc.coord);
-      const bounds = coords.reduce(
-        (bounds, coord) => {
-          return [
-            [
-              Math.min(bounds[0][0], coord[0]),
-              Math.min(bounds[0][1], coord[1]),
-            ],
-            [
-              Math.max(bounds[1][0], coord[0]),
-              Math.max(bounds[1][1], coord[1]),
-            ],
-          ];
-        },
-        [coords[0], coords[0]]
-      );
+    fetchDirections();
+  }, [point1, point2]);
 
-      try {
-        mapRef.current?.fitBounds(bounds, {
-          padding: 0,
-          animationDuration: 200,
-        });
-      } catch (e) {
-        console.log(e);
-      }
-      // Fit bounds with padding
+  const decodePolyline = (encoded) => {
+    // Decode a polyline into an array of coordinates
+    let points = [];
+    let index = 0,
+      len = encoded.length;
+    let lat = 0,
+      lng = 0;
+
+    while (index < len) {
+      let b,
+        shift = 0,
+        result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      let dlat = result & 1 ? ~(result >> 1) : result >> 1;
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      let dlng = result & 1 ? ~(result >> 1) : result >> 1;
+      lng += dlng;
+
+      points.push([lng * 1e-5, lat * 1e-5]);
     }
-  }, [locations]);
+    return points;
+  };
+  useEffect(() => {
+    dispatch(globalSlice.actions.changeIsOrderDetails(true));
+    handleGetOrderData();
+    return () => {
+      dispatch(globalSlice.actions.changeIsOrderDetails(false));
+    };
+  }, []);
+  //------------------------------------------------------------------
+  useEffect(() => {
+    console.log(orderStatusChange, "dsfafsfas asf asf as");
+    if (orderStatusChange) {
+      if (orderStatusChange.referenceId == params.orderId && isOrderDetails) {
+        handleGetOrderData();
+      }
+    }
+  }, [isFocus, orderStatusChange]);
   const handleGetOrderData = async () => {
     try {
       dispatch(
@@ -233,6 +216,11 @@ const OrderTracking = () => {
       setOrderData(data.value);
       if (data.value) {
         if (data.value.shopInfo) {
+          setPoint1([data.value.longitude, data.value.latitude]);
+          setPoint2([
+            data.value.shopInfo.longitude,
+            data.value.shopInfo.latitude,
+          ]);
         }
       }
     } catch (err) {
@@ -402,7 +390,9 @@ const OrderTracking = () => {
           })
         );
         dispatch(
-          globalSlice.actions.openSnackBar({ message: data?.error?.message + "😡" })
+          globalSlice.actions.openSnackBar({
+            message: data?.error?.message + "😡",
+          })
         );
       }
     } catch (e) {
@@ -477,6 +467,7 @@ const OrderTracking = () => {
       return "Xác nhận hoàn thành đơn hàng";
     }
   };
+  const [mapLoaded, setMapLoaded] = useState(false);
   return orderData == null ? (
     <></>
   ) : (
@@ -499,7 +490,7 @@ const OrderTracking = () => {
             icon="chevron-left"
             size={32}
             iconColor={Colors.primaryBackgroundColor}
-            onPress={() => router.push("/order/")}
+            onPress={() => router.replace("/order/")}
           />
           <Text className="font-hnow64regular text-lg text-primary">
             Đơn hàng đang giao
@@ -586,55 +577,112 @@ const OrderTracking = () => {
         </Modal>
       </Portal>
       <View className=" flex-1 items-center bg-red-300">
-        <MapboxGL.MapView
-          ref={mapRef}
-          styleURL={loadMap}
-          onPress={handleOnPress}
-          style={{
-            width: "100%",
-            height: "100%",
-          }}
-          projection="mercator"
-          zoomEnabled={true}
-        >
-          <MapboxGL.Camera
-            ref={camera}
-            zoomLevel={15}
-            centerCoordinate={coordinates}
-          />
-          {routeCoordinates && (
-            <MapboxGL.ShapeSource id="routeSource" shape={routeCoordinates}>
-              <MapboxGL.LineLayer
-                id="routeLine"
-                style={{
-                  lineColor: "#4285F4",
-                  lineWidth: 4,
-                  lineCap: "round",
-                  lineJoin: "round",
-                }}
-              />
-            </MapboxGL.ShapeSource>
-          )}
-          {/* 1 point  */}
-          {/* <MapboxGL.PointAnnotation 
-        id='pointDirect'
-        key='pointDirect'
-        coordinate={coordinates}
-        draggable={true}
-         /> */}
-          {/* many point */}
-          {locations.map((item) => (
+        {point1 && point2 && (
+          <MapboxGL.MapView
+            ref={mapRef}
+            styleURL={loadMap}
+            onDidFinishLoadingMap={() => setMapLoaded(true)}
+            onPress={handleOnPress}
+            style={{
+              width: "100%",
+              height: "100%",
+            }}
+            projection="mercator"
+            zoomEnabled={true}
+          >
+            <MapboxGL.Camera
+              bounds={{
+                ne: [
+                  Math.max(point1[0], point2[0]),
+                  Math.max(point1[1], point2[1]),
+                ], // Northeast corner
+                sw: [
+                  Math.min(point1[0], point2[0]),
+                  Math.min(point1[1], point2[1]),
+                ], // Southwest corner
+                paddingTop: 100,
+                paddingBottom: 100,
+                paddingLeft: 100,
+                paddingRight: 100,
+              }}
+              animationMode="easeTo"
+              animationDuration={1000}
+            />
+            <MapboxGL.Images
+              images={{
+                customerIcon: require("../../assets/images/pin-map.png"), // Replace with the path to your customer image
+                shopIcon: require("../../assets/images/restaurant.png"), // Replace with the path to your shop image
+              }}
+            />
             <MapboxGL.PointAnnotation
-              id="pointDirect"
-              key={item.coord[0]}
-              coordinate={item.coord}
-              draggable={true}
+              id="point1"
+              coordinate={point1}
+              title="asdfasfasdf"
             >
-              <MapboxGL.Callout title={item.key} />
+              {mapLoaded && (
+                <View
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <Image
+                    source={require("../../assets/images/pin-map.png")}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      resizeMode: "contain",
+                    }}
+                  />
+                </View>
+              )}
             </MapboxGL.PointAnnotation>
-          ))}
-        </MapboxGL.MapView>
 
+            {/* Marker 2 */}
+            <MapboxGL.PointAnnotation id="point2" coordinate={point2}>
+              {/* <View style={styles.marker} /> */}
+              {mapLoaded && (
+                <View
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    width: 50,
+                    height: 50,
+                  }}
+                >
+                  <Image
+                    source={require("../../assets/images/restaurant.png")}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      resizeMode: "contain",
+                    }}
+                  />
+                </View>
+              )}
+            </MapboxGL.PointAnnotation>
+            {routeCoordinates.length > 0 && (
+              <MapboxGL.ShapeSource
+                id="routeSource"
+                shape={{
+                  type: "Feature",
+                  geometry: {
+                    type: "LineString",
+                    coordinates: routeCoordinates,
+                  },
+                }}
+              >
+                <MapboxGL.LineLayer
+                  id="routeLayer"
+                  style={{
+                    lineColor: "#0f0094",
+                    lineWidth: 4,
+                  }}
+                />
+              </MapboxGL.ShapeSource>
+            )}
+          </MapboxGL.MapView>
+        )}
         {
           // <Animated.View
           //   style={[
@@ -704,7 +752,7 @@ const OrderTracking = () => {
             </View>
             <View className="flex-row">
               <Text className="font-hnow63book mr-4 text-green-800">
-                Mã đơn hàng: {params.id}
+                Mã đơn hàng:
               </Text>
               <Text className="font-hnow63book text-green-800">
                 #{orderData.id}
@@ -760,7 +808,9 @@ const OrderTracking = () => {
             <View className="justify-between py-4 flex-1 pr-10 ">
               <View className="flex-row items-center gap-2">
                 <Image
-                  source={images.PromotionShopLogo}
+                  source={{
+                    uri: orderData?.shopInfo?.logoUrl,
+                  }}
                   style={{
                     height: 40,
                     width: 40,
@@ -818,7 +868,30 @@ const OrderTracking = () => {
                     iconColor="blue"
                     icon={"chat-processing-outline"}
                     onPress={() => {
-                      router.push("/chat/" + orderData.id);
+                      if (orderData.status >= 5) {
+                        router.push("/chat/" + orderData.id);
+                      } else {
+                        dispatch(
+                          globalSlice.actions.customSnackBar({
+                            style: {
+                              color: "white",
+                              icon: "camera",
+                              backgroundColor: Colors.glass.red,
+                              pos: {
+                                top: 40,
+                              },
+                              actionColor: "yellow",
+                            },
+                          })
+                        );
+
+                        dispatch(
+                          globalSlice.actions.openSnackBar({
+                            message:
+                              "Phòng nhắn tin chỉ mở khi đơn hàng được cửa hàng chuẩn bị 🥲",
+                          })
+                        );
+                      }
                     }}
                   />
                   <IconButton
@@ -858,7 +931,10 @@ const OrderTracking = () => {
                   </Text>
                   <View className="flex-1 flex-row gap-1">
                     <Utensils size={16} color={"blue"} />
-                    <Text>
+                    <Text
+                      className="flex-wrap flex-1 text-ellipsis"
+                      numberOfLines={3}
+                    >
                       {product.optionGroups &&
                         Array.isArray(product.optionGroups) &&
                         product.optionGroups.length > 0 &&

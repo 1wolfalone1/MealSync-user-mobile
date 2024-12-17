@@ -44,6 +44,8 @@ const FloatCartButton = () => {
   const [operatingSlots, setOperatingSlots] = useState([]);
   const [cartTitle, setCartTitle] = useState(null);
   const dispatch = useDispatch();
+  const { notInShop } = useSelector(globalSelector);
+
   useEffect(() => {
     setCartQuantity(items[info?.id]?.length);
     if (items[info?.id] && Array.isArray(items[info?.id])) {
@@ -87,9 +89,8 @@ const FloatCartButton = () => {
     }
   }, [info, items]);
   useEffect(() => {
-    return () => {
-    }
-  }, [])
+    return () => {};
+  }, []);
   const handleOpenTempCart = () => {
     if (items[info?.id]) {
       router.push("/shop/temp-cart");
@@ -114,10 +115,13 @@ const FloatCartButton = () => {
     }
   };
   const a = "test";
-  return (
+
+  return notInShop ? (
+    <></>
+  ) : (
     <Portal>
       <FAB.Group
-        key={'asdfasfd'}
+        key={"asdfasfd"}
         open={open}
         visible={openFabInShop}
         label={cartTitle}

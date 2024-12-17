@@ -144,7 +144,7 @@ const OrderIssueItem = ({ item }) => {
 
             <View className="flex-row items-center justify-between">
               <Text className="text-xs text-gray-500">
-                Mã đơn hàng: #{item.id}
+                #{item.id}
               </Text>
               <View className="flex-row items-center gap-1">
                 {getUiBasedState()}

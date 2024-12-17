@@ -84,7 +84,7 @@ const ItemShopRegulerInHome = ({ item }) => {
                 }}
             />
           </View>
-          <View className="p-3 items-start  gap-1 flex-1"
+          <View className="p-3 items-start  flex-1"
           
           style={{
             width: widthItem,
@@ -106,10 +106,15 @@ const ItemShopRegulerInHome = ({ item }) => {
                 </Text>
               </View>
             </View>
-            <View className="flex-row gap-2 justify-between w-full items-center flex-1 items-end">
+            <View className="flex-row justify-between w-full items-center flex-1 items-end">
               <Text style className="text-xs text-gray-400 font-hnow64regular">
                 {item.buildingName}
               </Text>
+            </View>
+            <View className="flex-row">
+                <Text className="flex-wrap flex-1 text-xs text-gray-500" numberOfLines={1}>
+                 {item.address} 
+                </Text>
             </View>
           </View>
         </View>

@@ -4,14 +4,23 @@ import {
   Coins,
   Flag,
   MapPinned,
+  MessageCircleQuestion,
   NotepadText,
   TicketCheck,
   Utensils,
 } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
-import { Dimensions, Image, ScrollView, Text, View } from "react-native";
+import {
+  Dimensions,
+  FlatList,
+  Image,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import {
   Button,
+  Dialog,
   Divider,
   Modal,
   Portal,
@@ -21,7 +30,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import api from "../api/api";
-import { Colors, Images } from "../constant";
+import { Colors } from "../constant";
 import common from "../constant/common";
 import images from "../constant/images";
 import globalSlice from "../redux/slice/globalSlice";
@@ -125,10 +134,58 @@ const OrderHistoryCompleted = () => {
       return `Giảm ${formatNumberVND(item.amountValue)}.  Áp dụng đơn hàng từ ${formatNumberVND(item.minOrdervalue)}`;
     }
   };
+  const [visible2, setVisible2] = useState(false);
+  const hideDialog2 = () => setVisible2(false);
+  const widthImage2 = (width * 22) / 100;
   return orderData == null ? (
     <></>
   ) : (
     <SafeAreaView className="flex-1 bg-white">
+      <Portal>
+        <Dialog visible={visible2} onDismiss={hideDialog2}>
+          <Dialog.Title>Lý do giao thất bại</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">{orderData.reason}</Text>
+            <Text variant="bodyMedium" >Hình ảnh: </Text>
+            {orderData.shopDeliveryFailEvidence && (
+              <View className="flex-row flex-wrap bg-transparent justify-between">
+                <FlatList
+                  contentContainerStyle={{}}
+                  data={orderData.shopDeliveryFailEvidence}
+                  scrollEnabled={false}
+                  numColumns={3}
+                  renderItem={({ item, index }) => {
+                    return (
+                      <Surface
+                        elevation={2}
+                        style={{
+                          overflow: "hidden",
+                          width: widthImage2,
+                          height: widthImage2,
+                          margin: 10,
+                          borderRadius: 24,
+                        }}
+                      >
+                        <Image
+                          source={{ uri: item.imageUrl }}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            resizeMode: "cover",
+                          }}
+                        />
+                      </Surface>
+                    );
+                  }}
+                />
+              </View>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideDialog2}>Xong</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
       <Portal>
         <Modal
           visible={visible}
@@ -152,23 +209,41 @@ const OrderHistoryCompleted = () => {
             height: 1,
           }}
         />
-        {orderData.status == 12 && (
-          <TouchableRipple
-            borderless
-            onPress={() => {
-              router.push({
-                pathname: `/report-details`,
-                params: { orderId: orderData.id },
-              });
-            }}
-            className="p-2"
-          >
-            <View className="flex-row justify-end">
-              <Flag size={16} color={"red"} />
-              <Text className="text-sm text-red-600">Xem chi tiết báo cáo</Text>
-            </View>
-          </TouchableRipple>
-        )}
+        <View className="flex-row  justify-between items-center">
+          {orderData.reason && (
+            <TouchableRipple
+              borderless
+              onPress={() => {setVisible2(true)}}
+              className="p-2 rounded-lg"
+            >
+              <View className="flex-row items-center gap-1">
+                <MessageCircleQuestion size={16} color={"blue"} />
+                <Text className="text-sm text-blue-700">
+                  Xem lý do
+                </Text>
+              </View>
+            </TouchableRipple>
+          )}
+          {orderData.status == 12 && (
+            <TouchableRipple
+              borderless
+              onPress={() => {
+                router.push({
+                  pathname: `/report-details`,
+                  params: { orderId: orderData.id },
+                });
+              }}
+              className="p-2"
+            >
+              <View className="flex-row justify-end">
+                <Flag size={16} color={"red"} />
+                <Text className="text-sm text-red-600">
+                  Xem chi tiết báo cáo
+                </Text>
+              </View>
+            </TouchableRipple>
+          )}
+        </View>
       </View>
       <View className="flex-row px-10 justify-between my-4 items-center">
         <View className="flex-row gap-2 items-center">
@@ -231,7 +306,9 @@ const OrderHistoryCompleted = () => {
         <View className="justify-between py-4 flex-1 pr-10 ">
           <View className="flex-row items-center gap-2">
             <Image
-              source={images.PromotionShopLogo}
+              source={{
+                uri: orderData?.shopInfo?.logoUrl,
+              }}
               style={{
                 height: 40,
                 width: 40,
@@ -301,7 +378,10 @@ const OrderHistoryCompleted = () => {
               </Text>
               <View className="flex-1 flex-row gap-1 mr-2">
                 <Utensils size={16} color={"blue"} />
-                <Text>
+                <Text
+                  className="flex-wrap flex-1 text-ellipsis"
+                  numberOfLines={3}
+                >
                   {product.optionGroups &&
                     Array.isArray(product.optionGroups) &&
                     product.optionGroups.length > 0 &&
@@ -364,7 +444,9 @@ const OrderHistoryCompleted = () => {
                   width: 50,
                   borderRadius: 16,
                 }}
-                source={Images.PromotionShopLogo}
+                source={{
+                  uri: orderData.shopInfo.logoUrl,
+                }}
               />
               <View className="flex-row ml-2 flex-1 items-center">
                 <Text

@@ -116,7 +116,11 @@ export default function DynamicHeader({ animHeaderValue }) {
             >
               Giao toi
             </Button>
-            <Text className="text-primary font-hnow64regular text-xs">
+            <Text
+              className="text-primary font-hnow64regular"
+              style={{ fontSize: 10 }}
+              numberOfLines={2}
+            >
               {userData?.building?.name}
             </Text>
           </View>

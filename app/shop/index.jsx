@@ -80,7 +80,7 @@ const ShopPage = () => {
         router.setParams({ productId: "" });
         router.push("/shop/" + productId2);
       } else if (review == "true") {
-        router.setParams({review: "" });
+        router.setParams({ review: "" });
         router.push("/shop/review");
       }
     }
@@ -183,6 +183,10 @@ const ShopPage = () => {
   };
   useEffect(() => {
     getListCate();
+    dispatch(globalSlice.actions.changeNotShop(false));
+    return () => {
+      dispatch(globalSlice.actions.changeNotShop(true));
+    };
   }, []);
   useEffect(() => {
     dispatch(

@@ -41,15 +41,26 @@ const initialState = {
     msg: "Chờ tí nhé...",
   },
   refreshScroll: false,
-  orderStatusChange: false,
+  orderStatusChange: {
+    referenceId: 0,
+    entityType: 0,
+  },
   searchPage: false,
+  notInShop: true,
+  isOrderDetails: false,
 };
 const globalSlice = createSlice({
   name: "globalSlice",
   initialState: initialState,
   reducers: {
-    changeIdBuilding: (state,actions) => {
-      state.idBuilding = actions.payload
+    changeIsOrderDetails: (state, actions) => {
+      state.isOrderDetails = actions.payload;
+    },
+    changeNotShop: (state, actions) => {
+      state.notInShop = actions.payload;
+    },
+    changeIdBuilding: (state, actions) => {
+      state.idBuilding = actions.payload;
     },
     changeRefreshScroll: (state, action) => {
       state.refreshScroll = !state.refreshScroll;
@@ -68,7 +79,7 @@ const globalSlice = createSlice({
       state.currentScreen = actions.payload;
     },
     notifyOrderStatusChange: (state, actions) => {
-      state.orderStatusChange = !state.orderStatusChange;
+      state.orderStatusChange = actions.payload;
     },
     changePositionTabBar: (state, actions) => {
       state.tabBar.translateY = actions.payload;

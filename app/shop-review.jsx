@@ -42,7 +42,7 @@ const ShopReview = () => {
   const { refreshing, onRefreshHandler } = usePullToRefresh({
     onRefreshFunction() {
       setCurrentPage(1);
-      setTotal(0)
+      setTotal(0);
       getReviews(1, 5);
     },
   });
@@ -55,7 +55,7 @@ const ShopReview = () => {
     totalPages: total,
     initialPage: 1,
   });
-  console.log(total, " total")
+  console.log(total, " total");
   const getReviews = async (pageIndex, pageSize) => {
     try {
       const res = await api.get(
@@ -94,7 +94,7 @@ const ShopReview = () => {
       {reviewOverview == null ? (
         <></>
       ) : (
-        <SafeAreaView className="bg-white flex-1">
+        <SafeAreaView className="bg-white flex-1" edges={["bottom"]}>
           <View className="justify-center items-center my-3 mt-4">
             <Text className="text-3xl font-bold">
               {reviewOverview.ratingAverage}
@@ -161,10 +161,12 @@ const ShopReview = () => {
           </View>
           <FlatList
             data={reviews}
+            style={{
+            }}
             contentContainerStyle={{
               paddingHorizontal: 10,
               paddingVertical: 20,
-              paddingBottom: 100,
+              paddingBottom: 100
             }}
             renderItem={({ item }) => <ReviewInShopPageItem item={item} />}
             ItemSeparatorComponent={() => (

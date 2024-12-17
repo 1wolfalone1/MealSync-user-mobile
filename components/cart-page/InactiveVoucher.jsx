@@ -87,7 +87,7 @@ const InactiveVoucher = ({ item }) => {
             opacity: 0.7,
           }}
         >
-          <Text numberOfLines={5} className="font-hnow63book flex-1">
+          <Text numberOfLines={1} className="text-ellipsis flex-wrap flex-row">
             {item.title}
           </Text>
           <Text className="text-xs mb-1 text-gray-500">

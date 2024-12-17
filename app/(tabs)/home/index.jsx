@@ -114,7 +114,7 @@ const Index = () => {
       </View>
       <View className="pl-7">
         <Text className="font-hnow65medium text-xl text-primary">
-          Đặt lại quán quen
+        Cửa hàng nổi trội 
         </Text>
       </View>
       <View className="flex-1 ">
