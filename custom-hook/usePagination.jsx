@@ -1,11 +1,17 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from "react";
 
-const usePagination = ({ fetchFunction, totalPages, initialPage, setLoading }) => {
+const usePagination = ({
+  fetchFunction,
+  totalPages,
+  initialPage,
+  setLoading,
+}) => {
   const [currentPage, setCurrentPage] = useState(initialPage);
 
   const handleEndReached = useCallback(
     ({ distanceFromEnd }) => {
-      console.log(distanceFromEnd, 'distanceFromEnd');
+      console.log(distanceFromEnd, "distanceFromEnd",
+         currentPage, totalPages);
       if (distanceFromEnd < 0) return;
       if (currentPage < totalPages) {
         fetchFunction(currentPage);
@@ -16,7 +22,7 @@ const usePagination = ({ fetchFunction, totalPages, initialPage, setLoading }) =
         setLoading(false);
       }
     },
-    [currentPage, fetchFunction, totalPages],
+    [currentPage, fetchFunction, totalPages]
   );
 
   return { currentPage, handleEndReached, setCurrentPage };

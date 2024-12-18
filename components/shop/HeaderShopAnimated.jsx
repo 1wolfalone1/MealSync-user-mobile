@@ -1,5 +1,5 @@
 import { AntDesign, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
-import { ChevronRight, MapPin } from "lucide-react-native";
+import { ChevronRight, MapPin, Package } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   Animated,
@@ -188,11 +188,18 @@ const HeaderShopAnimated = ({
                 <Text className="text-xs font-hnow64regular items-center">
                   {shopInfo.rating}
                 </Text>
-                <Text className="font-hnow63book text-gray-600 text-xs">
+                <Text className="font-hnow63book text-gray-600 text-sm">
                   {shopInfo.averageRating}+
                 </Text>
-                <AntDesign name="star" size={14} color={Colors.star.defaut} />
+                <AntDesign name="star" size={18} color={Colors.star.defaut} />
               </View>
+              <View className="flex-row items-center gap-1">
+                <Text className="font-hnow63book text-green-800 text-sm">
+                  {shopInfo.totalOrder} đã bán
+                </Text>
+                <Package strokeWidth={2}  size={16} color={"green"}/>
+              </View>
+
               <TouchableRipple
                 onPress={() =>
                   router.push({

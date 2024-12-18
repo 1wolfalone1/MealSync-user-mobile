@@ -6,6 +6,7 @@ import {
   Button,
   Dialog,
   Divider,
+  Modal,
   Portal,
   RadioButton,
   Switch,
@@ -32,11 +33,88 @@ const FormReorder = () => {
   const dispatch = useDispatch();
   const [isSwitchOn, setIsSwitchOn] = React.useState(false);
   const [messageReorder, setMessageReorder] = React.useState("");
+  const [listAllDormitory, setListAllDormitory] = useState([]);
+  const [listAllBuilding, setListAllBuilding] = useState([]);
+  const [selectDormitoryId, setSelectDormitoryId] = useState(null);
+  const [selectBuildingId, setSelectBuildingId] = useState(null);
+  const [openC, setOpenC] = useState(false);
+  const [state, setState] = useState(false);
+  const [openB, setOpenB] = useState(false);
+  const [openModelCreateBuilding, setOpenModelCreateBuilding] = useState(false);
   const onToggleSwitch = () => setIsSwitchOn(!isSwitchOn);
   useEffect(() => {
     handleGetListBuilding();
     handleGetShopInfo();
   }, []);
+  const handleCreateNewBuilding = async () => {
+    try {
+      const res = await api.put("/api/v1/customer/building/update", {
+        buildingId: selectBuildingId,
+      });
+      const data = await res.data;
+      if (data.isSuccess) {
+        setSelectedBuilding(selectBuildingId);
+        dispatch(
+          globalSlice.actions.customSnackBar({
+            style: {
+              color: "white",
+              icon: "camera",
+              backgroundColor: Colors.glass.green,
+              pos: {
+                top: 40,
+              },
+              actionColor: "yellow",
+            },
+          })
+        );
+        handleGetListBuilding();
+        dispatch(
+          globalSlice.actions.openSnackBar({
+            message: "Thêm địa chỉ nhận hàng thành công",
+          })
+        );
+        setState(!state);
+        setOpenModelCreateBuilding(false);
+      } else {
+        dispatch(
+          globalSlice.actions.customSnackBar({
+            style: {
+              color: "white",
+              backgroundColor: Colors.glass.red,
+              pos: {
+                top: 40,
+              },
+              actionColor: "yellow",
+            },
+          })
+        );
+        dispatch(
+          globalSlice.actions.openSnackBar({
+            message: "Đơn hàng phải lớn hơn 0",
+          })
+        );
+      }
+    } catch (e) {
+      console.log("Create new building error: ", e);
+      dispatch(
+        globalSlice.actions.customSnackBar({
+          style: {
+            color: "white",
+            backgroundColor: Colors.glass.red,
+            pos: {
+              top: 40,
+            },
+            actionColor: "yellow",
+          },
+        })
+      );
+      dispatch(
+        globalSlice.actions.openSnackBar({
+          message: "Tạo mới địa chỉ nhận hàng thất bại",
+        })
+      );
+    }
+  };
   const handleGetShopInfo = async () => {
     try {
       const res = await api.post("/api/v1/customer/re-order/food", {
@@ -163,6 +241,41 @@ const FormReorder = () => {
       console.error("Reorder error: ", e);
     }
   };
+  const handleGetAllDormitory = async () => {
+    try {
+      const res = await api.get(`/api/v1/dormitory/all`);
+      const data = await res.data;
+      const newList = data.value.map((i) => {
+        return {
+          label: i.name,
+          value: i.id,
+        };
+      });
+      setListAllDormitory(newList);
+    } catch (e) {
+      console.log("Get list all dormitory error: ", e);
+    }
+  };
+  const handleGetAllBuilding = async () => {
+    console.log(selectBuildingId);
+    try {
+      if (selectDormitoryId) {
+        const res = await api.get(
+          `/api/v1/dormitory/${selectDormitoryId}/building`
+        );
+        const data = await res.data;
+        const newList = data.value.map((i) => {
+          return {
+            label: i.name,
+            value: i.id,
+          };
+        });
+        setListAllBuilding(newList);
+      }
+    } catch (e) {
+      console.log("Get list all building error: ", e);
+    }
+  };
   useEffect(() => {
     if (selectedOperatingSlot == null || selectedBuilding == null) {
       setDisable(true);
@@ -173,10 +286,15 @@ const FormReorder = () => {
   const [visible, setVisible] = React.useState(false);
 
   const showDialog = () => setVisible(true);
-
+  useEffect(() => {
+    handleGetAllDormitory();
+  }, [state]);
   const hideDialog = () => router.back();
+  useEffect(() => {
+    handleGetAllBuilding();
+  }, [selectDormitoryId]);
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white pb-10">
       <Portal>
         <Dialog visible={visible} onDismiss={hideDialog}>
           <Dialog.Title>Không thể đặt lại đơn</Dialog.Title>
@@ -188,7 +306,105 @@ const FormReorder = () => {
           </Dialog.Actions>
         </Dialog>
       </Portal>
-      <ScrollView>
+      <Portal>
+        <Modal
+          visible={openModelCreateBuilding}
+          onDismiss={() => setOpenModelCreateBuilding(false)}
+          contentContainerStyle={{
+            borderRadius: 20,
+            backgroundColor: "white",
+            padding: 20,
+            marginHorizontal: 20,
+          }}
+        >
+          <Text className="font-bold text-xl mb-4">
+            Tạo mới địa chỉ nhận hàng
+          </Text>
+          <DropDownPicker
+            listMode="SCROLLVIEW"
+            open={openC}
+            style={{
+              borderColor: Colors.primaryBackgroundColor,
+              width: "80%",
+            }}
+            zIndex={3000}
+            zIndexInverse={1000}
+            categorySelectable={true}
+            placeholderStyle={{ color: "grey" }}
+            dropDownContainerStyle={{
+              backgroundColor: "white",
+
+              borderColor: Colors.primaryBackgroundColor,
+              width: "80%",
+            }}
+            textStyle={{}}
+            value={selectDormitoryId}
+            items={listAllDormitory}
+            setOpen={setOpenC}
+            onChangeValue={(value) => {
+              console.log(value);
+              setSelectDormitoryId(value);
+            }}
+            setValue={setSelectDormitoryId}
+            setItems={setListAllDormitory}
+            placeholder={"Khu"}
+          />
+          <View
+            style={{
+              height: 20,
+            }}
+          />
+          <DropDownPicker
+            listMode="SCROLLVIEW"
+            open={openB}
+            style={{
+              borderColor: Colors.primaryBackgroundColor,
+              width: "80%",
+            }}
+            zIndex={2000}
+            zIndexInverse={2000}
+            categorySelectable={true}
+            placeholderStyle={{ color: "grey" }}
+            dropDownContainerStyle={{
+              backgroundColor: "white",
+
+              borderColor: Colors.primaryBackgroundColor,
+              width: "80%",
+            }}
+            textStyle={{}}
+            value={selectBuildingId}
+            items={listAllBuilding}
+            setOpen={setOpenB}
+            onChangeValue={(value) => {}}
+            setValue={setSelectBuildingId}
+            setItems={setListAllBuilding}
+            placeholder={"Tòa"}
+          />
+          <View className="flex-row justify-end gap-2 mt-2">
+            <Button
+              mode="contained"
+              contentStyle={{
+                backgroundColor: "#000000",
+              }}
+              onPress={() => setOpenModelCreateBuilding(false)}
+            >
+              Hủy
+            </Button>
+            <Button
+              mode="contained-tonal"
+              contentStyle={{}}
+              onPress={handleCreateNewBuilding}
+            >
+              Thêm
+            </Button>
+          </View>
+        </Modal>
+      </Portal>
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: 200,
+        }}
+      >
         <View className="flex-row justify-end items-center pb-2">
           <Text
             className="text-base text-gray-400"
@@ -221,6 +437,16 @@ const FormReorder = () => {
                     </View>
                   );
                 })}
+            </View>
+            <View className="items-center justify-center flex-row">
+              <Button
+                mode="text"
+                onPress={() => {
+                  setOpenModelCreateBuilding(true);
+                }}
+              >
+                Thêm địa chỉ nhận hàng
+              </Button>
             </View>
           </RadioButton.Group>
           <View className="my-4">
@@ -262,7 +488,7 @@ const FormReorder = () => {
         </View>
         <View className="px-4 mt-8 mb-8">
           <Button
-            mode="elevated"
+            mode="contained-tonal"
             textColor="white"
             buttonColor={Colors.primaryBackgroundColor}
             theme={{ roundness: 2 }}

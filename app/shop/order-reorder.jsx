@@ -43,7 +43,11 @@ import orderSlice, {
 } from "../../redux/slice/orderSlice";
 import { dataShopDetailsSelector } from "../../redux/slice/shopDetailsSlice";
 import { userInfoSliceSelector } from "../../redux/slice/userSlice";
-import { convertIntTimeToString, formatQuantity, getTimeSlotBelow } from "../../utils/MyUtils";
+import {
+  convertIntTimeToString,
+  formatQuantity,
+  getTimeSlotBelow,
+} from "../../utils/MyUtils";
 
 const CartItemInShop = () => {
   const apiKey = process.env.EXPO_PUBLIC_SERVICE_API;
@@ -61,6 +65,7 @@ const CartItemInShop = () => {
     { label: "Sao", value: 2 },
   ]);
   const { width, height } = Dimensions.get("window");
+  const [disabled, setDisabled] = useState(false);
   const [noteTemp, setNoteTemp] = useState("");
   const widthItem = parseInt((width * 85) / 100);
   const { listItemInfo, items } = useSelector(cartSelector);
@@ -84,7 +89,7 @@ const CartItemInShop = () => {
   };
   useEffect(() => {
     dispatch(orderSlice.actions.calculateVoucherPrice());
-  }, [voucher]);
+  }, [voucher, products]);
 
   useEffect(() => {
     const handleVNPayRedirect = async () => {
@@ -105,7 +110,7 @@ const CartItemInShop = () => {
               msg: "Chờ tí nhé...",
             })
           );
-          router.push("/order-details/" + orderIdAfterPayment);
+          router.replace("/order-details/" + orderIdAfterPayment);
         } else {
           // Handle payment failure
           dispatch(
@@ -168,7 +173,7 @@ const CartItemInShop = () => {
         const start = slot.startTime;
         const end = slot.endTime;
         let startBelow = start;
-        if (orderTomorrow == 'false') {
+        if (orderTomorrow == "false") {
           startBelow = getTimeSlotBelow(start);
         }
         for (let i = startBelow; i < end; i += 30) {
@@ -192,6 +197,7 @@ const CartItemInShop = () => {
     }
   }, [info]);
   useEffect(() => {
+    dispatch(globalSlice.actions.changeStateOpenFabInShop(false));
     console.log(dataReorder, "datareorrrrrrrrrrrrrrrrrrrrrr");
     if (dataReorder && dataReorder.foods && Array.isArray(dataReorder.foods)) {
       const listItemInCartBySlotTemp = dataReorder.foods.map((i) => {
@@ -252,9 +258,9 @@ const CartItemInShop = () => {
     if (userInfo) {
       dispatch(
         orderSlice.actions.changeOrderInfo({
-          fullName: userInfo.fullName,
-          phoneNumber: userInfo.phoneNumber,
-          buildingId: preDataReorder.buildingOrderId,
+          fullName: userInfo?.fullName,
+          phoneNumber: userInfo?.phoneNumber,
+          buildingId: preDataReorder?.buildingOrderId,
         })
       );
     }
@@ -268,11 +274,18 @@ const CartItemInShop = () => {
       dispatch(orderSlice.actions.changeProductsReorder(dataReorder.foods));
     }
   }, [dataReorder]);
+  useEffect(() => {
+    return () => {
+      dispatch(orderSlice.actions.resetVoucher());
+      dispatch(orderSlice.actions.resetState());
+    };
+  }, []);
   const handleOrder = async () => {
+    setDisabled(true);
     try {
       if (
         orderInfo.fullName == "" ||
-        orderInfo.phoneNumber == "" ||
+        !orderInfo.phoneNumber ||
         orderInfo.buildingId == 0
       ) {
         dispatch(
@@ -341,7 +354,7 @@ const CartItemInShop = () => {
             setPaymentUrl(qrUrl);
             // Linking.openURL(qrUrl)
           } else {
-            router.push("/order-details/" + data?.value?.order?.id);
+            router.replace("/order-details/" + data?.value?.order?.id);
           }
         } else {
           dispatch(
@@ -352,11 +365,56 @@ const CartItemInShop = () => {
           );
         }
       } else {
-        console.log("");
+        dispatch(
+          globalSlice.actions.customSnackBar({
+            style: {
+              color: "white",
+              backgroundColor: Colors.glass.red,
+              pos: {
+                top: 40,
+              },
+              actionColor: "white",
+            },
+          })
+        );
+        dispatch(
+          globalSlice.actions.openSnackBar({
+            message: "Vui lòng chọn thời gian nhận hàng!!!",
+          })
+        );
       }
     } catch (e) {
-      dispatch(globalSlice.actions.changeLoadings(false));
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message,
+            })
+          );
+        }
+      }
       console.error(e);
+      console.error(e);
+    } finally {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Chờ tí nhé...",
+        })
+      );
+      setDisabled(false);
     }
   };
 
@@ -691,13 +749,14 @@ const CartItemInShop = () => {
           </View>
           <View className="mt-8" style={{ width: widthItem }}>
             <Button
-              mode="elevated"
+              mode="contained-tonal"
               textColor="white"
               buttonColor={Colors.cyan500}
               theme={{ roundness: 2 }}
               contentStyle={{
                 paddingVertical: 4,
               }}
+              disabled={disabled}
               className="rounded-xl"
               labelStyle={{
                 fontFamily: "HeadingNow-64Regular",

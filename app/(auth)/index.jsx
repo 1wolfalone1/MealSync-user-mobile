@@ -67,6 +67,11 @@ const SignIn = () => {
   useEffect(() => {
     checkLogin();
   }, [stateLogin]);
+  /*  const rootNavigationState = useRootNavigationState();
+  if (true) {
+    if (!rootNavigationState?.key) return null;
+    return <Redirect href={'/home'}/>
+  } */
   const checkLogin = async () => {
     try {
       const token = await AsyncStorage.getItem("@token");
@@ -99,7 +104,13 @@ const SignIn = () => {
         idToken = signInResult.idToken;
       }
       if (!idToken) {
-        throw new Error("No ID token found");
+        dispatch(
+          globalSlice.actions.changeLoadings({
+            isLoading: false,
+            msg: "Đang đăng nhập",
+          })
+        );
+        return;
       }
       console.log(idToken, "Google Sign In Result");
       // Create a Google credential with the token
@@ -112,7 +123,7 @@ const SignIn = () => {
     } catch (e) {
       dispatch(
         globalSlice.actions.changeLoadings({
-          isLoading: true,
+          isLoading: false,
           msg: "Đang đăng nhập",
         })
       );
@@ -140,11 +151,7 @@ const SignIn = () => {
           const res = await api.post("/api/v1/auth/login-google", {
             idToken: idToken.token,
           });
-          try {
-            auth().signOut();
-          } catch (e) {
-            console.log(e);
-          }
+
           const data = await res.data;
           console.log(data, " asdfasd daaaaaaaaaaaaaaaaa");
           if (data.isSuccess) {
@@ -161,7 +168,7 @@ const SignIn = () => {
               })
             );
 
-            console.log(data.value, "dta login gooogle");
+            console.log(data.value, "dtaaaaa login gooogle");
             await AsyncStorage.setItem(
               "@token",
               data.value.tokenResponse.accessToken
@@ -182,13 +189,62 @@ const SignIn = () => {
           }
         }
       } catch (e) {
+        if (e.response && e.response.data) {
+          if (e.response.status == 400) {
+            dispatch(
+              globalSlice.actions.customSnackBar({
+                style: {
+                  color: "white",
+                  backgroundColor: "red",
+                  pos: {
+                    top: 40,
+                  },
+                  actionColor: "white",
+                },
+              })
+            );
+            dispatch(
+              globalSlice.actions.openSnackBar({
+                message: e.response?.data?.error?.message,
+              })
+            );
+          } else {
+            dispatch(
+              globalSlice.actions.customSnackBar({
+                style: {
+                  color: "white",
+                  backgroundColor: Colors.glass.red,
+                  pos: {
+                    top: 40,
+                  },
+                  actionColor: "white",
+                },
+              })
+            );
+            dispatch(
+              globalSlice.actions.openSnackBar({
+                message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+              })
+            );
+          }
+        }
         dispatch(
           globalSlice.actions.changeLoadings({
             isLoading: false,
             msg: "Đang đăng nhập",
           })
         );
-        console.log(e, " error get id token");
+      } finally {
+        try {
+        } catch (e) {
+          console.log(e);
+        }
+        dispatch(
+          globalSlice.actions.changeLoadings({
+            isLoading: false,
+            msg: "Đang đăng nhập",
+          })
+        );
       }
     });
     return subscriber; // unsubscribe on unmount
@@ -210,14 +266,53 @@ const SignIn = () => {
         data.error.code,
         data.error.message
       );
-    } catch (error) {
+    } catch (e) {
       dispatch(
         globalSlice.actions.changeLoadings({
           isLoading: false,
           msg: "Đang đăng nhập",
         })
       );
-      console.log("error ne", error);
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message,
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
+      console.log("error ne", e);
     }
   };
 
@@ -271,6 +366,45 @@ const SignIn = () => {
           msg: "Đang đăng nhập",
         })
       );
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message + "😠",
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau 😅",
+            })
+          );
+        }
+      }
       console.log(e);
     }
   };
@@ -334,7 +468,7 @@ const SignIn = () => {
       selectBuildingId == 0 ||
       !selectBuildingId
     ) {
-      setErrorBuilding("Cần chọn địa!");
+      setErrorBuilding("Cần chọn địa chỉ!");
       isValid = false;
     }
     const isValidPhone = validatePhoneNumber(phoneNumber);
@@ -376,6 +510,8 @@ const SignIn = () => {
           setInRequest(false);
         } else {
           setInRequest(false);
+
+          setOpenModelCreateBuilding(false);
           dispatch(
             globalSlice.actions.customSnackBar({
               style: {
@@ -397,8 +533,50 @@ const SignIn = () => {
           );
         }
       } catch (e) {
+        setOpenModelCreateBuilding(false);
         setInRequest(false);
+        if (e.response && e.response.data) {
+          if (e.response.status == 400) {
+            dispatch(
+              globalSlice.actions.customSnackBar({
+                style: {
+                  color: "white",
+                  backgroundColor: "red",
+                  pos: {
+                    top: 40,
+                  },
+                  actionColor: "white",
+                },
+              })
+            );
+            dispatch(
+              globalSlice.actions.openSnackBar({
+                message: e.response?.data?.error?.message,
+              })
+            );
+          } else {
+            dispatch(
+              globalSlice.actions.customSnackBar({
+                style: {
+                  color: "white",
+                  backgroundColor: Colors.glass.red,
+                  pos: {
+                    top: 40,
+                  },
+                  actionColor: "white",
+                },
+              })
+            );
+            dispatch(
+              globalSlice.actions.openSnackBar({
+                message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+              })
+            );
+          }
+        }
         console.log(e, "Unexpected error second time validation");
+      } finally {
+        setOpenModelCreateBuilding(false);
       }
     }
   };
@@ -700,7 +878,7 @@ const SignIn = () => {
             </View>
           </TouchableRipple>
         </View>
-        <View className="items-center flex-row justify-between mt-4">
+        <View className="items-center flex-row justify-between mt-4 px-10">
           <Text className="text-red-600">
             {loginErrorGoogleMessage || params.messageError}
           </Text>

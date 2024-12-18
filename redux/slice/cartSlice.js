@@ -4,7 +4,7 @@ import api from "../../api/api";
 const initialState = {
   items: {},
   total: 0,
-  listItemInfo: [],
+  listItemInfo: null,
   vouchers: [],
   listShopInfo: [],
   cartState: {
@@ -227,11 +227,15 @@ const cartSlice = createSlice({
           Array.isArray(action.payload.foods)
         ) {
           state.listItemInfo = action.payload.foods;
+        } else {
+          state.listItemInfo = [];
         }
         state.cartState = action.payload;
       })
       .addCase(getCartInfo.rejected, (state, action) => {
         console.log(action.payload);
+
+        state.listItemInfo = [];
       })
       .addCase(getListShopInfo.fulfilled, (state, action) => {
         state.listShopInfo = action.payload;
@@ -256,7 +260,7 @@ export const getListShopInfo = createAsyncThunk(
         }
       });
       console.log(keysArray, "keys", state.items);
-      const res = await api.get("/api/v1/customer/shop", {
+      const res = await api.get("/api/v1/shop/cart", {
         params: {
           ids: keysArray,
         },

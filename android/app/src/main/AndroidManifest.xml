@@ -32,6 +32,7 @@
         <data android:scheme="mealsync.org"/>
         <data android:scheme="exp+mealsync-user-mobile"/>
         <data android:scheme="org.mealsync.mobile"/>
+        <data android:scheme="exp+mealsync"/>
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>

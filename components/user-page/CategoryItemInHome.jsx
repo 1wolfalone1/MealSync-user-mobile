@@ -69,7 +69,7 @@ const CategoryItemInHome = ({
           </View>
           <View className="w-[40] pb-2 mt-2 justify-center items-center">
             <Text
-              numberOfLines={3}
+              numberOfLines={2}
               // className="font-hnow64regular flex flex-wrap over"
               className={`${"text-black"}  justify-center items-center text-center font-pregular`}
               style={{

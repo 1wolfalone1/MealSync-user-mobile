@@ -17,12 +17,15 @@ import colors from "../constant/colors";
 import { store } from "../redux/store";
 
 import messaging from "@react-native-firebase/messaging";
+import { StatusBar } from "expo-status-bar";
 import { ChevronLeft } from "lucide-react-native";
 import { Colors } from "../constant";
 let persistor = persistStore(store);
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
-
+if (!__DEV__) {
+  console.log = () => {};
+}
 export default function RootLayout() {
   const [loaded] = useFonts({});
   const insets = useContext(SafeAreaInsetsContext);
@@ -80,6 +83,7 @@ export default function RootLayout() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <PaperProvider>
+          <StatusBar style="light"  />
           <Stack>
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
 

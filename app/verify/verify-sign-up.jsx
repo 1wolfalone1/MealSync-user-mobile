@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import api from "../../api/api";
 import HeaderInForgot from "../../components/common/HeaderInForgot";
 import { Colors } from "../../constant";
+import globalSlice from "../../redux/slice/globalSlice";
 import persistSlice, {
   persistSliceSelector,
 } from "../../redux/slice/persistSlice";
@@ -60,8 +61,47 @@ export default function VerifyCode() {
         data.error.code,
         data.error.message
       );
-    } catch (error) {
-      console.log("error ne", error);
+    } catch (e) {
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message + "😠",
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau 😞",
+            })
+          );
+        }
+      }
+      console.log("error ne", e);
     }
   };
 
@@ -71,9 +111,9 @@ export default function VerifyCode() {
     errorMessage
   ) => {
     if (isSuccess) {
-      console.log("verifyCodeResponse")
+      console.log("verifyCodeResponse");
       dispatch(persistSlice.actions.saveIsSignup(true));
-      router.back();
+      router.replace("/");
     } else if (errorCode === "400") {
       setMessage(errorMessage);
     }

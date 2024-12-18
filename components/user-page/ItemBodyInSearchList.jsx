@@ -26,10 +26,11 @@ const ItemBodyInSearchList = ({ item, shopId }) => {
       className="rounded-lg"
       borderless
       onPress={() =>
-        router.navigate({
+        router.replace({
           pathname: "/shop",
           params: {
-            shopId: shopId,
+            shopId: item.shopId,
+            productId: item.id,
           },
         })
       }
@@ -55,6 +56,9 @@ const ItemBodyInSearchList = ({ item, shopId }) => {
               backgroundColor: "black",
             }}
           />
+          <View className="p-1 bg-black-200 absolute top-0 left-0 rounded-lg">
+            <Text className="text-xs text-white">{item.totalOrder} đã bán</Text>
+          </View>
         </View>
         <View>
           <Text className="text-lg text-primary">

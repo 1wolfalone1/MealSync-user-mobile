@@ -8,7 +8,9 @@ import LogoCover from '../assets/images/cover.png';
 import FlashSale from '../assets/images/flashsale.png';
 import FoodOrder from '../assets/images/food-order.png';
 import NoImage from '../assets/images/no-image.png';
+import UserMapPin from '../assets/images/pin-map.png';
 import PromotionShopLogo from '../assets/images/promotion-shop.png';
+import ShopMapPin from '../assets/images/restaurant.png';
 import ToppingDefault from '../assets/images/topping.jpg';
 import TranparentImage from '../assets/images/tranparent.png';
 import VNPay from '../assets/images/vnpay.png';
@@ -30,5 +32,7 @@ export default
   VNPay,
   Cod,
   AddImage,
+  UserMapPin,
+  ShopMapPin,
 };
 

@@ -54,8 +54,8 @@ const SearchList = () => {
           id: item.id,
           shopName: item.name,
           title: item.description,
-          address: item.buildingName,
-          price: "12k ->15k",
+          address: item.averageRating,
+          price: item.totalOrder,
           banner: item.bannerUrl,
           avatar: item.logoUrl,
         },
@@ -103,7 +103,6 @@ const SearchList = () => {
           }}
           ListHeaderComponentStyle={{ zIndex: 10 }}
           className="flex-1"
-          
           contentContainerStyle={{ zIndex: 1 }}
           keyExtractor={(item, index) => index}
           sections={dataSearchRender ? dataSearchRender : blankList}
@@ -146,14 +145,16 @@ const SearchList = () => {
           renderItem={({ item }) => null}
         />
       ) : (
-        <View className="items-center justify-center mt-8" style={{
-          height: 400,
-        }}>
-      
+        <View
+          className="items-center justify-center mt-8"
+          style={{
+            height: 400,
+          }}
+        >
           <Image
             style={{ width: "100%", height: "100%" }}
             source={{
-              uri: "https://static.vecteezy.com/system/resources/previews/007/872/974/non_2x/file-not-found-illustration-with-confused-people-holding-big-magnifier-search-no-result-data-not-found-concept-can-be-used-for-website-landing-page-animation-etc-vector.jpg",
+              uri: "https://mealsync.s3.ap-southeast-1.amazonaws.com/image/1733499673958-cca03ac5-281b-46b3-ae0c-46afe5cff5bb.png",
             }}
           />
         </View>

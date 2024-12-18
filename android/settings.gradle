@@ -44,7 +44,7 @@ if (getRNMinorVersion() >= 75) {
   }
 }
 
-rootProject.name = 'mealsync-user-mobile'
+rootProject.name = 'MealSync'
 
 dependencyResolutionManagement {
   versionCatalogs {

@@ -39,26 +39,45 @@ api.interceptors.response.use(
       console.log("error 423");
     } else if (error.response.status === 406) {
     } else if (error.response.status === 401) {
-      await AsyncStorage.setItem("@token", "");
-      await AsyncStorage.setItem("@statusLogin", "");
       console.log(error.response, "error 401");
-      router.navigate({
-        pathname: "/",
-        params: {
-          messageError: "Bạn cần đăng nhập để tiếp tục sử dụng ứng dụng!",
-        },
-      });
+      try {
+        await AsyncStorage.setItem("@token", "");
+        await AsyncStorage.setItem("@statusLogin", "");
+        router.navigate({
+          pathname: "/",
+          params: {
+            messageError: error?.response?.data?.error?.message,
+          },
+        });
+      } catch (error) {
+        console.log(error, "error 403");
+        router.navigate({
+          pathname: "/",
+          params: {
+            messageError: "Bạn cần đăng nhập để tiếp tục sử dụng ứng dụng!",
+          },
+        });
+      }
     } else if (error.response.status === 403) {
       console.log(error.response, "error 403333");
-
-      await AsyncStorage.setItem("@token", "");
-      await AsyncStorage.setItem("@statusLogin", "");
-      router.navigate({
-        pathname: "/",
-        params: {
-          messageError: "Bạn cần đăng nhập để tiếp tục sử dụng ứng dụng!",
-        },
-      });
+      try {
+        await AsyncStorage.setItem("@token", "");
+        await AsyncStorage.setItem("@statusLogin", "");
+        router.navigate({
+          pathname: "/",
+          params: {
+            messageError: error?.response?.data?.error?.message,
+          },
+        });
+      } catch (error) {
+        console.log(error, "error 403");
+        router.navigate({
+          pathname: "/",
+          params: {
+            messageError: "Bạn cần đăng nhập để tiếp tục sử dụng ứng dụng!",
+          },
+        });
+      }
     } else {
       throw error;
     }

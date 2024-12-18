@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import {
   HandCoins,
@@ -62,7 +62,7 @@ const CartItemInShop = () => {
   const [openNote, setOpenNote] = useState(false);
   const [note, setNote] = useState("");
   const [noteTemp, setNoteTemp] = useState("");
-
+  const [disabled, setDisabled] = useState(false);
   const [heightNote, setHeightNote] = useState(200);
   const [open, setOpen] = useState(false);
   const [orderIdAfterPayment, setOrderIdAfterPayment] = useState(0);
@@ -89,6 +89,7 @@ const CartItemInShop = () => {
   const order = useSelector(orderSelector);
   const handleHideNote = () => setOpenNote(false);
   let scrollOffsetY = useRef(new Animated.Value(0)).current;
+
   const handleChangePaymentMethod = (value) => {
     setPaymentMethod(value);
   };
@@ -100,7 +101,7 @@ const CartItemInShop = () => {
 
   useEffect(() => {
     dispatch(orderSlice.actions.calculateVoucherPrice());
-  }, [voucher]);
+  }, [voucher, products]);
 
   useEffect(() => {
     const handleVNPayRedirect = async () => {
@@ -121,7 +122,13 @@ const CartItemInShop = () => {
               msg: "Chờ tí nhé...",
             })
           );
-          router.push("/order-details/" + orderIdAfterPayment);
+          dispatch(
+            cartSlice.actions.clearCart({
+              shopId: shopId,
+              operatingSlotId: operatingSlotId,
+            })
+          );
+          router.replace("/order-details/" + orderIdAfterPayment);
         } else {
           // Handle payment failure
           dispatch(
@@ -140,6 +147,7 @@ const CartItemInShop = () => {
       // Linking.openURL(paymentUrl);
     }
   }, [paymentUrl]);
+  useEffect(() => {}, []);
   const checkPaymentStatus = async () => {
     try {
       dispatch(
@@ -255,7 +263,7 @@ const CartItemInShop = () => {
       console.log("Get list building error: ", e);
     }
   };
-
+  console.log(userInfo, " phonenumber ne");
   useEffect(() => {
     if (userInfo) {
       dispatch(
@@ -281,6 +289,7 @@ const CartItemInShop = () => {
       dispatch(orderSlice.actions.changeShopId(shopId));
     }
     return () => {
+      dispatch(orderSlice.actions.resetVoucher());
       dispatch(cartSlice.actions.resetStateListItemInfo());
       dispatch(orderSlice.actions.resetState());
       dispatch(shopDetailsSlice.actions.resetState());
@@ -295,11 +304,15 @@ const CartItemInShop = () => {
       dispatch(orderSlice.actions.changeProducts(newFoods));
     }
   }, [items]);
+  console.log(info);
   const handleOrder = async () => {
     try {
+      console.log(orderInfo, " info ne");
+      setDisabled(true);
       if (
         orderInfo.fullName == "" ||
         orderInfo.phoneNumber == "" ||
+        orderInfo.phoneNumber == undefined ||
         orderInfo.buildingId == 0
       ) {
         dispatch(
@@ -368,7 +381,13 @@ const CartItemInShop = () => {
             setPaymentUrl(qrUrl);
             // Linking.openURL(qrUrl)
           } else {
-            router.push("/order-details/" + data?.value?.order?.id);
+            dispatch(
+              cartSlice.actions.clearCart({
+                shopId: shopId,
+                operatingSlotId: operatingSlotId,
+              })
+            );
+            router.replace("/order-details/" + data?.value?.order?.id);
           }
         } else {
           dispatch(
@@ -398,8 +417,6 @@ const CartItemInShop = () => {
         );
       }
     } catch (e) {
-      dispatch(globalSlice.actions.changeLoadings(false));
-
       if (e.response && e.response.data) {
         if (e.response.status == 400) {
           dispatch(
@@ -422,6 +439,14 @@ const CartItemInShop = () => {
         }
       }
       console.error(e);
+    } finally {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Chờ tí nhé...",
+        })
+      );
+      setDisabled(false);
     }
   };
   const handleNavigateToOrderTracking = async (id) => {
@@ -431,6 +456,32 @@ const CartItemInShop = () => {
       console.error(e);
     }
   };
+  const navigation = useNavigation();
+  useEffect(() => {
+    dispatch(globalSlice.actions.changeStateOpenFabInShop(false));
+    navigation.addListener("beforeRemove", (e) => {
+      console.log("onback", e.data.action.type);
+      // Do your stuff here
+
+      if (e.data.action.type === "GO_BACK") {
+        e.preventDefault();
+        router.replace({
+          pathname: "/home",
+          params: {
+            shopId: info.id,
+          },
+        });
+        router.push({
+          pathname: "/shop",
+          params: {
+            shopId: info.id,
+          },
+        });
+      }
+
+      navigation.dispatch(e.data.action);
+    });
+  }, []);
   return (
     <View className="flex-1 bg-white overflow-visible">
       <Portal>
@@ -753,13 +804,14 @@ const CartItemInShop = () => {
           </TouchableRipple>
           <View className="mt-8" style={{ width: widthItem }}>
             <Button
-              mode="elevated"
+              mode="contained-tonal"
               textColor="white"
               buttonColor={Colors.cyan500}
               theme={{ roundness: 2 }}
               contentStyle={{
                 paddingVertical: 4,
               }}
+              disabled={disabled}
               className="rounded-xl"
               labelStyle={{
                 fontFamily: "HeadingNow-64Regular",

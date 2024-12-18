@@ -41,15 +41,12 @@ export default function DynamicHeader({ animHeaderValue }) {
   const isFocus = useIsFocused();
   useEffect(() => {
     if (socket) {
-      socket.emit("regisGetNotRead", true);
       socket.on("getCountNotRead", (msg) => {
         setNotRead(msg);
       });
     }
   }, [socket]);
-  useEffect(() => {
-    if (socket) socket.emit("regisListChannel", true);
-  }, [isFocus]);
+
   const animateHeaderHeight = animHeaderValue.interpolate({
     inputRange: [0, Header_Max_Height - Header_Min_Height],
     outputRange: [Header_Max_Height, Header_Min_Height],
@@ -108,8 +105,7 @@ export default function DynamicHeader({ animHeaderValue }) {
                 lineHeight: 15,
               }}
               onPress={() => {
-                router.push('/map2')
-
+                router.push("/map2");
               }}
               mode="text"
               contentStyle={{
@@ -120,7 +116,11 @@ export default function DynamicHeader({ animHeaderValue }) {
             >
               Giao toi
             </Button>
-            <Text className="text-primary font-hnow64regular text-xs">
+            <Text
+              className="text-primary font-hnow64regular"
+              style={{ fontSize: 10 }}
+              numberOfLines={2}
+            >
               {userData?.building?.name}
             </Text>
           </View>

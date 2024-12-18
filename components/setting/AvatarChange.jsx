@@ -1,11 +1,13 @@
+import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, StyleSheet, Text, View } from "react-native";
 import { Avatar, Button, IconButton } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import api from "../../api/api";
 import { Colors } from "../../constant";
 import commonConstants from "../../constant/common";
+import globalSlice from "../../redux/slice/globalSlice";
 import { loadInfo, userInfoSliceSelector } from "../../redux/slice/userSlice";
 const styles = StyleSheet.create({
   shadow: {
@@ -52,16 +54,30 @@ const AvatarChange = ({}) => {
         alert("Sorry, we need camera permissions to make this work!");
       }
     }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 4],
-      quality: 1,
-    });
-    console.log(result);
-    if (!result.cancelled) {
-      setAvatar(result.assets[0].uri);
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [4, 4],
+        quality: 1,
+      });
+      console.log(result);
+      if (!result.cancelled) {
+        const fileInfo = await FileSystem.getInfoAsync(result.assets[0].uri);
+        if (!fileInfo.exists) {
+          return;
+        }
+        if (fileInfo.size / (1024 * 1024) > 5) {
+          Alert.alert(
+            "Tệp không hợp lệ",
+            "Tệp tải lên không được lớn hơn 5MB 😔"
+          );
+          return;
+        }
+        setAvatar(result.assets[0].uri);
+      }
+    } catch (e) {
+      console.log(e, " error loading image");
     }
   };
   const handleSaveAvatar = async () => {
@@ -82,7 +98,47 @@ const AvatarChange = ({}) => {
       dispatch(loadInfo());
       console.log(data, "data upload image");
     } catch (e) {
-      console.log(e);
+      console.log(e, "image upload error");
+      setAvatar(info.avatarUrl);
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message,
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
     }
   };
   return (
@@ -110,7 +166,7 @@ const AvatarChange = ({}) => {
         />
       </View>
       <Text className="font-hnow64regular text-2xl mt-8">
-        {info?.fullname ? info.fullname : "Khách hàng"}
+        {info?.fullName ? info.fullName : "Khách hàng"}
       </Text>
       {isChangeMode ? (
         <>

@@ -1,8 +1,17 @@
+import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
-import { Flag, MapPinned } from "lucide-react-native";
+import {
+  CalendarCheck2,
+  Coins,
+  Flag,
+  MapPinned,
+  NotepadText,
+  Utensils,
+} from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Dimensions,
   FlatList,
   Image,
@@ -30,6 +39,7 @@ import api from "../api/api";
 import { Colors, Images } from "../constant";
 import images from "../constant/images";
 import globalSlice from "../redux/slice/globalSlice";
+import orderHistorySlice from "../redux/slice/orderHistorySlice";
 import {
   convertIntTimeToString,
   formatDateTime,
@@ -57,6 +67,12 @@ const OrderHistoryCompleted = () => {
   };
   const handleGetOrderData = async () => {
     try {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: true,
+          msg: "Đang tải dữ liệu...",
+        })
+      );
       const res = await api.get(`/api/v1/customer/order/${params.orderId}`);
       const data = await res.data;
       console.log(data, " data orderhistory");
@@ -65,8 +81,54 @@ const OrderHistoryCompleted = () => {
         if (data.value.shopInfo) {
         }
       }
-    } catch (err) {
-      console.log(err, " error in OrderTracking");
+    } catch (e) {
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message + "😠",
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau 🥲",
+            })
+          );
+        }
+      }
+      console.log(e, " error in OrderTracking");
+    } finally {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Đang tải dữ liệu...",
+        })
+      );
     }
   };
   const handleGetPaymentMethodString = (payment) => {
@@ -94,19 +156,33 @@ const OrderHistoryCompleted = () => {
         alert("Sorry, we need camera permissions to make this work!");
       }
     }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 4],
-      quality: 1,
-    });
-    console.log(result);
-    if (!result.cancelled) {
-      setImageUrls([
-        { uri: result.assets[0].uri, firstIndex: false },
-        ...imageUrls,
-      ]);
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [4, 4],
+        quality: 1,
+      });
+      console.log(result);
+      if (!result.cancelled) {
+        const fileInfo = await FileSystem.getInfoAsync(result.assets[0].uri);
+        if (!fileInfo.exists) {
+          return;
+        }
+        if (fileInfo.size / (1024 * 1024) > 5) {
+          Alert.alert(
+            "Tệp không hợp lệ",
+            "Tệp tải lên không được lớn hơn 5MB 😔"
+          );
+          return;
+        }
+        setImageUrls([
+          { uri: result.assets[0].uri, firstIndex: false },
+          ...imageUrls,
+        ]);
+      }
+    } catch (e) {
+      console.log(e, " error in pickImage");
     }
   };
   useEffect(() => {
@@ -162,27 +238,47 @@ const OrderHistoryCompleted = () => {
           })
         );
       }
-    } catch (err) {
-      dispatch(
-        globalSlice.actions.customSnackBar({
-          style: {
-            color: "white",
-            icon: "camera",
-            backgroundColor: Colors.glass.green,
-            pos: {
-              top: 40,
-            },
-            actionColor: "yellow",
-          },
-        })
-      );
-
-      dispatch(
-        globalSlice.actions.openSnackBar({
-          message: "Có gì đó lỗi",
-        })
-      );
-      console.log(err, " error in handlePressButton");
+    } catch (e) {
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message + "😠",
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau 🥲",
+            })
+          );
+        }
+      }
+      console.log(e, " error in handlePressButton");
     }
   };
   const validate = () => {
@@ -266,7 +362,7 @@ const OrderHistoryCompleted = () => {
 
         dispatch(
           globalSlice.actions.openSnackBar({
-            message: "Báo cáo đơn hàng thành công",
+            message: "Báo cáo đơn hàng thành công 🥳",
           })
         );
         setVisible(false);
@@ -299,6 +395,45 @@ const OrderHistoryCompleted = () => {
       setInRequest(false);
     } catch (e) {
       setInRequest(false);
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message + "😠",
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau 🥲",
+            })
+          );
+        }
+      }
       console.log(e);
     }
   };
@@ -325,10 +460,17 @@ const OrderHistoryCompleted = () => {
         );
         dispatch(
           globalSlice.actions.openSnackBar({
-            message: "Hoàn thành đơn hàng thành công",
+            message: "Hoàn thành đơn hàng thành công 🥳",
           })
         );
         setVisibleDialog(false);
+        dispatch(
+          orderHistorySlice.actions.changeOrderReviewDetails({
+            shopName: orderData.shopInfo.name,
+            logoUrl: orderData.shopInfo.logoUrl,
+          })
+        );
+
         router.replace({
           pathname: "/review-form",
           params: {
@@ -337,6 +479,45 @@ const OrderHistoryCompleted = () => {
         });
       }
     } catch (e) {
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "red",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message + "😠",
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau 🥲",
+            })
+          );
+        }
+      }
       console.error(e);
     }
   };
@@ -578,6 +759,20 @@ const OrderHistoryCompleted = () => {
           </Text>
         )}
       </View>
+      <View className="flex-row justify-end px-10 py-1">
+        {orderData.isOrderNextDay ? (
+          <>
+            <CalendarCheck2 color={"red"} size={16} />
+
+            <Text className="text-xs text-red-400">Đặt hàng cho ngày mai</Text>
+          </>
+        ) : (
+          <>
+            <CalendarCheck2 color={"red"} size={16} />
+            <Text className="text-xs text-red-400">Đặt hàng cho hôm nay</Text>
+          </>
+        )}
+      </View>
       <View
         className="flex-row"
         style={{
@@ -594,7 +789,9 @@ const OrderHistoryCompleted = () => {
         <View className="justify-between py-4 flex-1 pr-10 ">
           <View className="flex-row items-center gap-2">
             <Image
-              source={images.PromotionShopLogo}
+              source={{
+                uri: orderData.shopInfo.logoUrl
+              }}
               style={{
                 height: 40,
                 width: 40,
@@ -604,6 +801,7 @@ const OrderHistoryCompleted = () => {
             />
             <Text className="font-bold text-base">
               {orderData.shopInfo.name}
+              
             </Text>
           </View>
           <View className="flex-row justify-between items-center">
@@ -643,22 +841,21 @@ const OrderHistoryCompleted = () => {
         <Text className="pl-7 text-lg font-bold">Thông tin giỏ hàng</Text>
         {orderData.orderDetails.map((product) => (
           <View className="flex-row gap-4 pl-7 mt-4">
-            <Surface elevation={4} className="rounded-lg bg-white">
-              <Image
-                source={{ uri: product.imageUrl }}
-                style={{
-                  height: parseInt((width * 25) / 100),
-                  width: parseInt((width * 25) / 100),
-                  borderRadius: 10,
-                }}
-              />
-            </Surface>
+            <Image
+              source={{ uri: product.imageUrl }}
+              style={{
+                height: parseInt((width * 25) / 100),
+                width: parseInt((width * 25) / 100),
+                borderRadius: 10,
+              }}
+            />
             <View className="flex-1 justify-between">
               <Text numberOfLines={2} className="font-bold text-lg">
-                {product.name}
+                {product.name} 
               </Text>
-              <View className="flex-1">
-                <Text>
+              <View className="flex-1 flex-row gap-1 mr-2">
+                <Utensils size={16} color={"blue"} />
+                <Text className="flex-wrap flex-1 text-ellipsis" numberOfLines={3}>
                   {product.optionGroups &&
                     Array.isArray(product.optionGroups) &&
                     product.optionGroups.length > 0 &&
@@ -681,7 +878,18 @@ const OrderHistoryCompleted = () => {
                       .join(" & ")}
                 </Text>
               </View>
+              <View className="gap-3 my-1 flex-row items-center">
+                {product.note && (
+                  <>
+                    <NotepadText size={12} color="green" />
+                    <Text className="text-xs text-gray-500">
+                      Ghi chú: {product.note}
+                    </Text>
+                  </>
+                )}
+              </View>
               <View className="flex-row items-center gap-2">
+                <Coins size={18} color={"red"} />
                 <Text className="text-primary text-base">
                   {formatNumberVND(product.totalPrice)}
                 </Text>
@@ -696,7 +904,7 @@ const OrderHistoryCompleted = () => {
           <>
             <Text className="pl-7 text-lg font-bold mt-8">Giảm giá</Text>
             <Surface
-              className="flex-row my-4 mx-7 flex-1"
+              className="flex-row my-4 mx-7"
               style={{
                 height: 50,
                 borderRadius: 16,

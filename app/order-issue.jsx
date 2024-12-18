@@ -1,9 +1,19 @@
+import * as FileSystem from "expo-file-system";
 import { router, useLocalSearchParams } from "expo-router";
-import { MapPinned, TicketCheck } from "lucide-react-native";
+import {
+  CalendarCheck2,
+  Coins,
+  MapPinned,
+  MessageCircleQuestion,
+  NotepadText,
+  TicketCheck,
+  Utensils,
+} from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 
 import * as ImagePicker from "expo-image-picker";
 import {
+  Alert,
   Dimensions,
   FlatList,
   Image,
@@ -14,6 +24,7 @@ import {
 } from "react-native";
 import {
   Button,
+  Dialog,
   Divider,
   HelperText,
   IconButton,
@@ -24,11 +35,12 @@ import {
   TouchableRipple,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import api from "../api/api";
 import { Colors, Images } from "../constant";
+import common from "../constant/common";
 import images from "../constant/images";
-import globalSlice from "../redux/slice/globalSlice";
+import globalSlice, { globalSelector } from "../redux/slice/globalSlice";
 import {
   convertIntTimeToString,
   formatDateTime,
@@ -46,12 +58,19 @@ const OrderHistoryCompleted = () => {
   const [inRequest, setInRequest] = useState(false);
   const dispatch = useDispatch();
 
+  const { orderStatusChange } = useSelector(globalSelector);
   const [visible, setVisible] = useState(false);
   const { width, height } = Dimensions.get("window");
   const widthImage2 = (width * 22) / 100;
   const widthImageIllustration = (width * 30) / 100;
   const handleGetOrderData = async () => {
     try {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: true,
+          msg: "Đang tải dữ liệu...",
+        })
+      );
       const res = await api.get(`/api/v1/customer/order/${params.orderId}`);
       const data = await res.data;
       console.log(data, " data orderhistory");
@@ -62,8 +81,20 @@ const OrderHistoryCompleted = () => {
       }
     } catch (err) {
       console.log(err, " error in OrderTracking");
+    } finally {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Đang tải dữ liệu...",
+        })
+      );
     }
   };
+  useEffect(() => {
+    if (orderData && orderData.status == 12) {
+      router.navigate(`/order/order-history`);
+    }
+  }, [orderData]);
   const handleGetPaymentMethodString = (payment) => {
     if (payment) {
       if (payment.paymentMethods == 1) {
@@ -78,15 +109,63 @@ const OrderHistoryCompleted = () => {
 
   useEffect(() => {
     handleGetOrderData();
-  }, []);
+  }, [orderStatusChange]);
   const hideModal = () => setVisible(false);
+  const [reason, setReason] = useState();
   const getOrderDataString = () => {
+    let suffix = "";
     if (orderData.status == 8) {
-      return "Đơn hàng giao thất bại";
+      if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_DELIVERY_FAIL_BY_SHOP
+      ) {
+        return "Đơn hàng giao thất bại (do cửa hàng)";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_DELIVERY_FAIL_BY_CUSTOMER
+      ) {
+        return "Đơn hàng giao thất bại (do khách hàng)";
+      }
     } else if (orderData.status == 10) {
-      return "Đơn hàng đang được báo cáo";
+      if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_DELIVERED_REPORTED_BY_CUSTOMER
+      ) {
+        suffix = "\nTừ đơn hàng giao thành công";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity
+          .ORDER_IDENTITY_DELIVERY_FAIL_BY_CUSTOMER_REPORTED_BY_CUSTOMER
+      ) {
+        suffix = "\nVì đơn hàng giao thất bại do khách hàng";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity
+          .ORDER_IDENTITY_DELIVERY_FAIL_BY_SHOP_REPORTED_BY_CUSTOMER
+      ) {
+        suffix = "\nVì đơn hàng giao thất bại do cửa hàng";
+      }
+      return "Đơn hàng đang được báo cáo" + suffix;
     } else {
-      return "Đơn hàng đang được xem xét báo cáo";
+      if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity.ORDER_IDENTITY_DELIVERED_REPORTED_BY_CUSTOMER
+      ) {
+        suffix = "\nTừ đơn hàng giao thành công";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity
+          .ORDER_IDENTITY_DELIVERY_FAIL_BY_CUSTOMER_REPORTED_BY_CUSTOMER
+      ) {
+        suffix = "\nVì đơn hàng giao thất bại do khách hàng";
+      } else if (
+        orderData.reasonIdentity ==
+        common.OrderIdentity
+          .ORDER_IDENTITY_DELIVERY_FAIL_BY_SHOP_REPORTED_BY_CUSTOMER
+      ) {
+        suffix = "\nVì đơn hàng giao thất bại do cửa hàng";
+      }
+      return "Đơn hàng đang được xem xét báo cáo" + suffix;
     }
   };
   const getStringButton = () => {
@@ -102,6 +181,25 @@ const OrderHistoryCompleted = () => {
       if (orderData.isReportAllowed) {
         setVisible(true);
       } else {
+        dispatch(
+          globalSlice.actions.customSnackBar({
+            style: {
+              color: "white",
+              icon: "camera",
+              backgroundColor: Colors.glass.red,
+              pos: {
+                top: 40,
+              },
+              actionColor: "yellow",
+            },
+          })
+        );
+
+        dispatch(
+          globalSlice.actions.openSnackBar({
+            message: "Không thể báo cáo đơn hàng lúc này!!",
+          })
+        );
       }
     } else if (orderData.status == 10 || orderData.status == 11) {
       router.push({
@@ -125,18 +223,33 @@ const OrderHistoryCompleted = () => {
       }
     }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 4],
-      quality: 1,
-    });
-    console.log(result);
-    if (!result.cancelled) {
-      setImageUrls([
-        { uri: result.assets[0].uri, firstIndex: false },
-        ...imageUrls,
-      ]);
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [4, 4],
+        quality: 1,
+      });
+      console.log(result);
+      if (!result.cancelled) {
+        const fileInfo = await FileSystem.getInfoAsync(result.assets[0].uri);
+        if (!fileInfo.exists) {
+          return;
+        }
+        if (fileInfo.size / (1024 * 1024) > 5) {
+          Alert.alert(
+            "Tệp không hợp lệ",
+            "Tệp tải lên không được lớn hơn 5MB 😔"
+          );
+          return;
+        }
+        setImageUrls([
+          { uri: result.assets[0].uri, firstIndex: false },
+          ...imageUrls,
+        ]);
+      }
+    } catch (e) {
+      console.log(e, "Error loading image");
     }
   };
   const validate = () => {
@@ -260,11 +373,59 @@ const OrderHistoryCompleted = () => {
       return `Giảm ${formatNumberVND(item.amountValue)}.  Áp dụng đơn hàng từ ${formatNumberVND(item.minOrdervalue)}`;
     }
   };
-
+  const [visible2, setVisible2] = useState(false);
+  const hideDialog2 = () => setVisible2(false);
+  
+  const widthImage3 = (width * 22) / 100;
   return orderData == null ? (
     <></>
   ) : (
     <SafeAreaView className="flex-1 bg-white">
+      <Portal>
+        <Dialog visible={visible2} onDismiss={hideDialog2}>
+          <Dialog.Title>Lý do giao thất bại</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">{orderData.reason}</Text>
+            <Text variant="bodyMedium" >Hình ảnh: </Text>
+            {orderData.shopDeliveryFailEvidence && (
+              <View className="flex-row flex-wrap bg-transparent justify-between">
+                <FlatList
+                  contentContainerStyle={{}}
+                  data={orderData.shopDeliveryFailEvidence}
+                  scrollEnabled={false}
+                  numColumns={3}
+                  renderItem={({ item, index }) => {
+                    return (
+                      <Surface
+                        elevation={2}
+                        style={{
+                          overflow: "hidden",
+                          width: widthImage3,
+                          height: widthImage3,
+                          margin: 10,
+                          borderRadius: 24,
+                        }}
+                      >
+                        <Image
+                          source={{ uri: item.imageUrl }}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            resizeMode: "cover",
+                          }}
+                        />
+                      </Surface>
+                    );
+                  }}
+                />
+              </View>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideDialog2}>Xong</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
       <Portal>
         <Modal
           visible={visible}
@@ -282,6 +443,7 @@ const OrderHistoryCompleted = () => {
                 Báo cáo đơn hàng #${orderData.id}
               </Text>
               <Divider style={{ height: 1 }} />
+
               <View className="mt-4">
                 <TextInput
                   onChangeText={(value) => setTitle(value)}
@@ -358,11 +520,11 @@ const OrderHistoryCompleted = () => {
                               iconColor="white"
                               onPress={() => {
                                 setImageUrls(
-                                  imageUrls.filter((_, i) => i!== index)
+                                  imageUrls.filter((_, i) => i !== index)
                                 );
                               }}
                               style={{
-                                margin: 0
+                                margin: 0,
                               }}
                               icon={"cancel"}
                             />
@@ -400,7 +562,7 @@ const OrderHistoryCompleted = () => {
         </Modal>
       </Portal>
       <View className="px-10">
-        <Text className="font-bold text-lg text-red-500">
+        <Text className="text-lg font-hnow64regular text-red-500">
           {getOrderDataString()}
         </Text>
         <Divider
@@ -408,6 +570,22 @@ const OrderHistoryCompleted = () => {
             height: 1,
           }}
         />
+      </View>
+      <View className="flex-row justify-start px-10">
+        {orderData.reason && (
+          <TouchableRipple
+            borderless
+            onPress={() => {setVisible2(true);}}
+            className="p-2 rounded-lg"
+          >
+            <View className="flex-row justify-end items-center gap-1">
+              <MessageCircleQuestion size={16} color={"blue"} />
+              <Text className="text-sm text-blue-700">
+                Xem lý do
+              </Text>
+            </View>
+          </TouchableRipple>
+        )}
       </View>
       <View className="flex-row px-10 justify-between my-4 items-center">
         <View className="flex-row gap-2 items-center">
@@ -440,6 +618,20 @@ const OrderHistoryCompleted = () => {
           </Text>
         )}
       </View>
+      <View className="flex-row justify-end px-10 py-1">
+        {orderData.isOrderNextDay ? (
+          <>
+            <CalendarCheck2 color={"red"} size={16} />
+
+            <Text className="text-xs text-red-400">Đặt hàng cho ngày mai</Text>
+          </>
+        ) : (
+          <>
+            <CalendarCheck2 color={"red"} size={16} />
+            <Text className="text-xs text-red-400">Đặt hàng cho hôm nay</Text>
+          </>
+        )}
+      </View>
       <View
         className="flex-row"
         style={{
@@ -456,7 +648,9 @@ const OrderHistoryCompleted = () => {
         <View className="justify-between py-4 flex-1 pr-10 ">
           <View className="flex-row items-center gap-2">
             <Image
-              source={images.PromotionShopLogo}
+              source={{
+                uri: orderData?.shopInfo?.logoUrl,
+              }}
               style={{
                 height: 40,
                 width: 40,
@@ -511,22 +705,24 @@ const OrderHistoryCompleted = () => {
         <Text className="pl-7 text-lg font-bold">Thông tin giỏ hàng</Text>
         {orderData.orderDetails.map((product) => (
           <View className="flex-row gap-4 pl-7 mt-4">
-            <Surface elevation={4} className="rounded-lg bg-white">
-              <Image
-                source={{ uri: product.imageUrl }}
-                style={{
-                  height: parseInt((width * 25) / 100),
-                  width: parseInt((width * 25) / 100),
-                  borderRadius: 10,
-                }}
-              />
-            </Surface>
+            <Image
+              source={{ uri: product.imageUrl }}
+              style={{
+                height: parseInt((width * 25) / 100),
+                width: parseInt((width * 25) / 100),
+                borderRadius: 10,
+              }}
+            />
             <View className="flex-1 justify-between">
               <Text numberOfLines={2} className="font-bold text-lg">
                 {product.name}
               </Text>
-              <View className="flex-1">
-                <Text>
+              <View className="flex-1 flex-row gap-1 mr-2">
+                <Utensils size={16} color={"blue"} />
+                <Text
+                  className="flex-wrap flex-1 text-ellipsis"
+                  numberOfLines={3}
+                >
                   {product.optionGroups &&
                     Array.isArray(product.optionGroups) &&
                     product.optionGroups.length > 0 &&
@@ -549,7 +745,18 @@ const OrderHistoryCompleted = () => {
                       .join(" & ")}
                 </Text>
               </View>
+              <View className="gap-3 my-1 flex-row items-center">
+                {product.note && (
+                  <>
+                    <NotepadText size={12} color="green" />
+                    <Text className="text-xs text-gray-500">
+                      Ghi chú: {product.note}
+                    </Text>
+                  </>
+                )}
+              </View>
               <View className="flex-row items-center gap-2">
+                <Coins size={18} color={"red"} />
                 <Text className="text-primary text-base">
                   {formatNumberVND(product.totalPrice)}
                 </Text>
@@ -564,7 +771,7 @@ const OrderHistoryCompleted = () => {
           <>
             <Text className="pl-7 text-lg font-bold mt-8">Giảm giá</Text>
             <Surface
-              className="flex-row my-4 mx-7 flex-1"
+              className="flex-row my-4 mx-7"
               style={{
                 height: 50,
                 borderRadius: 16,

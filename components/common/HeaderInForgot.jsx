@@ -5,7 +5,7 @@ import { Text, View } from 'react-native';
 import { Colors } from '../../constant';
 
 // eslint-disable-next-line react/prop-types
-export default function HeaderInForgot({ back, title, des }) {
+export default function HeaderInForgot({ back, title, des, email }) {
   return (
     <View className="pt-8 pl-2">
       <MaterialIcons
@@ -13,7 +13,12 @@ export default function HeaderInForgot({ back, title, des }) {
         size={36}
         color={Colors.primaryBackgroundColor}
         onPress={() => {
-          router.push(back);
+          router.push({
+            pathname: back, 
+            params: {
+              email: email
+            },
+          });
         }}
       />
       <View className="px-8 pt-40 pb-8 gap-2">

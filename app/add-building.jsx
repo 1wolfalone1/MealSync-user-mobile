@@ -169,7 +169,7 @@ export default function StartPage() {
             resizeMode="contain"
             source={Icons.IconLight}
           />
-          <Text className="text-3xl font-bold text-white">VFoody</Text>
+          <Text className="text-3xl font-bold text-white">MealSync</Text>
         </View>
         <View className="items-center justify-center mb-8 w-full">
           <Text className="font-bold text-xl mb-4 text-white">

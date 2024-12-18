@@ -1,6 +1,6 @@
 import React from "react";
 import { Dimensions, FlatList, Image, StyleSheet, View } from "react-native";
-import { Card, Chip, Surface, Text } from "react-native-paper";
+import { Card, Surface, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { userInfoSliceSelector } from "../redux/slice/userSlice";
 import { formatDateTime } from "../utils/MyUtils";
@@ -14,9 +14,9 @@ const ItemReportDetails = ({ item, shopInfo }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 2:
-        return "#FFA500"; // Orange for status 2
+        return "#aa6f02"; // Orange for status 2
       case 3:
-        return "#4CAF50"; // Green for status 3
+        return "#ad0000"; // Green for status 3
       default:
         return "#757575"; // Grey for default
     }
@@ -27,9 +27,9 @@ const ItemReportDetails = ({ item, shopInfo }) => {
       case 1:
         return "Đang chờ";
       case 2:
-        return "Đồng ý";
+        return "Được Đồng ý";
       default:
-        return "Từ chối";
+        return "Bị từ chối";
     }
   };
 
@@ -78,46 +78,54 @@ const ItemReportDetails = ({ item, shopInfo }) => {
     <Card style={styles.card}>
       <Card.Content>
         <View style={styles.header}>
-          <Text variant="titleLarge" style={styles.title}>
-            {item.title}
-          </Text>
-          <Chip
-            mode="outlined"
-            textStyle={{ color: getStatusColor(item.status) }}
+          {item.isReportedByCustomer ? (
+            <Text variant="titleLarge" style={styles.title}>
+              {item.title}
+            </Text>
+          ) : (
+            <>
+              <View>
+                <Text variant="titleLarge" style={styles.title}>
+                  Trả lời từ cửa hàng
+                </Text>
+              </View>
+            </>
+          )}
+          <Text
             style={[
+              {
+                color: getStatusColor(item.status),
+              },
               styles.statusChip,
-              { borderColor: getStatusColor(item.status) },
             ]}
           >
-            {getStatusText(item.status)}
-          </Chip>
+             {item.isReportedByCustomer  && getStatusText(item.status)}
+          </Text>
         </View>
 
         <Text variant="bodyMedium" style={styles.content}>
           Lý do: <Text className="text-gray-600">{item.content}</Text>
         </Text>
 
-        {item.reason && (
-          <View style={styles.reasonContainer}>
-            <Text variant="bodySmall" style={styles.reasonLabel}>
-              Reason:
-            </Text>
-            <Text variant="bodyMedium" style={styles.reason}>
-              {item.reason}
-            </Text>
-          </View>
-        )}
-
         {renderImages()}
 
-        <View style={styles.footer}>
+        <View style={styles.footer} className="justify-between">
           <Text variant="bodySmall" style={styles.timestamp}>
             {formatDateTime(item.createdDate)}
           </Text>
-          <Text variant="bodySmall" style={styles.reporter}>
-            Báo cáo từ:{" "}
-            {item.isReportedByCustomer ? info.fullName + ` (Bạn)` : "Cửa hàng " + shopInfo.name}
-          </Text>
+          <View className="flex-1 flex-row justify-end ml-20">
+            <Text
+              variant="bodySmall"
+              className="flex-wrap text-ellipsis"
+              style={styles.reporter}
+              numberOfLines={2}
+            >
+              Báo cáo từ:{" "}
+              {item.isReportedByCustomer
+                ? info.fullName + ` (Bạn)`
+                : "Cửa hàng " + shopInfo.name}
+            </Text>
+          </View>
         </View>
       </Card.Content>
     </Card>

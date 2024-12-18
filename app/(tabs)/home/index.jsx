@@ -14,8 +14,12 @@ import ItemBestSellerInHome from "../../../components/user-page/ItemBestSellerIn
 import ItemShopRegulerInHome from "../../../components/user-page/ItemShopRegulerInHome";
 import { Colors } from "../../../constant";
 import cartSlice, { cartSelector } from "../../../redux/slice/cartSlice";
-import globalSlice from "../../../redux/slice/globalSlice";
-import { userInfoSliceSelector } from "../../../redux/slice/userSlice";
+import globalSlice, { globalSelector } from "../../../redux/slice/globalSlice";
+import shopDetailsSlice from "../../../redux/slice/shopDetailsSlice";
+import {
+  loadInfo,
+  userInfoSliceSelector,
+} from "../../../redux/slice/userSlice";
 const Index = () => {
   const info = useSelector(userInfoSliceSelector);
 
@@ -48,7 +52,7 @@ const Index = () => {
   const [dataTopShop, setDataTopShop] = useState(null);
 
   const [dataTopProduct, setDataTopProduct] = useState(null);
-
+  const { refreshScroll } = useSelector(globalSelector);
   const handleGetDataTopProduct = async () => {
     try {
       const res = await api.get("/api/v1/food/top?pageIndex=1&pageSize=5");
@@ -71,7 +75,9 @@ const Index = () => {
     }
   };
   useEffect(() => {
+        dispatch(loadInfo());
     dispatch(cartSlice.actions.resetStateListItemInfo());
+    dispatch(shopDetailsSlice.actions.resetState());
   }, []);
   useEffect(() => {
     dispatch(
@@ -82,7 +88,7 @@ const Index = () => {
     );
     handleGetDataTopShop();
     handleGetDataTopProduct();
-  }, []);
+  }, [refreshScroll]);
   useEffect(() => {
     console.log(userData, " teset");
   }, [userData]);
@@ -108,7 +114,7 @@ const Index = () => {
       </View>
       <View className="pl-7">
         <Text className="font-hnow65medium text-xl text-primary">
-          Đặt lại quán quen
+        Cửa hàng nổi trội 
         </Text>
       </View>
       <View className="flex-1 ">

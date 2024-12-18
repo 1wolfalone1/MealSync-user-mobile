@@ -6,6 +6,10 @@ const initialState = {
   listOrderTracking: [],
   listOrderReview: [],
   listOrderIssues: [],
+  totalPage: 0,
+  totalPage2: 0,
+  totalPage3: 0,
+  totalPage4: 0,
   orderReviewDetails: {
     shopName: "",
     logoUrl: "",
@@ -22,15 +26,32 @@ const orderHistorySlice = createSlice({
   extraReducers: (builder) =>
     builder
       .addCase(getListOrderHistory.fulfilled, (state, actions) => {
-        console.log(actions.payload, " actions payload in order history");
-        state.listOrderHistory = actions.payload.items;
+        console.log(actions.payload, " actions payload in order history 2");
+
+        state.totalPage2 = actions.payload.totalPages;
+        if (actions.payload.pageIndex == 1) {
+          state.listOrderHistory = actions.payload.items;
+        } else {
+          state.listOrderHistory = [
+            ...state.listOrderHistory,
+            ...actions.payload.items,
+          ];
+        }
       })
       .addCase(getListOrderHistory.rejected, (state, actions) => {
         console.log(actions.payload);
       })
       .addCase(getListOrderTracking.fulfilled, (state, actions) => {
         console.log(actions.payload, " actions payload in order history");
-        state.listOrderTracking = actions.payload.items;
+        state.totalPage = actions.payload.totalPages;
+        if (actions.payload.pageIndex == 1) {
+          state.listOrderTracking = actions.payload.items;
+        } else {
+          state.listOrderTracking = [
+            ...state.listOrderTracking,
+            ...actions.payload.items,
+          ];
+        }
       })
       .addCase(getListOrderTracking.rejected, (state, actions) => {
         console.log(actions.payload);
@@ -44,7 +65,15 @@ const orderHistorySlice = createSlice({
       })
       .addCase(getOrderIssues.fulfilled, (state, actions) => {
         console.log(actions.payload, " actions payload in order history");
-        state.listOrderIssues = actions.payload.items;
+        state.totalPage4 = actions.payload.totalPages;
+        if (actions.payload.pageIndex == 1) {
+          state.listOrderIssues = actions.payload.items;
+        } else {
+          state.listOrderIssues = [
+            ...state.listOrderIssues,
+            ...actions.payload.items,
+          ];
+        }
       })
       .addCase(getOrderIssues.rejected, (state, actions) => {
         console.log(actions.payload);
@@ -125,6 +154,7 @@ export const getListOrderTracking = createAsyncThunk(
   "orderHistorySlice/getListOrderHistory ",
   async ({ accountId, pageIndex, pageSize }, { getState }) => {
     try {
+      console.log("page size", pageIndex);
       const res = await api.get("/api/v1/customer/order/history", {
         params: {
           accountId: accountId,
@@ -138,7 +168,10 @@ export const getListOrderTracking = createAsyncThunk(
       });
       const data = await res.data;
       console.log(data, " order tracking api response");
-      return data.value;
+      return {
+        pageIndex: pageIndex,
+        ...data.value,
+      };
     } catch (e) {
       console.log(e);
     }

@@ -1,4 +1,3 @@
-import { TransitionPresets } from '@react-navigation/stack';
 import React from 'react';
 import { JsStack } from '../../components/custom-stack/JsStack';
 import colors from '../../constant/colors';
@@ -16,15 +15,7 @@ const UserLayout = () => {
       headerStyle: { backgroundColor: colors.primaryBackgroundColor},
       headerTintColor: 'white',
         animation: 'slide_from_left' }} />
-      <JsStack.Screen
-        name="map"
-        options={{
-          headerShown: false,
-          mode: 'model',
-          gestureEnabled: true,
-          ...TransitionPresets.ModalPresentationIOS,
-        }}
-      />
+    
     </JsStack>
   );
 };

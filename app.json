@@ -1,18 +1,21 @@
 {
   "expo": {
     
-    "name": "mealsync-user-mobile",
+    "name": "MealSync",
     "slug": "mealsync-user-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "backgroundColor": "#000000",
-    "icon": "./assets/icon/icon-light.png",
+    "icon": "./assets/image.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash.jpg",
+      "image": "./assets/slash-bg.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
+    },
+    "androidStatusBar": {
+      "translucent": false
     },
     "ios": {
       "supportsTablet": true,
@@ -22,8 +25,10 @@
       "package": "org.mealsync.mobile",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/image.png",
         "backgroundColor": "#ffffff"
+        
+
       },
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",

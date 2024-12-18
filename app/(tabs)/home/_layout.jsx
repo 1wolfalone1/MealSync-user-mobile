@@ -6,6 +6,7 @@ import {
   Animated,
   FlatList,
   PermissionsAndroid,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
@@ -21,11 +22,11 @@ import DynamicHeader from "../../../components/user-page/HeaderAnimated";
 import globalSlice, { globalSelector } from "../../../redux/slice/globalSlice";
 import searchSlice from "../../../redux/slice/searchSlice";
 import {
-  loadInfo,
-  userInfoSliceSelector,
+  userInfoSliceSelector
 } from "../../../redux/slice/userSlice";
 
 import messaging from "@react-native-firebase/messaging";
+import usePullToRefresh from "../../../custom-hook/usePullToRefresh";
 const styles = StyleSheet.create({
   container: {
     margin: 0,
@@ -103,10 +104,13 @@ const HomePage = () => {
     }
     console.log(message.EntityType, " message websocket type");
     if (message.EntityType == 1) {
-      dispatch(globalSlice.actions.notifyOrderStatusChange());
+      dispatch(globalSlice.actions.notifyOrderStatusChange({
+        referenceId: message.ReferenceId,
+        entityType: message.EntityType
+      }));
     }
     showToastable({
-      renderContent: () => <NotifyFisebaseForegroundItem {...message} />,
+      renderContent: () => <NotifyFisebaseForegroundItem {...message} item={message} />,
     });
   };
   const initializeSocket = async () => {
@@ -114,7 +118,6 @@ const HomePage = () => {
       const token = await AsyncStorage.getItem("@token"); // Retrieve token from AsyncStorage
 
       if (!token) {
-        Alert.alert("Error", "No token found. Please log in again.");
         return;
       }
 
@@ -166,7 +169,7 @@ const HomePage = () => {
       if (socket) {
       }
     };
-  }, []);
+  }, [info]);
   const [categories, setCategories] = useState(null);
   const [idCategorySelected, setCategorySelected] = useState(0);
   const handleGetCategories = async () => {
@@ -203,8 +206,12 @@ const HomePage = () => {
   let scrollOffsetY = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     handleGetCategories();
-    dispatch(loadInfo());
   }, []);
+  const { refreshing, onRefreshHandler } = usePullToRefresh({
+    onRefreshFunction() {
+      dispatch(globalSlice.actions.changeRefreshScroll());
+    },
+  });
   return (
     <SafeAreaView
       style={styles.container}
@@ -220,7 +227,7 @@ const HomePage = () => {
           paddingBottom: 100,
         }}
         style={{
-          flex: 1
+          flex: 1,
         }}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
@@ -228,6 +235,12 @@ const HomePage = () => {
             useNativeDriver: false,
           }
         )}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefreshHandler}
+          />
+        }
       >
         <View className="flex-1">
           <View className="flex-row mt-2">

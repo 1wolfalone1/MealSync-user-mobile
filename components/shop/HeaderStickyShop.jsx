@@ -63,7 +63,7 @@ const HeaderStickyShop = ({
           size={40}
           theme={{ padding: 5 }}
           onPress={() => {
-            router.navigate("/home");
+            router.replace("/home");
           }}
           className="p-0"
           style={{ borderRadius: 16 }}

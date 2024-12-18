@@ -1,5 +1,13 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Flag, MapPinned, TicketCheck } from "lucide-react-native";
+import {
+  CalendarCheck2,
+  Coins,
+  Flag,
+  MapPinned,
+  NotepadText,
+  TicketCheck,
+  Utensils,
+} from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import { Dimensions, Image, ScrollView, Text, View } from "react-native";
 import {
@@ -31,6 +39,13 @@ const OrderHistoryCompleted = () => {
   const widthImageIllustration = (width * 30) / 100;
   const handleGetOrderData = async () => {
     try {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: true,
+          msg: "Đang tải dữ liệu...",
+        })
+      );
+
       const res = await api.get(`/api/v1/customer/order/${params.orderId}`);
       const data = await res.data;
       console.log(data, " data orderhistory");
@@ -41,6 +56,13 @@ const OrderHistoryCompleted = () => {
       }
     } catch (err) {
       console.log(err, " error in OrderTracking");
+    } finally {
+      dispatch(
+        globalSlice.actions.changeLoadings({
+          isLoading: false,
+          msg: "Đang tải dữ liệu...",
+        })
+      );
     }
   };
   const handleGetPaymentMethodString = (payment) => {
@@ -188,6 +210,20 @@ const OrderHistoryCompleted = () => {
           </Text>
         )}
       </View>
+      <View className="flex-row justify-end px-10 py-1">
+        {orderData.isOrderNextDay ? (
+          <>
+            <CalendarCheck2 color={"red"} size={16} />
+
+            <Text className="text-xs text-red-400">Đặt hàng cho ngày mai</Text>
+          </>
+        ) : (
+          <>
+            <CalendarCheck2 color={"red"} size={16} />
+            <Text className="text-xs text-red-400">Đặt hàng cho hôm nay</Text>
+          </>
+        )}
+      </View>
       <View
         className="flex-row"
         style={{
@@ -204,7 +240,9 @@ const OrderHistoryCompleted = () => {
         <View className="justify-between py-4 flex-1 pr-10 ">
           <View className="flex-row items-center gap-2">
             <Image
-              source={images.PromotionShopLogo}
+              source={{
+                uri: orderData?.shopInfo?.logoUrl,
+              }}
               style={{
                 height: 40,
                 width: 40,
@@ -259,22 +297,21 @@ const OrderHistoryCompleted = () => {
         <Text className="pl-7 text-lg font-bold">Thông tin giỏ hàng</Text>
         {orderData.orderDetails.map((product) => (
           <View className="flex-row gap-4 pl-7 mt-4">
-            <Surface elevation={4} className="rounded-lg bg-white">
-              <Image
-                source={{ uri: product.imageUrl }}
-                style={{
-                  height: parseInt((width * 25) / 100),
-                  width: parseInt((width * 25) / 100),
-                  borderRadius: 10,
-                }}
-              />
-            </Surface>
+            <Image
+              source={{ uri: product.imageUrl }}
+              style={{
+                height: parseInt((width * 25) / 100),
+                width: parseInt((width * 25) / 100),
+                borderRadius: 10,
+              }}
+            />
             <View className="flex-1 justify-between">
               <Text numberOfLines={2} className="font-bold text-lg">
                 {product.name}
               </Text>
-              <View className="flex-1">
-                <Text>
+              <View className="flex-1 flex-row gap-1 mr-2">
+                <Utensils size={16} color={"blue"} />
+                <Text className="flex-wrap flex-1 text-ellipsis" numberOfLines={3}>
                   {product.optionGroups &&
                     Array.isArray(product.optionGroups) &&
                     product.optionGroups.length > 0 &&
@@ -297,7 +334,18 @@ const OrderHistoryCompleted = () => {
                       .join(" & ")}
                 </Text>
               </View>
+              <View className="gap-3 my-1 flex-row items-center">
+                {product.note && (
+                  <>
+                    <NotepadText size={12} color="green" />
+                    <Text className="text-xs text-gray-500">
+                      Ghi chú: {product.note}
+                    </Text>
+                  </>
+                )}
+              </View>
               <View className="flex-row items-center gap-2">
+                <Coins size={18} color={"red"} />
                 <Text className="text-primary text-base">
                   {formatNumberVND(product.totalPrice)}
                 </Text>
@@ -312,7 +360,7 @@ const OrderHistoryCompleted = () => {
           <>
             <Text className="pl-7 text-lg font-bold mt-8">Giảm giá</Text>
             <Surface
-              className="flex-row my-4 mx-7 flex-1"
+              className="flex-row my-4 mx-7"
               style={{
                 height: 50,
                 borderRadius: 16,

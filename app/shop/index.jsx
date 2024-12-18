@@ -1,5 +1,5 @@
 import { useIsFocused } from "@react-navigation/native";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -42,7 +42,7 @@ import shopDetailsSlice, {
 const listEmpty = new Array(9).fill(null);
 const ShopPage = () => {
   const { width, height } = Dimensions.get("window");
-  const widthIllu = width * 60 / 100
+  const widthIllu = (width * 80) / 100;
   const { searchState } = useSelector(dataShopDetailsSelector);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   let scrollOffsetY = useRef(new Animated.Value(0)).current;
@@ -59,14 +59,32 @@ const ShopPage = () => {
   const dispatch = useDispatch();
   const { totalPage } = useSelector(dataShopDetailsSelector);
   const [isLoading, setLoading] = useState(true);
-
   const isFocus = useIsFocused();
+
   const { refreshing, onRefreshHandler } = usePullToRefresh({
     onRefreshFunction() {
       setCurrentPage(1);
       dispatch(getListAllProductsInShop(shopId));
     },
   });
+  useEffect(() => {
+    if (shopInfo) {
+      console.log(
+        productId != null,
+        " ???SDFasdljkfjasdlkfkaljsdfl;kasdjf",
+        productId
+      );
+      if (productId) {
+        console.log(productId, " isssssssssssssssssssssssssss");
+        let productId2 = productId;
+        router.setParams({ productId: "" });
+        router.push("/shop/" + productId2);
+      } else if (review == "true") {
+        router.setParams({ review: "" });
+        router.push("/shop/review");
+      }
+    }
+  }, [shopInfo]);
   const { currentPage, handleEndReached, setCurrentPage } = usePagination({
     fetchFunction: () => {
       dispatch(addMoreProductInShopDetails(currentPage + 1));
@@ -76,7 +94,7 @@ const ShopPage = () => {
     initialPage: 1,
   });
   useEffect(() => {}, [height]);
-  const { shopId } = params;
+  const { shopId, productId, review } = params;
   const product = {
     id: "banhmi01",
     name: "Bánh mì",
@@ -126,7 +144,6 @@ const ShopPage = () => {
 
     dispatch(globalSlice.actions.changeStateOpenFabInShop(true));
     return () => {
-      dispatch(globalSlice.actions.changeStateOpenFabInShop(false));
       dispatch(shopDetailsSlice.actions.resetState());
       scrollOffsetY.removeListener(listener);
     };
@@ -166,6 +183,10 @@ const ShopPage = () => {
   };
   useEffect(() => {
     getListCate();
+    dispatch(globalSlice.actions.changeNotShop(false));
+    return () => {
+      dispatch(globalSlice.actions.changeNotShop(true));
+    };
   }, []);
   useEffect(() => {
     dispatch(
@@ -279,13 +300,13 @@ const ShopPage = () => {
                   ))
                 ) : (
                   <>
-                    <View className=" mx-4 my-4 justify-center items-center h-100">
+                    <View className=" mt-1">
                       <Image
                         source={{
-                          uri: "https://www.edinburghpharma.in/wp-content/themes/twentythirteen/images/no.jpg",
+                          uri: "https://mealsync.s3.ap-southeast-1.amazonaws.com/image/1733499673958-cca03ac5-281b-46b3-ae0c-46afe5cff5bb.png",
                         }}
                         style={{
-                          height: widthIllu,
+                          height: widthIllu - 100,
                           width: widthIllu,
                         }}
                       />

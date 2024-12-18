@@ -5,7 +5,8 @@ const initialState = {
   tabBar: {
     translateY: 0,
   },
-  openFabInShop: true,
+  idBuilding: null,
+  openFabInShop: false,
   currentScreen: "1",
   map: {
     origin: {
@@ -39,14 +40,31 @@ const initialState = {
     isLoading: false,
     msg: "Chờ tí nhé...",
   },
-
-  orderStatusChange: false,
+  refreshScroll: false,
+  orderStatusChange: {
+    referenceId: 0,
+    entityType: 0,
+  },
   searchPage: false,
+  notInShop: true,
+  isOrderDetails: false,
 };
 const globalSlice = createSlice({
   name: "globalSlice",
   initialState: initialState,
   reducers: {
+    changeIsOrderDetails: (state, actions) => {
+      state.isOrderDetails = actions.payload;
+    },
+    changeNotShop: (state, actions) => {
+      state.notInShop = actions.payload;
+    },
+    changeIdBuilding: (state, actions) => {
+      state.idBuilding = actions.payload;
+    },
+    changeRefreshScroll: (state, action) => {
+      state.refreshScroll = !state.refreshScroll;
+    },
     changeSearchPage: (state, actions) => {
       state.searchPage = true;
     },
@@ -61,7 +79,7 @@ const globalSlice = createSlice({
       state.currentScreen = actions.payload;
     },
     notifyOrderStatusChange: (state, actions) => {
-      state.orderStatusChange = !state.orderStatusChange;
+      state.orderStatusChange = actions.payload;
     },
     changePositionTabBar: (state, actions) => {
       state.tabBar.translateY = actions.payload;

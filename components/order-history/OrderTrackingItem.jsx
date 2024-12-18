@@ -130,7 +130,7 @@ const OrderTrackingItem = ({ item }) => {
                 {formatNumberVND(item.totalPrice - item.totalPromotion)}
               </Text>
               <Text className="text-xs text-gray-600">
-                Số lượng món: {item.totalOrderDetail}
+                {item.isOrderTomorrow ? "Đặt cho ngày mai" : "Đặt cho hôm nay"}
               </Text>
             </View>
             <View className="flex-row gap-1 justify-between">
@@ -139,10 +139,16 @@ const OrderTrackingItem = ({ item }) => {
               </Text>
             </View>
             <View className="flex-row gap-1 justify-between">
-              <Text className="text-green-800">
-                Khung thời gian giao:{" "}
-                {`${convertIntTimeToString(item.startTime)} - ${convertIntTimeToString(item.endTime)}`}
-              </Text>
+              {item.receiveAt == 0 ? (
+                <Text className="text-green-800">
+                  Khung thời gian giao:{" "}
+                  {`${convertIntTimeToString(item.startTime)} - ${convertIntTimeToString(item.endTime)}`}
+                </Text>
+              ) : (
+                <Text className="text-green-800">
+                  Giao lúc: {`${formatDateTime(item.receiveAt)}`}
+                </Text>
+              )}
             </View>
 
             <View className="flex-row items-center justify-between">

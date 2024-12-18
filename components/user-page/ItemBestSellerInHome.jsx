@@ -45,17 +45,18 @@ const ItemBestSellerInHome = ({ item }) => {
         width: widthItem,
       }}
     >
-      <Surface elevation={1} className="w-full rounded-2xl">        
+      <Surface elevation={1} className="w-full rounded-2xl">
         <TouchableRipple
           borderless
-          onPress={() =>
-            router.push({
+          onPress={() => {
+            router.replace({
               pathname: "/shop",
               params: {
                 shopId: item.shopId,
+                productId: item.id
               },
-            })
-          }
+            });
+          }}
           className="bg-red-300 rounded-2xl"
         >
           <View

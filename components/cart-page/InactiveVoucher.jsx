@@ -36,10 +36,14 @@ const InactiveVoucher = ({ item }) => {
     setOpen(false);
   };
   const genPromotionTitle = (item) => {
-    if (item.applyType == 1) {
-      return `Giảm ${item.amountRate}% \nTối đa ${formatNumberVND(item.maximumApplyValue)}\n  Áp dụng đơn hàng từ ${formatNumberVND(item.minimumOrdervalue)}`;
-    } else {
-      return `Giảm ${formatNumberVND(item.amountValue)}  Áp dụng đơn hàng từ ${formatNumberVND(item.minimumOrdervalue)}`;
+    try {
+      if (item.applyType == 1) {
+        return `Giảm ${item.amountRate}%, tối đa ${formatNumberVND(item.maximumApplyValue)}. Áp dụng đơn hàng từ ${formatNumberVND(item.minOrdervalue)}`;
+      } else {
+        return `Giảm ${formatNumberVND(item.amountValue)}.  Áp dụng đơn hàng từ ${formatNumberVND(item.minOrdervalue)}`;
+      }
+    } catch (e) {
+      return "";
     }
   };
   return (
@@ -87,7 +91,7 @@ const InactiveVoucher = ({ item }) => {
             opacity: 0.7,
           }}
         >
-          <Text numberOfLines={5} className="font-hnow63book flex-1">
+          <Text numberOfLines={1} className="text-ellipsis flex-wrap flex-row">
             {item.title}
           </Text>
           <Text className="text-xs mb-1 text-gray-500">

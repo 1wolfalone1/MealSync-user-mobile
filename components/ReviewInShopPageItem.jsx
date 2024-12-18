@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
     shadowColor: Colors.shadow[400],
 
     shadowOpacity: 0.1,
-    elevation: 1,
+    elevation: 2,
     // background color must be set
   },
   shadowSelected: {
@@ -56,7 +56,7 @@ const ReviewInShopPageItem = ({ item }) => {
   return user == null ? (
     <></>
   ) : (
-    <View>
+    <View className="">
       <View
         className="rounded-xl bg-white p-4 mx-2"
         style={{
@@ -74,9 +74,12 @@ const ReviewInShopPageItem = ({ item }) => {
               borderRadius: 100,
             }}
           />
+
           <View className="flex-1 ml-2">
             <View className="flex-row justify-between items-start flex-1">
               <Text className="font-bold">{user.name}</Text>
+            </View>
+            <View className="flex-row justify-end">
               <Text className="text-gray-500 text-xs">
                 {formatDateTime(user.createdDate)}
               </Text>
@@ -101,7 +104,7 @@ const ReviewInShopPageItem = ({ item }) => {
           </View>
         </View>
         <Divider className="my-2" />
-        <View>
+        <View className="">
           <View className="">
             <Text className="flex-wrap ">{user.comment}</Text>
           </View>
@@ -140,7 +143,7 @@ const ReviewInShopPageItem = ({ item }) => {
               </View>
             )}
           </View>
-          <View className="flex-1 items-end">
+          <View className="items-end">
             <Text
               className="text-green-600 text-xs flex-wrap text-ellipsis"
               numberOfLines={1}
@@ -154,7 +157,7 @@ const ReviewInShopPageItem = ({ item }) => {
         <></>
       ) : (
         <>
-          <View className="flex-row p-6 ">
+          <View className="flex-row p-6">
             <Divider
               style={{
                 width: 0.5,
@@ -162,7 +165,7 @@ const ReviewInShopPageItem = ({ item }) => {
                 marginRight: 10,
               }}
             />
-            <View className="rounded-xl mx-2" style={{}}>
+            <View className="rounded-xl mx-2 flex-1" style={{}}>
               <View className="flex-row">
                 <Image
                   source={{
@@ -174,10 +177,15 @@ const ReviewInShopPageItem = ({ item }) => {
                     borderRadius: 100,
                   }}
                 />
-                <View className="flex-1 ml-2">
-                  <View className="flex-row justify-between items-start">
-                    <View className="justify-between flex-1">
-                      <Text className="font-bold">{shop.name}</Text>
+                <View className="ml-2 flex-1">
+                  <View className="flex-row justify-between items-start flex-1">
+                    <View className="justify-between">
+                      <Text
+                        className="font-bold flex-wrap text-ellipsis"
+                        numberOfLines={2}
+                      >
+                        {shop.name}
+                      </Text>
                       <Text className="text-gray-600 text-xs">
                         Trả lời từ shop
                       </Text>
@@ -189,7 +197,7 @@ const ReviewInShopPageItem = ({ item }) => {
                 </View>
               </View>
               <Divider className="my-2" />
-              <View>
+              <View className="">
                 <View className="">
                   <Text className="flex-wrap ">{shop.comment}</Text>
                 </View>

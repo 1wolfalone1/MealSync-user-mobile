@@ -1,4 +1,5 @@
 import { ResizeMode, Video } from "expo-av";
+import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Camera, Play, Send, X } from "lucide-react-native";
@@ -7,6 +8,8 @@ import {
   Alert,
   Dimensions,
   Image,
+  Keyboard,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -90,8 +93,22 @@ const MediaPreview = ({ media, onRemove }) => {
   );
 };
 
-const CustomInputToolbar = ({ selectedMedia, onRemoveMedia, ...props }) => {
-  return (
+const CustomInputToolbar = ({
+  isClose,
+  selectedMedia,
+  onRemoveMedia,
+  ...props
+}) => {
+  return isClose ? (
+    <>
+      <View className="h-20 justify-center items-center">
+        <Text className="text-gray-600">
+          {" "}
+          Phòng nhắn tin đã đóng, hiện tại không thể nhắn tin!!!
+        </Text>
+      </View>
+    </>
+  ) : (
     <View style={styles.inputContainer}>
       {selectedMedia && (
         <View style={styles.mediaPreviewContainer}>
@@ -180,7 +197,17 @@ const ChatChannel = () => {
       if (!result.canceled) {
         const asset = result.assets[0];
         console.log(result, "result");
-
+        const fileInfo = await FileSystem.getInfoAsync(asset.uri);
+        if (!fileInfo.exists) {
+          return;
+        }
+        if (fileInfo.size / (1024 * 1024) > 5) {
+          Alert.alert(
+            "Tệp không hợp lệ",
+            "Tệp tải lên không được lớn hơn 5MB 😔"
+          );
+          return;
+        }
         const mediaUrl = await uploadMedia(asset.uri, asset.type);
         if (mediaUrl) {
           setSelectedMedia({
@@ -193,9 +220,47 @@ const ChatChannel = () => {
           setSelectedMediaUrl(mediaUrl);
         }
       }
-    } catch (error) {
-      console.log(error, " error pick media in chat");
-      Alert.alert("Error", "Failed to pick media");
+    } catch (e) {
+      console.log(e, " error pick media in chat");
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "black",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message + " 😔",
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
     }
   };
 
@@ -221,19 +286,52 @@ const ChatChannel = () => {
       if (data.isSuccess) {
         return data?.value?.url;
       }
-    } catch (error) {
-      console.error("Upload error:", error);
-      throw error;
+    } catch (e) {
+      if (e.response && e.response.data) {
+        if (e.response.status == 400) {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: "black",
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: e.response?.data?.error?.message + " 😔",
+            })
+          );
+        } else {
+          dispatch(
+            globalSlice.actions.customSnackBar({
+              style: {
+                color: "white",
+                backgroundColor: Colors.glass.red,
+                pos: {
+                  top: 40,
+                },
+                actionColor: "white",
+              },
+            })
+          );
+          dispatch(
+            globalSlice.actions.openSnackBar({
+              message: "Có gì đó sai sai! Mong bạn thử lại sau :_(",
+            })
+          );
+        }
+      }
     }
   };
   const handleGetChatData = async () => {
     try {
-      console.log("asdfasdfasdfasfasfd -----------------------------");
-
       const res = await api.get(`/api/v1/order/${params.id}/chat-info`);
-      console.log(res, "asdfasdfasdf");
       const data = await res.data;
-      console.log(data, "data ssssssssssssssssssss");
       if (data.isSuccess) {
         setChatData(data.value);
       }
@@ -241,42 +339,79 @@ const ChatChannel = () => {
       console.error(error, " erorsefasdfasf");
     }
   };
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   useEffect(() => {
     handleGetChatData();
-    dispatch(globalSlice.actions.setCurrentScreen("chat"))
+    dispatch(globalSlice.actions.setCurrentScreen("chat"));
+    if (socket) {
+    }
     return () => {
-    dispatch(globalSlice.actions.setCurrentScreen(""))
+      dispatch(globalSlice.actions.setCurrentScreen(""));
+      if (socket)
+        socket.emit("leaveRoomsChat", { chatRoomId: Number(params.id) });
     };
   }, []);
+
+  const [dataHeader, setDataHeader] = useState(null);
+  const [channelData, setChannelData] = useState(null);
   useEffect(() => {
     console.log(socket, " socket ne ", chatData);
     if (chatData) {
       try {
+        if (!socket) {
+          return;
+        }
         socket.emit("joinRoomsChat", {
           chatRoomId: Number(params.id),
           chatData,
         });
+        Object.keys(chatData).forEach((key) => {
+          if (chatData[key].roleId === 2) {
+            setDataHeader(chatData[key]);
+          }
+        });
+        socket.on("errorChat", (msg) => {
+          if (msg) {
+            dispatch(
+              globalSlice.actions.customSnackBar({
+                style: {
+                  color: "white",
+                  backgroundColor: "red",
+                  pos: {
+                    top: 40,
+                  },
+                  actionColor: "white",
+                },
+              })
+            );
+            dispatch(
+              globalSlice.actions.openSnackBar({
+                message: msg,
+              })
+            );
+
+            console.log(e, "Unexpected error second time validation");
+          }
+        });
+        socket.on("receivedRoomData", (msg) => {
+          setChannelData(msg);
+        });
+
+        socket.emit("getRoomDataById", Number(params.id));
         socket.on("chatMessage", (msg) => {
           console.log(msg, "chatMessage");
           let user = {};
-          if (msg.role_id === 1) {
+          if (chatData[msg.account_id]) {
             user = {
-              _id: chatData.customer.id,
-              name: chatData.customer.fullName,
-              avatar: chatData.avatarUrl,
-            };
-          } else if (msg.role_id === 2) {
-            user = {
-              _id: chatData.shop.id,
-              name: chatData.shop.fullName,
-              avatar: chatData.shop.avatarUrl,
+              _id: chatData[msg.account_id].id,
+              name: chatData[msg.account_id].fullName,
+              avatar: chatData[msg.account_id].avatarUrl,
             };
           } else {
             user = {
-              _id: chatData.deliveryStaff.id,
-              name: chatData.deliveryStaff.fullName,
-              avatar: chatData.deliveryStaff.avatarUrl,
+              _id: msg.id,
+              name: "",
+              avatar: "",
             };
           }
           console.log(user, " user for chatg");
@@ -305,32 +440,25 @@ const ChatChannel = () => {
             ])
           );
         });
-
+        console.log(chatData, "asdfasfd asdfasas");
         socket.on("previousMessages", (previousMessages) => {
-          console.log(previousMessages, "previousMessages");
           setMessages(
             previousMessages.map((msg) => {
               let user = {};
-              if (msg.role_id === 1) {
+
+              if (chatData[msg.account_id]) {
                 user = {
-                  _id: chatData.customer.id,
-                  name: chatData.customer.fullName,
-                  avatar: chatData.avatarUrl,
-                };
-              } else if (msg.role_id === 2) {
-                user = {
-                  _id: chatData.shop.id,
-                  name: chatData.shop.fullName,
-                  avatar: chatData.shop.avatarUrl,
+                  _id: chatData[msg.account_id].id,
+                  name: chatData[msg.account_id].fullName,
+                  avatar: chatData[msg.account_id].avatarUrl,
                 };
               } else {
                 user = {
-                  _id: chatData.deliveryStaff.id,
-                  name: chatData.deliveryStaff.fullName,
-                  avatar: chatData.deliveryStaff.avatarUrl,
+                  _id: msg.id,
+                  name: "",
+                  avatar: "",
                 };
               }
-              console.log(user, "userrrrrrrrrrrrrr");
               let imageUrl = null;
               let videoUrl = null;
               if (msg.file_url) {
@@ -366,30 +494,32 @@ const ChatChannel = () => {
 
       const [message] = newMessages;
       console.log(message, " new messages");
-      const messageToSend = {
-        text: message.text,
-        chatRoomId: Number(params.id),
-        image: selectedMedia?.type === "image" ? selectedMediaUrl : null,
-        video: selectedMedia?.type === "video" ? selectedMediaUrl : null,
-        userId: userInfo.id,
-        id: message._id,
-        fullName: userInfo.fullName,
-        avatarUrl: userInfo.avatarUrl
-      };
-      setSelectedMedia(null);
-      setSelectedMediaUrl(null);
-      socket.emit("chatMessage", messageToSend);
-      setMessages((previousMessages) =>
-        GiftedChat.append(previousMessages, [
-          {
-            ...message,
-            image: messageToSend.image,
-            video: messageToSend.video,
-          },
-        ])
-      );
+      if (channelData?.is_close == 1) {
+        const messageToSend = {
+          text: message.text,
+          chatRoomId: Number(params.id),
+          image: selectedMedia?.type === "image" ? selectedMediaUrl : null,
+          video: selectedMedia?.type === "video" ? selectedMediaUrl : null,
+          userId: userInfo.id,
+          id: message._id,
+          fullName: userInfo.fullName,
+          avatarUrl: userInfo.avatarUrl,
+        };
+        setSelectedMedia(null);
+        setSelectedMediaUrl(null);
+        socket.emit("chatMessage", messageToSend);
+        setMessages((previousMessages) =>
+          GiftedChat.append(previousMessages, [
+            {
+              ...message,
+              image: messageToSend.image,
+              video: messageToSend.video,
+            },
+          ])
+        );
+      }
     } catch (error) {
-      Alert.alert("Error", "Failed to send message");
+      console.log("Error send chat:", error);
     }
   };
 
@@ -420,7 +550,15 @@ const ChatChannel = () => {
       </View>
     );
   };
-
+  const handlerLoadEarlier = () => {
+    console.log("Loading earlier ne");
+  };
+  useEffect(() => {
+    Keyboard.dismiss();
+    return () => {
+      Keyboard.dismiss();
+    };
+  }, []);
   const renderBubble = (props) => {
     return (
       <Bubble
@@ -448,70 +586,81 @@ const ChatChannel = () => {
   };
   return (
     <>
-      <SafeAreaView className="bg-primary p-2" edges={["top"]}>
-        <View className="flex-row items-center gap-4 pl-2">
-          <TouchableRipple
-            className="rounded-full p-2"
-            borderless
-            onPress={() => router.back()}
-          >
-            <ArrowLeft size={25} color={"white"} strokeWidth={2} />
-          </TouchableRipple>
-          <View className="flex-row items-center ">
-            <Avatar.Image source={{ uri: userInfo.avatarUrl }} size={50} />
-            <Text className="text-white font-semibold text-lg ml-4">
-              {userInfo.fullName}
-            </Text>
-          </View>
-        </View>
-      </SafeAreaView>
-      <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
-        <GiftedChat
-          messages={messages}
-          onSend={onSend}
-          renderBubble={renderBubble}
-          renderInputToolbar={(props) => (
-            <CustomInputToolbar
-              {...props}
-              selectedMedia={selectedMedia}
-              onRemoveMedia={async () => {
-                setSelectedMedia(null);
-                try {
-                  const res = await api.delete(
-                    `/api/v1/storage/file/delete?url=${selectedMediaUrl}`
-                  );
-                  const data = await res.data;
-                  console.log(data, " result after delete image");
-                  setSelectedMediaUrl(null);
-                } catch (e) {
-                  console.log("Error remove media:", e);
-                }
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
+      >
+        <SafeAreaView className="bg-primary p-2" edges={["top"]}>
+          <View className="flex-row items-center gap-4 pl-2">
+            <TouchableRipple
+              className="rounded-full p-2"
+              borderless
+              onPress={() => {
+                Keyboard.dismiss();
+                router.back();
               }}
-            />
-          )}
-          renderComposer={(props) => (
-            <View style={styles.composerContainer}>
-              <TouchableRipple onPress={pickMedia} style={styles.mediaButton}>
-                <Camera size={24} color={Colors.primaryBackgroundColor} />
-              </TouchableRipple>
-              <Composer {...props} textInputStyle={styles.textInput} />
+            >
+              <ArrowLeft size={25} color={"white"} strokeWidth={2} />
+            </TouchableRipple>
+            <View className="flex-row items-center ">
+              <Avatar.Image source={{ uri: dataHeader?.avatarUrl }} size={50} />
+              <Text className="text-white font-semibold text-lg ml-4">
+                {dataHeader?.fullName}
+              </Text>
             </View>
-          )}
-          renderSend={(props) => (
-            <SendMess {...props} containerStyle={styles.sendButton}>
-              <TouchableRipple className="rounded-full p-2" borderless>
-                <Send color={Colors.primaryBackgroundColor} size={24} />
-              </TouchableRipple>
-            </SendMess>
-          )}
-          user={{
-            _id: userInfo.id,
-            name: userInfo.fullName,
-            avatar: userInfo.avatarUrl,
-          }}
-          minInputToolbarHeight={selectedMedia ? 150 : 60}
-        />
-      </SafeAreaView>
+          </View>
+        </SafeAreaView>
+        <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+          <GiftedChat
+            messages={messages}
+            onSend={onSend}
+            renderUsernameOnMessage={true}
+            renderBubble={renderBubble}
+            keyboardShouldPersistTaps="always"
+            renderInputToolbar={(props) => (
+              <CustomInputToolbar
+                {...props}
+                isClose={channelData?.is_close == 1 ? false : true}
+                selectedMedia={selectedMedia}
+                onRemoveMedia={async () => {
+                  setSelectedMedia(null);
+                  try {
+                    const res = await api.delete(
+                      `/api/v1/storage/file/delete?url=${selectedMediaUrl}`
+                    );
+                    const data = await res.data;
+                    console.log(data, " result after delete image");
+                    setSelectedMediaUrl(null);
+                  } catch (e) {
+                    console.log("Error remove media:", e);
+                  }
+                }}
+              />
+            )}
+            renderComposer={(props) => (
+              <View style={styles.composerContainer}>
+                <TouchableRipple onPress={pickMedia} style={styles.mediaButton}>
+                  <Camera size={24} color={Colors.primaryBackgroundColor} />
+                </TouchableRipple>
+                <Composer {...props} textInputStyle={styles.textInput} />
+              </View>
+            )}
+            renderSend={(props) => (
+              <SendMess {...props} containerStyle={styles.sendButton}>
+                <TouchableRipple className="rounded-full p-2" borderless>
+                  <Send color={Colors.primaryBackgroundColor} size={24} />
+                </TouchableRipple>
+              </SendMess>
+            )}
+            user={{
+              _id: userInfo.id,
+              name: userInfo.fullName,
+              avatar: userInfo.avatarUrl,
+            }}
+            minInputToolbarHeight={selectedMedia ? 150 : 60}
+          />
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </>
   );
 };
@@ -521,9 +670,13 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   mediaPreviewContainer: {
-    height: PREVIEW_HEIGHT,
-    backgroundColor: "#f5f5f5",
-    paddingVertical: 8,
+    height: PREVIEW_HEIGHT - 16,
+    width: PREVIEW_HEIGHT - 16,
+    marginHorizontal: 15,
+    borderRadius: 12,
+    overflow: "hidden",
+    position: "relative",
+    backgroundColor: "#f0f0f0",
   },
   mediaPreviewItem: {
     height: PREVIEW_HEIGHT - 16,
@@ -537,6 +690,7 @@ const styles = StyleSheet.create({
   previewImage: {
     width: "100%",
     height: "100%",
+    zIndex: 0,
   },
   previewVideo: {
     width: "100%",
