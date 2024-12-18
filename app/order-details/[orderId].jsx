@@ -17,7 +17,15 @@ import {
   Utensils,
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Dimensions,
+  Image,
+  Linking,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import {
   Button,
@@ -895,7 +903,16 @@ const OrderTracking = () => {
                     }}
                   />
                   <IconButton
-                    onPress={() => {}}
+                    onPress={() => {
+                      const url = `tel:${orderData?.shopInfo?.phoneNumber}`;
+                      Linking.canOpenURL(url)
+                        .then((supported) => {
+                          return Linking.openURL(url);
+                        })
+                        .catch((err) => {
+                          console.error("Error opening phone call:", err);
+                        });
+                    }}
                     style={{
                       margin: 0,
                     }}

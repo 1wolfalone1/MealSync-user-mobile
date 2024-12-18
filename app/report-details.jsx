@@ -92,11 +92,11 @@ const ReportDetails = () => {
             <View className="px-4 py-2">
               <Text className="text-red-600 text-base mt-4">
                 Quản trị viên{" "}
-                {reportDetails.reports[0].status == 2
+                {reportDetails?.reports[0]?.status == 2
                   ? "đã chấp nhận báo cáo"
                   : "đã từ chối báo cáo"}
-                {reportDetails.reports[0] &&
-                  " với lý do: " + reportDetails.reports[0].reason}
+                {reportDetails?.reports[0] &&
+                  " với lý do: " + reportDetails?.reports[0]?.reason}
               </Text>
             </View>
           )}

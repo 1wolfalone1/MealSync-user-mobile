@@ -36,10 +36,14 @@ const InactiveVoucher = ({ item }) => {
     setOpen(false);
   };
   const genPromotionTitle = (item) => {
-    if (item.applyType == 1) {
-      return `Giảm ${item.amountRate}% \nTối đa ${formatNumberVND(item.maximumApplyValue)}\n  Áp dụng đơn hàng từ ${formatNumberVND(item.minimumOrdervalue)}`;
-    } else {
-      return `Giảm ${formatNumberVND(item.amountValue)}  Áp dụng đơn hàng từ ${formatNumberVND(item.minimumOrdervalue)}`;
+    try {
+      if (item.applyType == 1) {
+        return `Giảm ${item.amountRate}%, tối đa ${formatNumberVND(item.maximumApplyValue)}. Áp dụng đơn hàng từ ${formatNumberVND(item.minOrdervalue)}`;
+      } else {
+        return `Giảm ${formatNumberVND(item.amountValue)}.  Áp dụng đơn hàng từ ${formatNumberVND(item.minOrdervalue)}`;
+      }
+    } catch (e) {
+      return "";
     }
   };
   return (

@@ -99,7 +99,7 @@ const ItemReportDetails = ({ item, shopInfo }) => {
               styles.statusChip,
             ]}
           >
-            {getStatusText(item.status)}
+             {item.isReportedByCustomer  && getStatusText(item.status)}
           </Text>
         </View>
 

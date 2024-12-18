@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
 const ActiveVoucher = ({ item }) => {
   const [image, setImage] = useState("");
   const { width, height } = Dimensions.get("window");
-  const widthImage = parseInt((width * 25) / 100);
+  const widthImage = parseInt((width * 27) / 100);
   console.log(item, " vouche4r details");
   const genPromotionTitle = (item) => {
     if (item.applyType == 1) {
@@ -63,10 +63,10 @@ const ActiveVoucher = ({ item }) => {
         }}
       />
       <View className="ml-2 justify-between p-1 flex-1">
-        <Text numberOfLines={1} className="text-ellipsis flex-wrap flex-row">
+        <Text numberOfLines={1} className="text-ellipsis flex-wrap flex-row text-sm">
          {item.title}
         </Text>
-        <Text className="text-xs mb-1 text-gray-500 flex-1">
+        <Text className="text-xs mb-1 text-gray-500 flex-1" numberOfLines={2}>
           {genPromotionTitle(item)}
         </Text>
         <Text className="text-xs mb-1 text-gray-500">
